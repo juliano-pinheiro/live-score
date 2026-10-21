@@ -1,0 +1,2099 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  FlatList,
+  Modal,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
+} from 'react-native';
+import { MatchCard } from '../components/MatchCard';
+import { MatchDetailModal } from '../components/MatchDetailModal';
+import { API_CONFIG } from '../config/api';
+import { fetchMatchesFromApi } from '../services/matchService';
+import { Match } from '../types/match';
+
+type MainTab = 'ALL' | 'FAVORITES' | 'COMPETITIONS';
+type StatusFilter = 'ALL' | 'LIVE' | 'FINISHED' | 'UPCOMING';
+
+const WEEKDAYS = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
+
+interface MatchGroup {
+  id: string;
+  leagueName: string;
+  leagueCountry: string;
+  matches: Match[];
+}
+
+const LEAGUE_REPUTATION: Record<string, number> = {
+  '700': 1000,
+  '740': 990,
+  '730': 980,
+  '720': 970,
+  '710': 960,
+  '725': 940,
+  '630': 900,
+  '745': 890,
+  '760': 880,
+  '21231': 870,
+  '8316': 850,
+  '8376': 840,
+  '3906': 820,
+  '680': 810,
+  '660': 800,
+  '670': 790,
+  '620': 780,
+  '20922': 770,
+  '2391': 920,
+  '18000': 860,
+};
+
+function getLeagueReputation(leagueId: string, leagueName: string): number {
+  const name = leagueName.toLocaleLowerCase();
+  if (
+    /champions league|copa libertadores|copa sudamericana|club world cup/.test(
+      name
+    )
+  ) {
+    return 1100;
+  }
+  if (
+    /europa league|conference league|afc champions|concacaf champions|caf champions/.test(
+      name
+    )
+  ) {
+    return 950;
+  }
+  if (LEAGUE_REPUTATION[leagueId]) return LEAGUE_REPUTATION[leagueId];
+  if (/premier league|laliga|serie a|bundesliga|ligue 1|eredivisie/.test(name)) {
+    return 900;
+  }
+  if (/women|feminino/.test(name)) return 700;
+  if (
+    /segunda|second|division 2|division two|serie b|ligue 2|2\. bundesliga|championship|nacional b|expansión|ascenso|primera b|primera nacional|league one|league two/.test(
+      name
+    )
+  ) {
+    return 500;
+  }
+  return 600;
+}
+
+function getKickoffMinutes(startTime: string): number {
+  const time = startTime.match(/^(\d{1,2}):(\d{2})$/);
+  if (!time) return Number.MAX_SAFE_INTEGER;
+  return Number(time[1]) * 60 + Number(time[2]);
+}
+
+function getCountryFlag(country: string): string {
+  const flags: Record<string, string> = {
+    Argentina: '🇦🇷',
+    Austrália: '🇦🇺',
+    Brasil: '🇧🇷',
+    Chile: '🇨🇱',
+    China: '🇨🇳',
+    Colômbia: '🇨🇴',
+    Equador: '🇪🇨',
+    Espanha: '🇪🇸',
+    'Estados Unidos': '🇺🇸',
+    França: '🇫🇷',
+    Holanda: '🇳🇱',
+    'Países Baixos': '🇳🇱',
+    Inglaterra: '🇬🇧',
+    Itália: '🇮🇹',
+    México: '🇲🇽',
+    Paraguai: '🇵🇾',
+    Peru: '🇵🇪',
+    Portugal: '🇵🇹',
+    Escócia: '🏴',
+    Suécia: '🇸🇪',
+    Dinamarca: '🇩🇰',
+    Áustria: '🇦🇹',
+    Turquia: '🇹🇷',
+    Índia: '🇮🇳',
+    'Arábia Saudita': '🇸🇦',
+    'El Salvador': '🇸🇻',
+    Uruguai: '🇺🇾',
+    Alemanha: '🇩🇪',
+    África: '🌍',
+    Internacional: '🌍',
+  };
+  return flags[country] ?? '🌍';
+}
+
+function getDateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getMonthDays(date: Date): Date[] {
+  const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+  const leadingDays = (firstDay.getDay() + 6) % 7;
+  const daysInMonth = new Date(
+    date.getFullYear(),
+    date.getMonth() + 1,
+    0
+  ).getDate();
+  const cellCount = Math.ceil((leadingDays + daysInMonth) / 7) * 7;
+
+  return Array.from({ length: cellCount }, (_, index) => {
+    const day = index - leadingDays + 1;
+    return new Date(date.getFullYear(), date.getMonth(), day);
+  });
+}
+
+export const HomeScreen: React.FC = () => {
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [activeTab, setActiveTab] = useState<MainTab>('ALL');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
+  const [selectedLeague, setSelectedLeague] = useState<string>('ALL');
+  const [sortChronologically, setSortChronologically] = useState(false);
+  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date());
+  const [isCalendarVisible, setIsCalendarVisible] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [lastSyncTime, setLastSyncTime] = useState<string>('Agora');
+  const [pinnedTimestamps, setPinnedTimestamps] = useState<Record<string, number>>({});
+  const pinnedIdsRef = React.useRef<Set<string>>(new Set());
+  const listRef = React.useRef<FlatList<MatchGroup>>(null);
+  const { width } = useWindowDimensions();
+  const showSideDetails = width >= 760;
+  const showDesktopSidebar = width >= 1120;
+  const isViewingToday = getDateKey(selectedDate) === getDateKey(new Date());
+  const calendarDays = useMemo(() => getMonthDays(calendarMonth), [calendarMonth]);
+
+  useEffect(() => {
+    let isActive = true;
+    let isRefreshing = false;
+    const refreshMatches = async () => {
+      if (isRefreshing) return;
+      isRefreshing = true;
+
+      try {
+        const apiMatches = await fetchMatchesFromApi(selectedDate, (updates) => {
+          if (!isActive) return;
+          const updatesById = new Map(updates.map((match) => [match.id, match]));
+          setMatches((currentMatches) =>
+            currentMatches.map((currentMatch) => {
+              const update = updatesById.get(currentMatch.id);
+              if (!update) return currentMatch;
+              return {
+                ...currentMatch,
+                homeTeam: {
+                  ...currentMatch.homeTeam,
+                  redCards: update.homeTeam.redCards,
+                },
+                awayTeam: {
+                  ...currentMatch.awayTeam,
+                  redCards: update.awayTeam.redCards,
+                },
+                recentAlert:
+                  update.recentAlert ??
+                  (currentMatch.recentAlert?.type === 'VAR'
+                    ? undefined
+                    : currentMatch.recentAlert),
+              };
+            })
+          );
+        });
+        if (!isActive) return;
+        setMatches((previousMatches) => {
+          const previousById = new Map(
+            previousMatches.map((match) => [match.id, match])
+          );
+          return apiMatches.map((match) => {
+            const previous = previousById.get(match.id);
+            const homeScored =
+              previous && match.homeTeam.score > previous.homeTeam.score;
+            const awayScored =
+              previous && match.awayTeam.score > previous.awayTeam.score;
+            let recentAlert: Match['recentAlert'];
+            if (homeScored || awayScored) {
+              recentAlert = {
+                id: `${match.id}-${match.homeTeam.score}-${match.awayTeam.score}`,
+                type: 'GOAL',
+                team: homeScored ? 'HOME' : 'AWAY',
+                createdAt: Date.now(),
+              };
+            } else if (match.recentAlert?.type === 'VAR') {
+              recentAlert = {
+                ...match.recentAlert,
+                createdAt:
+                  previous?.recentAlert?.id === match.recentAlert.id
+                    ? previous.recentAlert.createdAt
+                    : Date.now(),
+              };
+            } else if (
+              previous?.recentAlert?.type === 'VAR' &&
+              (match.status === '1H' ||
+                match.status === '2H' ||
+                match.status === 'HT')
+            ) {
+              recentAlert = previous.recentAlert;
+            } else if (
+              previous?.recentAlert?.type === 'GOAL' &&
+              previous.recentAlert.createdAt &&
+              Date.now() - previous.recentAlert.createdAt < 5000
+            ) {
+              recentAlert = previous.recentAlert;
+            }
+
+            return {
+              ...match,
+              recentAlert,
+              recentGoalTeam: homeScored
+                ? 'HOME'
+                : awayScored
+                ? 'AWAY'
+                : previous?.recentGoalTeam,
+              isPinned:
+                pinnedIdsRef.current.has(match.id) ||
+                (previous?.isPinned ?? false),
+            };
+          });
+        });
+        setApiError(null);
+        setLastSyncTime(
+          new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          })
+        );
+      } catch (error) {
+        console.error('Falha ao buscar partidas da API gratuita:', error);
+        if (isActive) {
+          setApiError(
+            error instanceof Error
+              ? error.message
+              : 'Não foi possível carregar os jogos agora.'
+          );
+        }
+      } finally {
+        isRefreshing = false;
+        if (isActive) setIsLoading(false);
+      }
+    };
+
+    void refreshMatches();
+    const interval = isViewingToday
+      ? setInterval(refreshMatches, API_CONFIG.REFRESH_INTERVAL_MS)
+      : null;
+
+    return () => {
+      isActive = false;
+      if (interval) clearInterval(interval);
+    };
+  }, [refreshKey, selectedDate, isViewingToday]);
+
+  useEffect(() => {
+    if (isCalendarVisible) setCalendarMonth(selectedDate);
+  }, [isCalendarVisible, selectedDate]);
+
+  const handleTogglePin = (matchId: string) => {
+    const isCurrentlyPinned = pinnedIdsRef.current.has(matchId);
+    if (isCurrentlyPinned) {
+      pinnedIdsRef.current.delete(matchId);
+      setPinnedTimestamps((prev) => {
+        const next = { ...prev };
+        delete next[matchId];
+        return next;
+      });
+    } else {
+      pinnedIdsRef.current.add(matchId);
+      setPinnedTimestamps((prev) => ({
+        ...prev,
+        [matchId]: Date.now(),
+      }));
+    }
+
+    setMatches((prev) =>
+      prev.map((m) =>
+        m.id === matchId ? { ...m, isPinned: !isCurrentlyPinned } : m
+      )
+    );
+  };
+
+  const handleRefresh = () => {
+    setIsLoading(true);
+    setRefreshKey((key) => key + 1);
+  };
+
+  const handleSelectDate = (date: Date) => {
+    setSelectedDate(date);
+    setSelectedLeague('ALL');
+    setActiveTab('ALL');
+    setStatusFilter('ALL');
+    setMatches([]);
+    setApiError(null);
+    setIsLoading(true);
+    setIsCalendarVisible(false);
+  };
+
+  const handleGoHome = () => {
+    setActiveTab('ALL');
+    setSelectedLeague('ALL');
+    setStatusFilter('ALL');
+    setSelectedMatchId(null);
+    setIsCalendarVisible(false);
+    if (!isViewingToday) {
+      handleSelectDate(new Date());
+    } else {
+      listRef.current?.scrollToOffset({ offset: 0, animated: true });
+    }
+  };
+
+  const matchesForTab = useMemo(
+    () => matches.filter((match) => activeTab !== 'FAVORITES' || match.isPinned),
+    [matches, activeTab]
+  );
+
+  const statusFilteredMatches = useMemo(
+    () =>
+      matchesForTab.filter((match) => {
+        if (statusFilter === 'LIVE') {
+          return match.status === '1H' || match.status === '2H' || match.status === 'HT';
+        }
+        if (statusFilter === 'FINISHED') return match.status === 'FT';
+        if (statusFilter === 'UPCOMING') return match.status === 'NS';
+        return true;
+      }),
+    [matchesForTab, statusFilter]
+  );
+
+  const leagues = useMemo(
+    () =>
+      [
+        {
+        id: 'ALL',
+        name: 'Todas as ligas',
+        country: '',
+        count: statusFilteredMatches.length,
+        },
+        ...Array.from(
+          statusFilteredMatches.reduce((map, match) => {
+            const current = map.get(match.leagueId);
+            map.set(match.leagueId, {
+              id: match.leagueId,
+              name: match.leagueName,
+              country: match.leagueCountry,
+              count: (current?.count ?? 0) + 1,
+            });
+            return map;
+          }, new Map<string, { id: string; name: string; country: string; count: number }>())
+            .values()
+        )
+          .sort(
+            (a, b) =>
+              getLeagueReputation(b.id, b.name) -
+                getLeagueReputation(a.id, a.name) ||
+              a.name.localeCompare(b.name)
+          ),
+      ],
+    [statusFilteredMatches]
+  );
+
+  const isMatchLive = (status: Match['status']) =>
+    status === '1H' || status === '2H' || status === 'HT';
+
+  const comparePinnedPriority = (a: Match, b: Match) => {
+    const aPinned = Number(Boolean(a.isPinned));
+    const bPinned = Number(Boolean(b.isPinned));
+    if (aPinned !== bPinned) return bPinned - aPinned;
+    if (aPinned && bPinned) {
+      const aLive = Number(isMatchLive(a.status));
+      const bLive = Number(isMatchLive(b.status));
+      if (aLive !== bLive) return bLive - aLive;
+      const aTime = pinnedTimestamps[a.id] ?? 0;
+      const bTime = pinnedTimestamps[b.id] ?? 0;
+      if (aTime !== bTime) return bTime - aTime;
+    }
+    return 0;
+  };
+
+  const filteredMatches = useMemo(() => {
+    const filtered = statusFilteredMatches.filter(
+      (match) => selectedLeague === 'ALL' || match.leagueId === selectedLeague
+    );
+    return [...filtered].sort((a, b) => {
+      const pinDiff = comparePinnedPriority(a, b);
+      if (pinDiff !== 0) return pinDiff;
+      if (sortChronologically) {
+        return (
+          getKickoffMinutes(a.startTime) - getKickoffMinutes(b.startTime) ||
+          a.leagueName.localeCompare(b.leagueName) ||
+          a.homeTeam.name.localeCompare(b.homeTeam.name)
+        );
+      }
+      const aLive = Number(isMatchLive(a.status));
+      const bLive = Number(isMatchLive(b.status));
+      if (aLive !== bLive) return bLive - aLive;
+      return 0;
+    });
+  }, [statusFilteredMatches, selectedLeague, sortChronologically, pinnedTimestamps]);
+
+  const matchGroups = useMemo(() => {
+    if (sortChronologically) {
+      const chronologicalGroups: MatchGroup[] = [];
+      filteredMatches.forEach((match) => {
+        const previousGroup = chronologicalGroups[chronologicalGroups.length - 1];
+        if (
+          previousGroup?.matches[0]?.leagueId === match.leagueId &&
+          Boolean(previousGroup?.matches[0]?.isPinned) === Boolean(match.isPinned)
+        ) {
+          previousGroup.matches.push(match);
+          return;
+        }
+        chronologicalGroups.push({
+          id: `${match.leagueId}-${match.id}`,
+          leagueName: match.leagueName,
+          leagueCountry: match.leagueCountry,
+          matches: [match],
+        });
+      });
+      return chronologicalGroups;
+    }
+
+    const pinnedMatches =
+      selectedLeague === 'ALL' && activeTab !== 'FAVORITES'
+        ? filteredMatches.filter((match) => match.isPinned)
+        : [];
+    const regularMatches =
+      pinnedMatches.length > 0
+        ? filteredMatches.filter((match) => !match.isPinned)
+        : filteredMatches;
+
+    const pinnedGroups: MatchGroup[] = [];
+    pinnedMatches.forEach((match) => {
+      const existing = pinnedGroups.find(
+        (group) => group.id === `pinned-${match.leagueId}`
+      );
+      if (existing) {
+        existing.matches.push(match);
+      } else {
+        pinnedGroups.push({
+          id: `pinned-${match.leagueId}`,
+          leagueName: match.leagueName,
+          leagueCountry: match.leagueCountry,
+          matches: [match],
+        });
+      }
+    });
+
+    const groups = new Map<string, MatchGroup>();
+    regularMatches.forEach((match) => {
+      const group = groups.get(match.leagueId);
+      if (group) {
+        group.matches.push(match);
+      } else {
+        groups.set(match.leagueId, {
+          id: match.leagueId,
+          leagueName: match.leagueName,
+          leagueCountry: match.leagueCountry,
+          matches: [match],
+        });
+      }
+    });
+
+    const sortedLeagueGroups = Array.from(groups.values()).sort(
+      (a, b) =>
+        getLeagueReputation(b.id, b.leagueName) -
+          getLeagueReputation(a.id, a.leagueName) ||
+        a.leagueName.localeCompare(b.leagueName)
+    );
+
+    return [...pinnedGroups, ...sortedLeagueGroups];
+  }, [filteredMatches, sortChronologically, selectedLeague, activeTab]);
+
+  const selectedMatch = useMemo(
+    () => matches.find((m) => m.id === selectedMatchId) || null,
+    [matches, selectedMatchId]
+  );
+
+  const liveCount = useMemo(
+    () =>
+      matches.filter(
+        (m) => m.status === '1H' || m.status === '2H' || m.status === 'HT'
+      ).length,
+    [matches]
+  );
+  const finishedCount = matches.filter((match) => match.status === 'FT').length;
+  const upcomingCount = matches.filter((match) => match.status === 'NS').length;
+
+  const shiftDate = (days: number) => {
+    const nextDate = new Date(selectedDate);
+    nextDate.setDate(nextDate.getDate() + days);
+    handleSelectDate(nextDate);
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" />
+
+      {/* Top Navigation & Brand Bar */}
+      <View style={styles.topNavbar}>
+        <View style={styles.topNavbarInner}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Voltar para a tela de início"
+            activeOpacity={0.78}
+            onPress={handleGoHome}
+            style={styles.brandCluster}
+          >
+            <View style={styles.brandLogoMark}>
+              <View style={styles.brandLivePulseDot} />
+              <Text style={styles.brandLogoIcon}>⚽</Text>
+            </View>
+            <View style={styles.brandRow}>
+              <Text style={styles.brandTitle}>PULSE</Text>
+              <Text style={styles.brandAccent}>SCORE</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View
+        style={[
+          styles.container,
+          showSideDetails && styles.containerDesktop,
+        ]}
+      >
+        {/* Left Sidebar on wide Desktop: Quick Competition Navigator */}
+        {showDesktopSidebar && (
+          <View style={styles.leagueSidebar}>
+            <View style={styles.sidebarHeaderRow}>
+              <Text style={styles.sidebarTitle}>COMPETIÇÕES</Text>
+              <Text style={styles.sidebarBadgeCount}>
+                {Math.max(0, leagues.length - 1)}
+              </Text>
+            </View>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.leagueList}
+            >
+              {leagues.map((league) => {
+                const isSelected = selectedLeague === league.id;
+                return (
+                  <TouchableOpacity
+                    key={league.id}
+                    onPress={() => setSelectedLeague(league.id)}
+                    style={[
+                      styles.leagueItem,
+                      isSelected && styles.leagueItemActive,
+                    ]}
+                  >
+                    <View style={styles.leagueSidebarFlagBox}>
+                      <Text style={styles.leagueSidebarFlagText}>
+                        {league.id === 'ALL'
+                          ? '🏆'
+                          : getCountryFlag(league.country)}
+                      </Text>
+                    </View>
+                    <View style={styles.leagueItemText}>
+                      <Text
+                        style={[
+                          styles.leagueItemName,
+                          isSelected && styles.leagueItemNameActive,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {league.name}
+                      </Text>
+                      {league.country ? (
+                        <Text
+                          style={styles.leagueItemCountry}
+                          numberOfLines={1}
+                        >
+                          {league.country}
+                        </Text>
+                      ) : null}
+                    </View>
+                    <View
+                      style={[
+                        styles.leagueCountBadge,
+                        isSelected && styles.leagueCountBadgeActive,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.leagueCount,
+                          isSelected && styles.leagueCountActive,
+                        ]}
+                      >
+                        {league.count}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
+
+        <View
+          style={[
+            styles.mainColumn,
+            showSideDetails && styles.mainColumnWithDetails,
+          ]}
+        >
+          {/* Unified Controls Card */}
+          <View style={styles.controlsCard}>
+            <View
+              style={[
+                styles.topControlsRow,
+                showSideDetails && styles.topControlsRowWide,
+              ]}
+            >
+              <View style={styles.tabsRow}>
+                <TouchableOpacity
+                  accessibilityRole="tab"
+                  accessibilityState={{
+                    selected: activeTab === 'ALL',
+                  }}
+                  onPress={() => {
+                    setActiveTab('ALL');
+                    setStatusFilter('ALL');
+                    setSelectedLeague('ALL');
+                  }}
+                  style={[
+                    styles.tabButton,
+                    activeTab === 'ALL' && styles.tabButtonActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      activeTab === 'ALL' && styles.tabTextActive,
+                    ]}
+                  >
+                    Todos
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    setActiveTab('FAVORITES');
+                    setStatusFilter('ALL');
+                    setSelectedLeague('ALL');
+                  }}
+                  style={[
+                    styles.tabButton,
+                    activeTab === 'FAVORITES' && styles.tabButtonActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      activeTab === 'FAVORITES' && styles.tabTextActive,
+                    ]}
+                  >
+                    Favoritos ({matches.filter((match) => match.isPinned).length})
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: activeTab === 'COMPETITIONS' }}
+                  onPress={() => {
+                    setActiveTab('COMPETITIONS');
+                    setStatusFilter('ALL');
+                    setSelectedLeague('ALL');
+                  }}
+                  style={[
+                    styles.tabButton,
+                    activeTab === 'COMPETITIONS' && styles.tabButtonActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      activeTab === 'COMPETITIONS' && styles.tabTextActive,
+                    ]}
+                  >
+                    Competições
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.dateSelectorRow}>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel="Dia anterior"
+                  onPress={() => shiftDate(-1)}
+                  style={styles.dateArrow}
+                >
+                  <Text style={styles.dateArrowText}>‹</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel="Escolher data das partidas"
+                  onPress={() => setIsCalendarVisible(true)}
+                  style={styles.dateCenterButton}
+                >
+                  <Text style={styles.selectedDateLabel}>
+                    {isViewingToday
+                      ? 'HOJE'
+                      : selectedDate
+                          .toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: 'short',
+                          })
+                          .toUpperCase()}
+                  </Text>
+                  <Text style={styles.dateSubLabel}>
+                    {selectedDate.toLocaleDateString('pt-BR', {
+                      weekday: 'short',
+                      day: '2-digit',
+                      month: 'short',
+                    })}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel="Próximo dia"
+                  onPress={() => shiftDate(1)}
+                  style={styles.dateArrow}
+                >
+                  <Text style={styles.dateArrowText}>›</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View
+              style={[
+                styles.secondaryControlsRow,
+                showSideDetails && styles.secondaryControlsRowWide,
+              ]}
+            >
+              <View style={styles.statusFiltersRow}>
+                {[
+                  { id: 'LIVE' as const, label: `Ao Vivo (${liveCount})` },
+                  {
+                    id: 'FINISHED' as const,
+                    label: `Finalizado (${finishedCount})`,
+                  },
+                  {
+                    id: 'UPCOMING' as const,
+                    label: `Próximos (${upcomingCount})`,
+                  },
+                ].map((filter) => {
+                  const isActive = statusFilter === filter.id;
+                  return (
+                    <TouchableOpacity
+                      key={filter.id}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: isActive }}
+                      onPress={() => {
+                        setStatusFilter((current) =>
+                          current === filter.id ? 'ALL' : filter.id
+                        );
+                      }}
+                      style={[
+                        styles.statusFilterButton,
+                        filter.id === 'LIVE' && styles.statusFilterLiveIdle,
+                        filter.id === 'FINISHED' &&
+                          styles.statusFilterFinishedIdle,
+                        filter.id === 'UPCOMING' &&
+                          styles.statusFilterUpcomingIdle,
+                        filter.id === 'LIVE' &&
+                          isActive &&
+                          styles.statusFilterLiveActive,
+                        filter.id === 'FINISHED' &&
+                          isActive &&
+                          styles.statusFilterFinishedActive,
+                        filter.id === 'UPCOMING' &&
+                          isActive &&
+                          styles.statusFilterUpcomingActive,
+                      ]}
+                    >
+                      {filter.id === 'LIVE' && (
+                        <View
+                          style={[
+                            styles.filterLiveDot,
+                            isActive && styles.filterLiveDotActive,
+                          ]}
+                        />
+                      )}
+                      <Text
+                        style={[
+                          styles.statusFilterText,
+                          filter.id === 'LIVE' && styles.statusFilterTextLive,
+                          filter.id === 'FINISHED' &&
+                            styles.statusFilterTextFinished,
+                          filter.id === 'UPCOMING' &&
+                            styles.statusFilterTextUpcoming,
+                          isActive && styles.statusFilterTextActive,
+                        ]}
+                      >
+                        {filter.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View style={styles.lowerLeagueToggle}>
+                <Text style={styles.lowerLeagueText}>
+                  Ordenar jogos por horário de início
+                </Text>
+                <Switch
+                  accessibilityLabel="Ordenar jogos por horário de início"
+                  value={sortChronologically}
+                  onValueChange={setSortChronologically}
+                  trackColor={{ false: '#CBD5E1', true: '#93C5FD' }}
+                  thumbColor={sortChronologically ? '#1D4ED8' : '#FFFFFF'}
+                  style={styles.lowerLeagueSwitch}
+                />
+              </View>
+            </View>
+
+            {activeTab === 'COMPETITIONS' && (
+              <View style={styles.competitionSelector}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.competitionSelectorContent}
+                >
+                  {leagues.map((league) => (
+                    <TouchableOpacity
+                      key={league.id}
+                      onPress={() => setSelectedLeague(league.id)}
+                      style={[
+                        styles.competitionChip,
+                        selectedLeague === league.id &&
+                          styles.competitionChipActive,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.competitionChipText,
+                          selectedLeague === league.id &&
+                            styles.competitionChipTextActive,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {league.id === 'ALL' ? 'Todas' : league.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+          </View>
+
+          {apiError && (
+            <View style={styles.errorBanner}>
+              <Text style={styles.errorText}>{apiError}</Text>
+              <TouchableOpacity onPress={handleRefresh}>
+                <Text style={styles.retryText}>Tentar novamente</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <View style={styles.matchesList}>
+            <FlatList
+              ref={listRef}
+              data={matchGroups}
+              keyExtractor={(group) => group.id}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.listContent}
+              renderItem={({ item: group }) => (
+                <View style={styles.leagueGroup}>
+                  <View style={styles.leagueGroupHeader}>
+                    <View style={styles.leagueBadge}>
+                      <Text style={styles.leagueBadgeText}>
+                        {getCountryFlag(group.leagueCountry)}
+                      </Text>
+                    </View>
+                    <View style={styles.leagueGroupTitle}>
+                      <Text style={styles.leagueGroupName} numberOfLines={1}>
+                        {group.leagueName}
+                      </Text>
+                      <Text style={styles.leagueGroupCountry} numberOfLines={1}>
+                        {group.leagueCountry}
+                      </Text>
+                    </View>
+                    <View style={styles.leagueGroupCountPill}>
+                      <Text style={styles.leagueGroupCount}>
+                        {group.matches.length}
+                      </Text>
+                    </View>
+                  </View>
+                  {group.matches.map((match) => (
+                    <MatchCard
+                      key={match.id}
+                      match={match}
+                      isSelected={selectedMatchId === match.id}
+                      onPress={(selected) => setSelectedMatchId(selected.id)}
+                      onTogglePin={handleTogglePin}
+                    />
+                  ))}
+                </View>
+              )}
+              ListEmptyComponent={
+                <View style={styles.emptyBox}>
+                  <Text style={styles.emptyTitle}>
+                    {isLoading
+                      ? 'Buscando partidas...'
+                      : isViewingToday
+                      ? 'Nenhuma partida neste filtro'
+                      : 'Nenhuma partida encontrada nesta data'}
+                  </Text>
+                  <Text style={styles.emptySubtitle}>
+                    {isLoading
+                      ? 'Carregando placares reais da API gratuita.'
+                      : statusFilter !== 'ALL'
+                      ? 'Mude o filtro de status para ver outras partidas.'
+                      : activeTab === 'FAVORITES'
+                      ? 'Toque na estrela de uma partida para adicioná-la aos favoritos.'
+                      : 'A ESPN não retornou partidas para a data selecionada.'}
+                  </Text>
+                </View>
+              }
+            />
+          </View>
+        </View>
+
+        {/* Right Side Panel on Desktop or Modal on Mobile */}
+        {showSideDetails ? (
+          <View style={styles.sideDetailsWrapper}>
+            {selectedMatch ? (
+              <MatchDetailModal
+                match={selectedMatch}
+                matches={matches}
+                visible={Boolean(selectedMatch)}
+                sidePanel
+                onClose={() => setSelectedMatchId(null)}
+              />
+            ) : (
+              <View style={styles.infoPanel}>
+                <View style={styles.infoPanelHeroIconBox}>
+                  <Text style={styles.infoPanelHeroEmoji}>🏟️</Text>
+                </View>
+                <Text style={styles.infoPanelEyebrow}>
+                  CENTRAL DA PARTIDA • PULSESCORE
+                </Text>
+                <Text style={styles.infoPanelTitle}>
+                  Selecione um confronto ao lado
+                </Text>
+                <Text style={styles.infoPanelDescription}>
+                  Clique em qualquer partida da lista para abrir o painel
+                  completo com eventos em tempo real, estatísticas comparativas,
+                  mapa tático das formações, classificação e ficha técnica.
+                </Text>
+
+                <View style={styles.infoPanelStatsGrid}>
+                  <View
+                    style={[
+                      styles.infoPanelStatCard,
+                      styles.infoPanelStatCardLive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.infoPanelStatNumber,
+                        styles.infoPanelStatLive,
+                      ]}
+                    >
+                      {liveCount}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.infoPanelStatLabel,
+                        styles.infoPanelStatLabelLive,
+                      ]}
+                    >
+                      Ao Vivo
+                    </Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.infoPanelStatCard,
+                      styles.infoPanelStatCardFinished,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.infoPanelStatNumber,
+                        styles.infoPanelStatFinished,
+                      ]}
+                    >
+                      {finishedCount}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.infoPanelStatLabel,
+                        styles.infoPanelStatLabelFinished,
+                      ]}
+                    >
+                      Encerrados
+                    </Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.infoPanelStatCard,
+                      styles.infoPanelStatCardUpcoming,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.infoPanelStatNumber,
+                        styles.infoPanelStatUpcoming,
+                      ]}
+                    >
+                      {upcomingCount}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.infoPanelStatLabel,
+                        styles.infoPanelStatLabelUpcoming,
+                      ]}
+                    >
+                      Próximos
+                    </Text>
+                  </View>
+                </View>
+
+                {filteredMatches.length > 0 && (
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    onPress={() => setSelectedMatchId(filteredMatches[0].id)}
+                    style={styles.infoPanelCtaButton}
+                  >
+                    <Text style={styles.infoPanelCtaText}>
+                      Abrir partida em destaque →
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+          </View>
+        ) : (
+          <MatchDetailModal
+            match={selectedMatch}
+            matches={matches}
+            visible={Boolean(selectedMatch)}
+            sidePanel={false}
+            onClose={() => setSelectedMatchId(null)}
+          />
+        )}
+
+        <Modal
+          visible={isCalendarVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsCalendarVisible(false)}
+        >
+          <View style={styles.calendarOverlay}>
+            <View style={styles.calendarPanel}>
+              <View style={styles.calendarHeader}>
+                <Text style={styles.calendarTitle}>ESCOLHER DATA</Text>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel="Fechar calendário"
+                  onPress={() => setIsCalendarVisible(false)}
+                  style={styles.calendarCloseButton}
+                >
+                  <Text style={styles.calendarCloseText}>×</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.monthNavigation}>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel="Mês anterior"
+                  onPress={() =>
+                    setCalendarMonth(
+                      (month) =>
+                        new Date(month.getFullYear(), month.getMonth() - 1, 1)
+                    )
+                  }
+                  style={styles.monthArrow}
+                >
+                  <Text style={styles.monthArrowText}>‹</Text>
+                </TouchableOpacity>
+                <Text style={styles.monthTitle}>
+                  {calendarMonth
+                    .toLocaleDateString('pt-BR', {
+                      month: 'long',
+                      year: 'numeric',
+                    })
+                    .toUpperCase()}
+                </Text>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel="Próximo mês"
+                  onPress={() =>
+                    setCalendarMonth(
+                      (month) =>
+                        new Date(month.getFullYear(), month.getMonth() + 1, 1)
+                    )
+                  }
+                  style={styles.monthArrow}
+                >
+                  <Text style={styles.monthArrowText}>›</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.calendarGrid}>
+                {WEEKDAYS.map((weekday) => (
+                  <Text key={weekday} style={styles.weekdayLabel}>
+                    {weekday}
+                  </Text>
+                ))}
+                {calendarDays.map((day) => {
+                  const isInMonth = day.getMonth() === calendarMonth.getMonth();
+                  const isSelected = getDateKey(day) === getDateKey(selectedDate);
+                  const isToday = getDateKey(day) === getDateKey(new Date());
+                  return (
+                    <TouchableOpacity
+                      key={getDateKey(day)}
+                      accessibilityRole="button"
+                      accessibilityLabel={day.toLocaleDateString('pt-BR')}
+                      accessibilityState={{ selected: isSelected }}
+                      disabled={!isInMonth}
+                      onPress={() => handleSelectDate(day)}
+                      style={[
+                        styles.calendarDay,
+                        isSelected && styles.calendarDaySelected,
+                        isToday && !isSelected && styles.calendarDayToday,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.calendarDayText,
+                          !isInMonth && styles.calendarDayOutsideMonth,
+                          isSelected && styles.calendarDayTextSelected,
+                          isToday && !isSelected && styles.calendarDayTextToday,
+                        ]}
+                      >
+                        {day.getDate()}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              <Text style={styles.calendarHint}>
+                Consulte jogos anteriores ou a programação futura.
+              </Text>
+            </View>
+          </View>
+        </Modal>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F1F5F9',
+  },
+  topNavbar: {
+    width: '100%',
+    backgroundColor: '#0F172A',
+    borderBottomWidth: 3,
+    borderBottomColor: '#2563EB',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  topNavbarInner: {
+    width: '100%',
+    maxWidth: 1320,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  brandCluster: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  brandLogoMark: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#1E293B',
+    borderWidth: 1,
+    borderColor: '#3B82F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  brandLivePulseDot: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
+  },
+  brandLogoIcon: {
+    fontSize: 18,
+  },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  brandTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  brandAccent: {
+    color: '#60A5FA',
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+    marginLeft: 4,
+  },
+  subtitle: {
+    color: '#94A3B8',
+    fontSize: 9,
+    lineHeight: 12,
+    marginTop: 2,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    fontVariant: ['tabular-nums'],
+  },
+  headerActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  headerKpiRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerKpiPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  headerKpiPillLive: {
+    backgroundColor: '#FFE4E6',
+    borderColor: '#FDA4AF',
+  },
+  headerKpiPillFinished: {
+    backgroundColor: '#E0E7FF',
+    borderColor: '#A5B4FC',
+  },
+  headerKpiPillTotal: {
+    backgroundColor: '#FEF3C7',
+    borderColor: '#FDE68A',
+  },
+  headerKpiLiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#E11D48',
+  },
+  headerKpiLiveText: {
+    color: '#BE123C',
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+  },
+  headerKpiFinishedText: {
+    color: '#3730A3',
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+  },
+  headerKpiTotalText: {
+    color: '#B45309',
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+  },
+  container: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 680,
+    alignSelf: 'center',
+    paddingHorizontal: 10,
+    paddingTop: 12,
+  },
+  containerDesktop: {
+    maxWidth: 1320,
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 14,
+  },
+  mainColumn: {
+    flex: 1,
+    minWidth: 0,
+  },
+  mainColumnWithDetails: {
+    flex: 1,
+    minWidth: 0,
+  },
+  controlsCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 12,
+    gap: 10,
+  },
+  topControlsRow: {
+    flexDirection: 'column',
+    gap: 8,
+  },
+  topControlsRowWide: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  secondaryControlsRow: {
+    flexDirection: 'column',
+    gap: 8,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+  },
+  secondaryControlsRowWide: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  tabsRow: {
+    flexDirection: 'row',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 10,
+    padding: 3,
+    gap: 4,
+  },
+  tabButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+  },
+  tabButtonActive: {
+    backgroundColor: '#1D4ED8',
+  },
+  tabText: {
+    color: '#334155',
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '700',
+    textAlign: 'center',
+    fontVariant: ['tabular-nums'],
+  },
+  tabTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
+  dateSelectorRow: {
+    minHeight: 34,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    borderRadius: 10,
+    paddingHorizontal: 4,
+  },
+  selectedDateLabel: {
+    color: '#1E3A8A',
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '800',
+    textAlign: 'center',
+    fontVariant: ['tabular-nums'],
+  },
+  dateArrow: {
+    width: 28,
+    height: 26,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#DBEAFE',
+  },
+  dateArrowText: {
+    color: '#1D4ED8',
+    fontSize: 18,
+    lineHeight: 20,
+    fontWeight: '800',
+  },
+  dateCenterButton: {
+    minWidth: 104,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+  },
+  dateSubLabel: {
+    color: '#2563EB',
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+    fontVariant: ['tabular-nums'],
+  },
+  statusFiltersRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 8,
+  },
+  statusFilterButton: {
+    minHeight: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingHorizontal: 11,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F8FAFC',
+  },
+  statusFilterLiveIdle: {
+    backgroundColor: '#FFF1F2',
+    borderColor: '#FECDD3',
+  },
+  statusFilterFinishedIdle: {
+    backgroundColor: '#EEF2FF',
+    borderColor: '#C7D2FE',
+  },
+  statusFilterUpcomingIdle: {
+    backgroundColor: '#FFFBEB',
+    borderColor: '#FDE68A',
+  },
+  statusFilterLiveActive: {
+    backgroundColor: '#E11D48',
+    borderColor: '#E11D48',
+  },
+  statusFilterFinishedActive: {
+    backgroundColor: '#4338CA',
+    borderColor: '#4338CA',
+  },
+  statusFilterUpcomingActive: {
+    backgroundColor: '#D97706',
+    borderColor: '#D97706',
+  },
+  filterLiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#E11D48',
+  },
+  filterLiveDotActive: {
+    backgroundColor: '#FFFFFF',
+  },
+  statusFilterText: {
+    color: '#1E293B',
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+  },
+  statusFilterTextLive: {
+    color: '#BE123C',
+  },
+  statusFilterTextFinished: {
+    color: '#3730A3',
+  },
+  statusFilterTextUpcoming: {
+    color: '#B45309',
+  },
+  statusFilterTextActive: {
+    color: '#FFFFFF',
+  },
+  lowerLeagueToggle: {
+    minHeight: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 6,
+    paddingLeft: 10,
+    paddingRight: 4,
+    borderRadius: 999,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  lowerLeagueText: {
+    color: '#334155',
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '700',
+  },
+  lowerLeagueSwitch: {
+    transform: [{ scaleX: 0.75 }, { scaleY: 0.75 }],
+  },
+  competitionSelector: {
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+  },
+  competitionSelectorContent: {
+    alignItems: 'center',
+    gap: 6,
+    paddingRight: 4,
+  },
+  competitionChip: {
+    maxWidth: 210,
+    minHeight: 28,
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    backgroundColor: '#EFF6FF',
+  },
+  competitionChipActive: {
+    backgroundColor: '#1D4ED8',
+    borderColor: '#1D4ED8',
+  },
+  competitionChipText: {
+    color: '#1E3A8A',
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '700',
+  },
+  competitionChipTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#FFF1F0',
+    borderColor: '#F2C5C1',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
+  errorText: {
+    color: '#A33B35',
+    fontSize: 12,
+    flex: 1,
+  },
+  retryText: {
+    color: '#8E302B',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  leagueSidebar: {
+    width: 252,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    padding: 12,
+  },
+  sidebarHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#0F172A',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    marginBottom: 8,
+  },
+  sidebarTitle: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  sidebarBadgeCount: {
+    color: '#1E3A8A',
+    backgroundColor: '#93C5FD',
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '800',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 999,
+    overflow: 'hidden',
+    fontVariant: ['tabular-nums'],
+  },
+  leagueList: {
+    gap: 4,
+    paddingBottom: 12,
+  },
+  leagueItem: {
+    minHeight: 42,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+  leagueItemActive: {
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#93C5FD',
+  },
+  leagueSidebarFlagBox: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  leagueSidebarFlagText: {
+    fontSize: 13,
+  },
+  leagueItemText: {
+    flex: 1,
+    minWidth: 0,
+  },
+  leagueItemName: {
+    color: '#0F172A',
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '700',
+  },
+  leagueItemNameActive: {
+    color: '#1D4ED8',
+    fontWeight: '800',
+  },
+  leagueItemCountry: {
+    color: '#64748B',
+    fontSize: 9,
+    lineHeight: 12,
+    marginTop: 1,
+  },
+  leagueCountBadge: {
+    minWidth: 24,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 999,
+    backgroundColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  leagueCountBadgeActive: {
+    backgroundColor: '#1D4ED8',
+  },
+  leagueCount: {
+    color: '#334155',
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+  },
+  leagueCountActive: {
+    color: '#FFFFFF',
+  },
+  matchesList: {
+    flex: 1,
+    minWidth: 0,
+  },
+  sideDetailsWrapper: {
+    width: 448,
+    flexShrink: 0,
+  },
+  infoPanel: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoPanelHeroIconBox: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  infoPanelHeroEmoji: {
+    fontSize: 26,
+  },
+  infoPanelEyebrow: {
+    color: '#1D4ED8',
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '800',
+    letterSpacing: 1,
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  infoPanelTitle: {
+    color: '#0F172A',
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '800',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  infoPanelDescription: {
+    color: '#475569',
+    fontSize: 11,
+    lineHeight: 16,
+    textAlign: 'center',
+    maxWidth: 320,
+    marginBottom: 18,
+  },
+  infoPanelStatsGrid: {
+    width: '100%',
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
+  infoPanelStatCard: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    gap: 3,
+  },
+  infoPanelStatCardLive: {
+    backgroundColor: '#FFF1F2',
+    borderColor: '#FECDD3',
+  },
+  infoPanelStatCardFinished: {
+    backgroundColor: '#EEF2FF',
+    borderColor: '#C7D2FE',
+  },
+  infoPanelStatCardUpcoming: {
+    backgroundColor: '#FFFBEB',
+    borderColor: '#FDE68A',
+  },
+  infoPanelStatNumber: {
+    color: '#0F172A',
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: '900',
+    fontVariant: ['tabular-nums'],
+  },
+  infoPanelStatLive: {
+    color: '#E11D48',
+  },
+  infoPanelStatFinished: {
+    color: '#4338CA',
+  },
+  infoPanelStatUpcoming: {
+    color: '#D97706',
+  },
+  infoPanelStatLabel: {
+    color: '#475569',
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  infoPanelStatLabelLive: {
+    color: '#BE123C',
+  },
+  infoPanelStatLabelFinished: {
+    color: '#3730A3',
+  },
+  infoPanelStatLabelUpcoming: {
+    color: '#B45309',
+  },
+  infoPanelCtaButton: {
+    backgroundColor: '#1D4ED8',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  infoPanelCtaText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '800',
+  },
+  leagueGroup: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  leagueGroupPinned: {
+    borderColor: '#FCD34D',
+    backgroundColor: '#FFFBEB',
+  },
+  leagueGroupHeader: {
+    minHeight: 42,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: '#F8FAFC',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    borderLeftWidth: 4,
+    borderLeftColor: '#2563EB',
+  },
+  leagueGroupHeaderPinned: {
+    backgroundColor: '#FEF3C7',
+    borderBottomColor: '#FDE68A',
+    borderLeftColor: '#D97706',
+  },
+  leagueGroupTitle: {
+    flex: 1,
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  leagueGroupCountry: {
+    color: '#2563EB',
+    fontFamily: 'Plus Jakarta Sans',
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '700',
+    marginTop: 1,
+  },
+  leagueGroupCountryPinned: {
+    color: '#B45309',
+  },
+  leagueGroupName: {
+    color: '#0F172A',
+    fontFamily: 'Plus Jakarta Sans',
+    flexShrink: 1,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: '800',
+  },
+  leagueGroupNamePinned: {
+    color: '#92400E',
+  },
+  leagueGroupCountPill: {
+    minWidth: 24,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 999,
+    backgroundColor: '#DBEAFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  leagueGroupCountPillPinned: {
+    backgroundColor: '#FDE68A',
+  },
+  leagueGroupCount: {
+    color: '#1E40AF',
+    fontFamily: 'Outfit',
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+  },
+  leagueGroupCountPinned: {
+    color: '#92400E',
+  },
+  leagueBadge: {
+    width: 26,
+    height: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  leagueBadgePinned: {
+    backgroundColor: '#FFFBEB',
+    borderColor: '#FCD34D',
+  },
+  leagueBadgeText: {
+    fontSize: 13,
+  },
+  listContent: {
+    paddingBottom: 20,
+  },
+  emptyBox: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    alignItems: 'center',
+    paddingVertical: 36,
+    paddingHorizontal: 20,
+  },
+  emptyTitle: {
+    color: '#0F172A',
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: '800',
+    marginBottom: 5,
+  },
+  emptySubtitle: {
+    color: '#64748B',
+    fontSize: 11,
+    lineHeight: 15,
+    textAlign: 'center',
+  },
+  calendarOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+  },
+  calendarPanel: {
+    width: '100%',
+    maxWidth: 360,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    padding: 16,
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.16,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 8,
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  calendarTitle: {
+    color: '#64748B',
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  calendarCloseButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+  },
+  calendarCloseText: {
+    color: '#334155',
+    fontSize: 18,
+    lineHeight: 20,
+  },
+  monthNavigation: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  monthArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+  },
+  monthArrowText: {
+    color: '#1D4ED8',
+    fontSize: 20,
+    lineHeight: 22,
+    fontWeight: '800',
+  },
+  monthTitle: {
+    color: '#0F172A',
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+  },
+  calendarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  weekdayLabel: {
+    width: '14.2857%',
+    paddingVertical: 6,
+    textAlign: 'center',
+    color: '#64748B',
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: '800',
+  },
+  calendarDay: {
+    width: '14.2857%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 18,
+  },
+  calendarDaySelected: {
+    backgroundColor: '#1D4ED8',
+  },
+  calendarDayToday: {
+    borderWidth: 1,
+    borderColor: '#2563EB',
+  },
+  calendarDayText: {
+    color: '#0F172A',
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '600',
+    fontVariant: ['tabular-nums'],
+  },
+  calendarDayOutsideMonth: {
+    color: 'transparent',
+  },
+  calendarDayTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
+  calendarDayTextToday: {
+    color: '#1D4ED8',
+    fontWeight: '800',
+  },
+  calendarHint: {
+    color: '#64748B',
+    fontSize: 10,
+    lineHeight: 14,
+    marginTop: 10,
+    textAlign: 'center',
+  },
+});

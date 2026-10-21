@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PulseScore Android — Preview Interativo</title>
+  <style>
+    :root {
+      --bg: #0A0E17;
+      --card: #121826;
+      --card-goal: #112224;
+      --border: #1E293B;
+      --accent: #10B981;
+      --accent-light: #34D399;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+      --subtle: #64748B;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body {
+      background: #05070B;
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .phone-frame {
+      width: 400px;
+      height: 820px;
+      background: var(--bg);
+      border-radius: 38px;
+      border: 8px solid #1E293B;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.75);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 24px 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .app-content {
+      flex: 1;
+      padding: 12px 16px;
+      overflow-y: auto;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .brand { font-size: 21px; font-weight: 900; letter-spacing: 1px; }
+    .brand span { color: var(--accent); }
+    .sync-sub { font-size: 11px; color: var(--subtle); margin-top: 2px; }
+    .header-actions { display: flex; gap: 6px; align-items: center; }
+    .btn-pill {
+      background: #1E293B;
+      border: 1px solid #334155;
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .btn-pill.live-on {
+      background: rgba(16, 185, 129, 0.14);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--accent-light);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .dot-pulse {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1.4s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.25); }
+    }
+    .tabs {
+      display: flex;
+      background: var(--card);
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 8px 0;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--subtle);
+      border-radius: 9px;
+      cursor: pointer;
+    }
+    .tab.active { background: #1E293B; color: var(--text); }
+    .chips { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
+    .chip {
+      padding: 5px 11px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .chip.active {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: var(--accent);
+      color: var(--accent-light);
+    }
+    .match-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 15px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .match-card:hover { border-color: #334155; }
+    .match-card.goal-flash {
+      background: var(--card-goal);
+      border-color: var(--accent);
+      box-shadow: 0 0 20px rgba(16,185,129,0.2);
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .league-meta { font-size: 11px; color: var(--muted); font-weight: 600; }
+    .league-meta b { color: var(--subtle); font-size: 10px; letter-spacing: 0.6px; }
+    .badge-row { display: flex; align-items: center; gap: 6px; }
+    .goal-pill {
+      background: var(--accent);
+      color: #052E16;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
+    .time-pill {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(16, 185, 129, 0.14);
+      color: var(--accent-light);
+    }
+    .time-pill.ft { background: #1E293B; color: var(--muted); }
+    .scoreboard {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .team { flex: 1; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+    .team.home { justify-content: flex-end; text-align: right; }
+    .team.away { justify-content: flex-start; text-align: left; }
+    .color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .score-box {
+      background: #0B0F19;
+      border: 1px solid var(--border);
+      padding: 6px 13px;
+      border-radius: 12px;
+      margin: 0 10px;
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+    .stats-strip {
+      display: flex;
+      background: #0B0F19;
+      border-radius: 10px;
+      padding: 8px 10px;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .stat-mini {
+      flex: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #CBD5E1;
+      padding: 0 4px;
+    }
+    .stat-mini span.lbl { font-size: 8.5px; color: var(--subtle); letter-spacing: 0.4px; }
+    .divider { width: 1px; height: 14px; background: var(--border); margin: 0 4px; }
+    /* Modal */
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 8, 17, 0.8);
+      display: none;
+      align-items: flex-end;
+      z-index: 20;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-sheet {
+      width: 100%;
+      background: #0F1624;
+      border-top: 1px solid var(--border);
+      border-radius: 24px 24px 0 0;
+      padding: 16px 18px 26px;
+      max-height: 82%;
+      overflow-y: auto;
+    }
+    .sheet-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .stat-bar-wrap { margin-bottom: 14px; }
+    .stat-bar-head { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+    .bar-track { display: flex; height: 8px; border-radius: 4px; overflow: hidden; gap: 3px; background: #0B0F19; }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="status-bar">
+      <span>13:05</span>
+      <span>5G • 100%</span>
+    </div>
+    <div class="app-content">
+      <div class="header">
+        <div>
+          <div class="brand">PULSE<span>SCORE</span></div>
+          <div class="sync-sub" id="syncText">Futebol ao vivo • Sync: Agora</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn-pill" onclick="forceGoal()">⚡ Gol Teste</button>
+          <button class="btn-pill live-on" id="liveBtn" onclick="toggleLive()">
+            <span class="dot-pulse" id="liveDot"></span>
+            <span id="liveLabel">REAL-TIME</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" id="tab-LIVE" onclick="setTab('LIVE')">Ao Vivo</div>
+        <div class="tab" id="tab-ALL" onclick="setTab('ALL')">Todos</div>
+        <div class="tab" id="tab-PINNED" onclick="setTab('PINNED')">★ Fixados</div>
+      </div>
+
+      <div id="matchesList"></div>
+    </div>
+
+    <div class="modal-backdrop" id="detailModal" onclick="closeModal(event)">
+      <div class="modal-sheet" onclick="event.stopPropagation()" id="modalContent"></div>
+    </div>
+  </div>
+
+  <script>
+    let activeTab = 'LIVE';
+    let isLiveOn = true;
+    let selectedMatchId = null;
+
+    let matches = [
+      {
+        id: 'm-1', country: 'BRASIL', league: 'Brasileirão Série A', status: '2H', minute: 67, isPinned: true,
+        home: { name: 'Flamengo', short: 'FLA', color: '#E11D48', score: 2 },
+        away: { name: 'Palmeiras', short: 'PAL', color: '#10B981', score: 1 },
+        stats: { poss: [56, 44], shots: [14, 9], target: [6, 4], corners: [7, 4] },
+        events: [
+          { min: 18, type: 'GOL', player: 'Pedro', team: 'FLA' },
+          { min: 41, type: 'GOL', player: 'Estêvão', team: 'PAL' },
+          { min: 59, type: 'GOL', player: 'Arrascaeta', team: 'FLA' }
+        ]
+      },
+      {
+        id: 'm-2', country: 'INGLATERRA', league: 'Premier League', status: '2H', minute: 78, isPinned: true,
+        home: { name: 'Man City', short: 'MCI', color: '#38BDF8', score: 2 },
+        away: { name: 'Arsenal', short: 'ARS', color: '#F43F5E', score: 2 },
+        stats: { poss: [64, 36], shots: [17, 8], target: [7, 5], corners: [9, 3] },
+        events: [
+          { min: 12, type: 'GOL', player: 'Haaland', team: 'MCI' },
+          { min: 31, type: 'GOL', player: 'Saka', team: 'ARS' },
+          { min: 54, type: 'GOL', player: 'Gabriel', team: 'ARS' },
+          { min: 71, type: 'GOL', player: 'Foden', team: 'MCI' }
+        ]
+      },
+      {
+        id: 'm-3', country: 'BRASIL', league: 'Brasileirão Série A', status: '1H', minute: 34, isPinned: false,
+        home: { name: 'Botafogo', short: 'BOT', color: '#F8FAFC', score: 1 },
+        away: { name: 'São Paulo', short: 'SAO', color: '#EF4444', score: 0 },
+        stats: { poss: [61, 39], shots: [8, 3], target: [4, 1], corners: [5, 1] },
+        events: [
+          { min: 29, type: 'GOL', player: 'Igor Jesus', team: 'BOT' }
+        ]
+      }
+    ];
+
+    function render() {
+      const container = document.getElementById('matchesList');
+      const now = Date.now();
+      const filtered = matches.filter(m => {
+        if (activeTab === 'LIVE') return m.status !== 'FT';
+        if (activeTab === 'PINNED') return m.isPinned;
+        return true;
+      });
+
+      container.innerHTML = filtered.map(m => {
+        const isGoal = m.goalAt && (now - m.goalAt < 6000);
+        return `
+          <div class="match-card ${isGoal ? 'goal-flash' : ''}" onclick="openModal('${m.id}')">
+            <div class="card-top">
+              <div class="league-meta"><b>${m.country}</b> • ${m.league}</div>
+              <div class="badge-row">
+                ${isGoal ? '<span class="goal-pill">GOL!</span>' : ''}
+                <div class="time-pill">
+                  <span class="dot-pulse"></span> ${m.minute}'
+                </div>
+              </div>
+            </div>
+            <div class="scoreboard">
+              <div class="team home">
+                <span>${m.home.name}</span>
+                <span class="color-dot" style="background:${m.home.color}"></span>
+              </div>
+              <div class="score-box">${m.home.score} : ${m.away.score}</div>
+              <div class="team away">
+                <span class="color-dot" style="background:${m.away.color}"></span>
+                <span>${m.away.name}</span>
+              </div>
+            </div>
+            <div class="stats-strip">
+              <div class="stat-mini"><span>${m.stats.poss[0]}%</span><span class="lbl">POSSE</span><span>${m.stats.poss[1]}%</span></div>
+              <div class="divider"></div>
+              <div class="stat-mini"><span>${m.stats.shots[0]}(${m.stats.target[0]})</span><span class="lbl">FINALIZ.</span><span>${m.stats.shots[1]}(${m.stats.target[1]})</span></div>
+              <div class="divider"></div>
+              <div class="stat-mini"><span>${m.stats.corners[0]}</span><span class="lbl">ESCANT.</span><span>${m.stats.corners[1]}</span></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      if (selectedMatchId) renderModalContent();
+    }
+
+    function openModal(id) {
+      selectedMatchId = id;
+      document.getElementById('detailModal').classList.add('open');
+      renderModalContent();
+    }
+
+    function closeModal() {
+      selectedMatchId = null;
+      document.getElementById('detailModal').classList.remove('open');
+    }
+
+    function renderModalContent() {
+      const m = matches.find(x => x.id === selectedMatchId);
+      if (!m) return;
+      const shotsTot = m.stats.shots[0] + m.stats.shots[1] || 1;
+      const shotsPct = Math.round((m.stats.shots[0] / shotsTot) * 100);
+      const cornTot = m.stats.corners[0] + m.stats.corners[1] || 1;
+      const cornPct = Math.round((m.stats.corners[0] / cornTot) * 100);
+
+      document.getElementById('modalContent').innerHTML = `
+        <div class="sheet-top">
+          <span style="font-size:11px;color:#94A3B8;font-weight:700">${m.country} • ${m.league}</span>
+          <button class="btn-pill" onclick="closeModal()">Fechar</button>
+        </div>
+        <div style="text-align:center;padding:14px;background:#161F33;border-radius:16px;margin-bottom:16px;">
+          <div style="font-size:13px;color:#94A3B8;margin-bottom:6px">${m.home.name} vs ${m.away.name}</div>
+          <div style="font-size:30px;font-weight:900">${m.home.score} - ${m.away.score}</div>
+          <div style="font-size:11px;color:#34D399;font-weight:800;margin-top:4px">AO VIVO • ${m.minute}'</div>
+        </div>
+        <div style="background:#141C2E;padding:15px;border-radius:16px;margin-bottom:14px;border:1px solid #1E293B">
+          <div style="font-size:10px;color:#64748B;font-weight:800;margin-bottom:12px;letter-spacing:0.8px">ESTATÍSTICAS ESSENCIAIS</div>
+          <div class="stat-bar-wrap">
+            <div class="stat-bar-head"><span>${m.stats.poss[0]}%</span><span>Posse de Bola</span><span>${m.stats.poss[1]}%</span></div>
+            <div class="bar-track">
+              <div style="width:${m.stats.poss[0]}%;background:${m.home.color}"></div>
+              <div style="width:${m.stats.poss[1]}%;background:${m.away.color}"></div>
+            </div>
+          </div>
+          <div class="stat-bar-wrap">
+            <div class="stat-bar-head"><span>${m.stats.shots[0]} (${m.stats.target[0]})</span><span>Finalizações (No Alvo)</span><span>${m.stats.shots[1]} (${m.stats.target[1]})</span></div>
+            <div class="bar-track">
+              <div style="width:${shotsPct}%;background:${m.home.color}"></div>
+              <div style="width:${100 - shotsPct}%;background:${m.away.color}"></div>
+            </div>
+          </div>
+          <div class="stat-bar-wrap" style="margin-bottom:0">
+            <div class="stat-bar-head"><span>${m.stats.corners[0]}</span><span>Escanteios</span><span>${m.stats.corners[1]}</span></div>
+            <div class="bar-track">
+              <div style="width:${cornPct}%;background:${m.home.color}"></div>
+              <div style="width:${100 - cornPct}%;background:${m.away.color}"></div>
+            </div>
+          </div>
+        </div>
+        <div style="background:#141C2E;padding:15px;border-radius:16px;border:1px solid #1E293B">
+          <div style="font-size:10px;color:#64748B;font-weight:800;margin-bottom:10px;letter-spacing:0.8px">GOLS E LANCES DECISIVOS</div>
+          ${m.events.map(e => `
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1E293B;font-size:13px">
+              <span style="color:#34D399;font-weight:700">${e.min}'</span>
+              <span style="font-weight:600">${e.player}</span>
+              <span style="color:#64748B;font-weight:700">${e.team}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function setTab(t) {
+      activeTab = t;
+      ['LIVE', 'ALL', 'PINNED'].forEach(k => {
+        document.getElementById('tab-' + k).classList.toggle('active', k === t);
+      });
+      render();
+    }
+
+    function toggleLive() {
+      isLiveOn = !isLiveOn;
+      document.getElementById('liveLabel').textContent = isLiveOn ? 'REAL-TIME' : 'PAUSADO';
+    }
+
+    function forceGoal() {
+      const idx = Math.floor(Math.random() * matches.length);
+      const m = matches[idx];
+      m.minute = Math.min(90, m.minute + 1);
+      const isHome = Math.random() > 0.45;
+      if (isHome) {
+        m.home.score++;
+        m.stats.shots[0]++;
+        m.stats.target[0]++;
+        m.events.push({ min: m.minute, type: 'GOL', player: 'Gol Ao Vivo!', team: m.home.short });
+      } else {
+        m.away.score++;
+        m.stats.shots[1]++;
+        m.stats.target[1]++;
+        m.events.push({ min: m.minute, type: 'GOL', player: 'Gol Ao Vivo!', team: m.away.short });
+      }
+      m.goalAt = Date.now();
+      document.getElementById('syncText').textContent = 'Futebol ao vivo • Gol agora!';
+      render();
+    }
+
+    setInterval(() => {
+      if (!isLiveOn) return;
+      matches.forEach(m => {
+        if (m.minute < 90) m.minute++;
+        const shift = Math.floor(Math.random() * 3) - 1;
+        m.stats.poss[0] = Math.min(72, Math.max(28, m.stats.poss[0] + shift));
+        m.stats.poss[1] = 100 - m.stats.poss[0];
+        if (Math.random() < 0.35) m.stats.shots[0]++;
+        if (Math.random() < 0.2) m.stats.corners[0]++;
+      });
+      document.getElementById('syncText').textContent = 'Futebol ao vivo • Sync: ' + new Date().toLocaleTimeString();
+      render();
+    }, 4000);
+
+    render();
+  </script>
+</body>
+</html>
+
