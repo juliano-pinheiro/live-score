@@ -2017,10 +2017,13 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
     let isActive = true;
     let isFetching = false;
+    let hasLoadedOnce = false;
     const loadDetails = async () => {
       if (isFetching) return;
       isFetching = true;
-      setIsLoadingDetails(true);
+      if (!hasLoadedOnce) {
+        setIsLoadingDetails(true);
+      }
       setDetailsError(null);
 
       try {
@@ -2028,11 +2031,12 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
           matchesRef.current.find((item) => item.id === match.id) ?? match;
         const result = await fetchMatchDetails(currentMatch, matchesRef.current);
         if (isActive) {
+          hasLoadedOnce = true;
           setDetails(result);
         }
       } catch (error) {
         console.error('Falha ao buscar detalhes da partida:', error);
-        if (isActive) {
+        if (isActive && !hasLoadedOnce) {
           setDetailsError(
             error instanceof Error
               ? error.message
@@ -2045,7 +2049,10 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
       }
     };
     void loadDetails();
-    const interval = setInterval(loadDetails, API_CONFIG.REFRESH_INTERVAL_MS);
+    const interval = setInterval(
+      loadDetails,
+      API_CONFIG.LIVE_DETAIL_REFRESH_INTERVAL_MS
+    );
 
     return () => {
       isActive = false;

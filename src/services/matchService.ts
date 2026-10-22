@@ -894,6 +894,11 @@ async function fetchRecentVARAlerts(
       alertTeam?: 'HOME' | 'AWAY';
       homeRedCards?: number;
       awayRedCards?: number;
+      homeScore?: number;
+      awayScore?: number;
+      status?: MatchStatus;
+      minute?: number | null;
+      minuteLabel?: string | null;
     }
   >
 > {
@@ -907,13 +912,18 @@ async function fetchRecentVARAlerts(
       alertTeam?: 'HOME' | 'AWAY';
       homeRedCards?: number;
       awayRedCards?: number;
+      homeScore?: number;
+      awayScore?: number;
+      status?: MatchStatus;
+      minute?: number | null;
+      minuteLabel?: string | null;
     }
   >();
   await Promise.all(
     liveMatches.map(async (match) => {
       try {
         const response = await fetch(
-          `${API_CONFIG.BASE_URL}/all/summary?event=${encodeURIComponent(match.id)}`,
+          `${API_CONFIG.BASE_URL}/all/summary?event=${encodeURIComponent(match.id)}&_=${Date.now()}`,
           { cache: 'no-store' }
         );
         if (!response.ok) {
@@ -943,6 +953,32 @@ async function fetchRecentVARAlerts(
           getTeamStatistics(
             summary.boxscore?.teams?.find((team) => team.homeAway === homeAway)
           ).get('redCards');
+        const comp = summary.header?.competitions?.[0];
+        const homeComp = comp?.competitors?.find((c) => c.homeAway === 'home');
+        const awayComp = comp?.competitors?.find((c) => c.homeAway === 'away');
+        const rawStatus = comp?.status;
+        const nextStatus = rawStatus ? getEventStatus(rawStatus) : undefined;
+        const parsedMin = Number.parseInt(
+          rawStatus?.displayClock ?? rawStatus?.type.detail ?? '',
+          10
+        );
+        const nextMinute =
+          nextStatus === 'NS' || nextStatus === 'FT'
+            ? null
+            : Number.isFinite(parsedMin)
+            ? parsedMin
+            : undefined;
+        const nextMinuteLabel =
+          nextStatus === 'NS' || nextStatus === 'FT'
+            ? null
+            : rawStatus
+            ? getMinuteLabel(
+                rawStatus.displayClock,
+                [rawStatus.type.shortDetail, rawStatus.type.detail],
+                rawStatus.period
+              )
+            : undefined;
+
         const alert = {
           alertId: review?.id,
           alertTeam:
@@ -953,6 +989,11 @@ async function fetchRecentVARAlerts(
               : undefined,
           homeRedCards: getRedCardCount('home'),
           awayRedCards: getRedCardCount('away'),
+          homeScore: homeComp?.score !== undefined ? Number(homeComp.score) : undefined,
+          awayScore: awayComp?.score !== undefined ? Number(awayComp.score) : undefined,
+          status: nextStatus,
+          minute: nextMinute,
+          minuteLabel: nextMinuteLabel,
         };
         alerts.set(match.id, alert);
       } catch (error) {
@@ -1958,7 +1999,7 @@ export async function fetchMatchDetails(
   relatedMatches: Match[] = []
 ): Promise<MatchDetails> {
   const response = await fetch(
-    `${API_CONFIG.BASE_URL}/all/summary?event=${encodeURIComponent(match.id)}`,
+    `${API_CONFIG.BASE_URL}/all/summary?event=${encodeURIComponent(match.id)}&_=${Date.now()}`,
     { cache: 'no-store' }
   );
   if (!response.ok) {
@@ -2105,12 +2146,26 @@ export async function fetchMatchesFromApi(
     const matchUpdates = varAlerts.get(match.id);
     return [{
       ...match,
+      status: matchUpdates?.status ?? match.status,
+      minute: matchUpdates?.minute !== undefined ? matchUpdates.minute : match.minute,
+      minuteLabel:
+        matchUpdates?.minuteLabel !== undefined
+          ? matchUpdates.minuteLabel
+          : match.minuteLabel,
       homeTeam: {
         ...match.homeTeam,
+        score:
+          matchUpdates?.homeScore !== undefined && Number.isFinite(matchUpdates.homeScore)
+            ? matchUpdates.homeScore
+            : match.homeTeam.score,
         redCards: matchUpdates?.homeRedCards ?? match.homeTeam.redCards,
       },
       awayTeam: {
         ...match.awayTeam,
+        score:
+          matchUpdates?.awayScore !== undefined && Number.isFinite(matchUpdates.awayScore)
+            ? matchUpdates.awayScore
+            : match.awayTeam.score,
         redCards: matchUpdates?.awayRedCards ?? match.awayTeam.redCards,
       },
       ...(matchUpdates?.alertId

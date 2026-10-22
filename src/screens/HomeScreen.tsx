@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  AppState,
   FlatList,
   Modal,
   SafeAreaView,
@@ -187,17 +188,39 @@ export const HomeScreen: React.FC = () => {
             currentMatches.map((currentMatch) => {
               const update = updatesById.get(currentMatch.id);
               if (!update) return currentMatch;
+              const homeScored = update.homeTeam.score > currentMatch.homeTeam.score;
+              const awayScored = update.awayTeam.score > currentMatch.awayTeam.score;
+              const goalAlert =
+                homeScored || awayScored
+                  ? {
+                      id: `${currentMatch.id}-${update.homeTeam.score}-${update.awayTeam.score}`,
+                      type: 'GOAL' as const,
+                      team: homeScored ? ('HOME' as const) : ('AWAY' as const),
+                      createdAt: Date.now(),
+                    }
+                  : undefined;
               return {
                 ...currentMatch,
+                status: update.status,
+                minute: update.minute,
+                minuteLabel: update.minuteLabel,
                 homeTeam: {
                   ...currentMatch.homeTeam,
+                  score: update.homeTeam.score,
                   redCards: update.homeTeam.redCards,
                 },
                 awayTeam: {
                   ...currentMatch.awayTeam,
+                  score: update.awayTeam.score,
                   redCards: update.awayTeam.redCards,
                 },
+                recentGoalTeam: homeScored
+                  ? 'HOME'
+                  : awayScored
+                  ? 'AWAY'
+                  : currentMatch.recentGoalTeam,
                 recentAlert:
+                  goalAlert ??
                   update.recentAlert ??
                   (currentMatch.recentAlert?.type === 'VAR'
                     ? undefined
@@ -289,10 +312,18 @@ export const HomeScreen: React.FC = () => {
     const interval = isViewingToday
       ? setInterval(refreshMatches, API_CONFIG.REFRESH_INTERVAL_MS)
       : null;
+    const appStateSubscription = isViewingToday
+      ? AppState.addEventListener('change', (nextState) => {
+          if (nextState === 'active') {
+            void refreshMatches();
+          }
+        })
+      : null;
 
     return () => {
       isActive = false;
       if (interval) clearInterval(interval);
+      appStateSubscription?.remove();
     };
   }, [refreshKey, selectedDate, isViewingToday]);
 
