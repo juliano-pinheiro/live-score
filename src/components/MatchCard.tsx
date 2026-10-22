@@ -12,6 +12,10 @@ import { Match } from '../types/match';
 
 const FONT_SANS = Platform.select({ web: 'Plus Jakarta Sans', default: undefined });
 const FONT_DISPLAY = Platform.select({ web: 'Outfit', default: undefined });
+const FONT_SCORE = Platform.select({
+  web: 'Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
+  default: undefined,
+});
 
 interface MatchCardProps {
   match: Match;
@@ -654,26 +658,27 @@ const styles = StyleSheet.create({
   },
   score: {
     color: '#000000',
-    fontFamily: FONT_DISPLAY,
+    fontFamily: FONT_SCORE,
     minWidth: 20,
     textAlign: 'right',
     fontSize: 14,
     lineHeight: 18,
-    fontWeight: '800',
+    fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
   scoreWinner: {
     color: '#000000',
-    fontWeight: '900',
-    fontSize: 15,
+    fontWeight: '700',
+    fontSize: 14,
   },
   scoreLoser: {
     color: '#64748B',
-    fontWeight: '600',
+    fontWeight: '400',
     opacity: 0.65,
   },
   scoreLive: {
     color: '#D71920',
+    fontWeight: '600',
   },
   redCard: {
     minWidth: 10,

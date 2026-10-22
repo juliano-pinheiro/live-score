@@ -16,6 +16,10 @@ import {
 
 const FONT_SANS = Platform.select({ web: 'Plus Jakarta Sans', default: undefined });
 const FONT_DISPLAY = Platform.select({ web: 'Outfit', default: undefined });
+const FONT_SCORE = Platform.select({
+  web: 'Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
+  default: undefined,
+});
 import {
   HeadToHeadMatch,
   ClubProfile,
@@ -3034,47 +3038,49 @@ const styles = StyleSheet.create({
   },
   heroScoreText: {
     color: '#0F172A',
-    fontFamily: FONT_DISPLAY,
-    fontSize: 26,
-    lineHeight: 32,
-    fontWeight: '900',
+    fontFamily: FONT_SCORE,
+    fontSize: 27,
+    lineHeight: 33,
+    fontWeight: '500',
     fontVariant: ['tabular-nums'],
   },
   heroScoreLive: {
     color: '#D71920',
+    fontWeight: '500',
   },
   heroScoreDashLive: {
     color: '#D71920',
+    fontWeight: '400',
   },
   heroScoreFinished: {
     color: '#000000',
-    fontWeight: '800',
+    fontWeight: '500',
   },
   heroScoreWinner: {
     color: '#000000',
-    fontWeight: '900',
+    fontWeight: '700',
     fontSize: 28,
   },
   heroScoreLoser: {
     color: '#64748B',
-    fontWeight: '600',
-    fontSize: 24,
+    fontWeight: '400',
+    fontSize: 25,
     opacity: 0.65,
   },
   heroTeamNameWinner: {
     color: '#000000',
-    fontWeight: '800',
+    fontWeight: '700',
   },
   heroTeamNameLoser: {
     color: '#64748B',
     fontWeight: '500',
   },
   heroScoreDash: {
-    color: '#64748B',
-    fontFamily: FONT_DISPLAY,
+    color: '#94A3B8',
+    fontFamily: FONT_SCORE,
     fontSize: 18,
-    lineHeight: 22,
-    fontWeight: '800',
+    lineHeight: 24,
+    fontWeight: '400',
     marginHorizontal: 8,
   },
   heroStatusPill: {
@@ -3089,15 +3095,15 @@ const styles = StyleSheet.create({
   },
   heroStatusText: {
     color: '#475569',
-    fontFamily: FONT_DISPLAY,
+    fontFamily: FONT_SANS,
     fontSize: 11,
     lineHeight: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     letterSpacing: 0.5,
     fontVariant: ['tabular-nums'],
   },
   heroStatusTextLive: {
-    color: '#E11D48',
+    color: '#D71920',
   },
   sectionBox: {
     backgroundColor: '#FFFFFF',
