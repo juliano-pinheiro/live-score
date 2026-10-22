@@ -1965,7 +1965,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
       .filter((team) => team.name.toLocaleLowerCase().includes(query))
       .slice(0, 12);
   }, [searchableTeams, teamSearch]);
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const isWide = width >= 900;
 
   const translateY = useRef(new Animated.Value(0)).current;
@@ -1982,7 +1982,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
     }
     if (!sidePanel && !isWide) {
       Animated.timing(translateY, {
-        toValue: 800,
+        toValue: height || 800,
         duration: 180,
         useNativeDriver: true,
       }).start(() => {
@@ -1994,116 +1994,57 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
     }
   };
 
-  const topBarPanResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        if (sidePanel || isWide) return false;
-        return (
-          gestureState.dy > 5 &&
-          Math.abs(gestureState.dy) > Math.abs(gestureState.dx)
-        );
-      },
-      onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dy > 0) {
-          translateY.setValue(gestureState.dy);
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (
-          gestureState.dy > 70 ||
-          (gestureState.dy > 25 && gestureState.vy > 0.35)
-        ) {
-          Animated.timing(translateY, {
-            toValue: 800,
-            duration: 180,
-            useNativeDriver: true,
-          }).start(() => {
-            translateY.setValue(0);
-            if (profileTeamRef.current) {
-              setProfileTeam(null);
-            } else {
-              onCloseRef.current();
-            }
-          });
+  const handleGestureEnd = (gestureState: { dy: number; vy: number }) => {
+    // If dragged down past 50px or flicked down with downward velocity
+    if (gestureState.dy > 50 || (gestureState.dy > 15 && gestureState.vy > 0.25)) {
+      Animated.timing(translateY, {
+        toValue: height || 800,
+        duration: 180,
+        useNativeDriver: true,
+      }).start(() => {
+        translateY.setValue(0);
+        if (profileTeamRef.current) {
+          setProfileTeam(null);
         } else {
-          Animated.spring(translateY, {
-            toValue: 0,
-            bounciness: 3,
-            speed: 16,
-            useNativeDriver: true,
-          }).start();
+          onCloseRef.current();
         }
-      },
-      onPanResponderTerminate: () => {
-        Animated.spring(translateY, {
-          toValue: 0,
-          bounciness: 3,
-          speed: 16,
-          useNativeDriver: true,
-        }).start();
-      },
-    })
-  ).current;
+      });
+    } else {
+      Animated.spring(translateY, {
+        toValue: 0,
+        bounciness: 3,
+        speed: 16,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
 
-  const sheetPanResponder = useRef(
+  const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
       onStartShouldSetPanResponderCapture: () => false,
       onMoveShouldSetPanResponder: (_, gestureState) => {
         if (sidePanel || isWide) return false;
+        // Respond when at the top of scroll view and dragging downward
         return (
           isScrollAtTopRef.current &&
-          gestureState.dy > 8 &&
-          Math.abs(gestureState.dy) > Math.abs(gestureState.dx) * 1.2
+          gestureState.dy > 6 &&
+          gestureState.dy > Math.abs(gestureState.dx) * 1.2
         );
       },
-      onMoveShouldSetPanResponderCapture: (_, gestureState) => {
-        if (sidePanel || isWide) return false;
-        return (
-          isScrollAtTopRef.current &&
-          gestureState.dy > 12 &&
-          Math.abs(gestureState.dy) > Math.abs(gestureState.dx) * 1.4
-        );
-      },
+      onPanResponderTerminationRequest: () => false,
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
           translateY.setValue(gestureState.dy);
+        } else {
+          translateY.setValue(0);
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        if (
-          gestureState.dy > 100 ||
-          (gestureState.dy > 30 && gestureState.vy > 0.4)
-        ) {
-          Animated.timing(translateY, {
-            toValue: 800,
-            duration: 180,
-            useNativeDriver: true,
-          }).start(() => {
-            translateY.setValue(0);
-            if (profileTeamRef.current) {
-              setProfileTeam(null);
-            } else {
-              onCloseRef.current();
-            }
-          });
-        } else {
-          Animated.spring(translateY, {
-            toValue: 0,
-            bounciness: 3,
-            speed: 16,
-            useNativeDriver: true,
-          }).start();
-        }
+        handleGestureEnd(gestureState);
       },
-      onPanResponderTerminate: () => {
-        Animated.spring(translateY, {
-          toValue: 0,
-          bounciness: 3,
-          speed: 16,
-          useNativeDriver: true,
-        }).start();
+      onPanResponderTerminate: (_, gestureState) => {
+        handleGestureEnd(gestureState);
       },
     })
   ).current;
@@ -2365,23 +2306,17 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 transform: [{ translateY }],
               },
           ]}
-          {...sheetPanResponder.panHandlers}
+          {...panResponder.panHandlers}
         >
           {/* Barra de arraste para mobile */}
           {!sidePanel && !isWide && (
-            <View
-              style={styles.dragHandleArea}
-              {...topBarPanResponder.panHandlers}
-            >
+            <View style={styles.dragHandleArea}>
               <View style={styles.handle} />
             </View>
           )}
 
-          {/* Barra superior de arraste e botão fechar */}
-          <View
-            style={styles.sheetTopBar}
-            {...topBarPanResponder.panHandlers}
-          >
+          {/* Barra superior de título e botão fechar */}
+          <View style={styles.sheetTopBar}>
             <Text style={styles.modalTitle}>
               {profileTeam ? 'Perfil do clube' : 'Detalhes da partida'}
             </Text>
@@ -2401,6 +2336,8 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
           <ScrollView
             showsVerticalScrollIndicator={false}
+            bounces={false}
+            overScrollMode="never"
             scrollEventThrottle={16}
             onScroll={(event) => {
               const y = event.nativeEvent.contentOffset.y;
@@ -2906,11 +2843,12 @@ const styles = StyleSheet.create({
   dragHandleArea: {
     width: '100%',
     alignItems: 'center',
-    paddingTop: 2,
-    paddingBottom: 8,
+    justifyContent: 'center',
+    paddingTop: 6,
+    paddingBottom: 10,
   },
   handle: {
-    width: 44,
+    width: 48,
     height: 5,
     borderRadius: 3,
     backgroundColor: '#CBD5E1',
