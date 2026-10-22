@@ -38,7 +38,10 @@ jobs:
       - name: Generate Android native project (Expo Prebuild)
         env:
           CI: "1"
-        run: npx expo prebuild --platform android --no-install
+        run: |
+          npx expo prebuild --platform android --no-install
+          sed -i 's/android.enableMinifyInReleaseBuilds=true/android.enableMinifyInReleaseBuilds=false/g' android/gradle.properties
+          sed -i 's/edgeToEdgeEnabled=true/edgeToEdgeEnabled=false/g' android/gradle.properties
 
       - name: Build signed Release APK
         working-directory: ./android

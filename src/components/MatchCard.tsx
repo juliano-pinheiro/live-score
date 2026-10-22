@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -8,6 +9,9 @@ import {
 } from 'react-native';
 import { TeamCrest } from './TeamCrest';
 import { Match } from '../types/match';
+
+const FONT_SANS = Platform.select({ web: 'Plus Jakarta Sans', default: undefined });
+const FONT_DISPLAY = Platform.select({ web: 'Outfit', default: undefined });
 
 interface MatchCardProps {
   match: Match;
@@ -68,18 +72,18 @@ export const MatchCard: React.FC<MatchCardProps> = ({
           Animated.timing(homeScoreScale, {
             toValue: 1.45,
             duration: 170,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
           Animated.spring(homeScoreScale, {
             toValue: 1,
             friction: 4,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
         ]),
         Animated.timing(homeScoreEntrance, {
           toValue: 1,
           duration: 320,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
         Animated.sequence([
           Animated.timing(homeScoreHighlight, {
@@ -104,18 +108,18 @@ export const MatchCard: React.FC<MatchCardProps> = ({
           Animated.timing(awayScoreScale, {
             toValue: 1.45,
             duration: 170,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
           Animated.spring(awayScoreScale, {
             toValue: 1,
             friction: 4,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
         ]),
         Animated.timing(awayScoreEntrance, {
           toValue: 1,
           duration: 320,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
         Animated.sequence([
           Animated.timing(awayScoreHighlight, {
@@ -515,12 +519,12 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
   },
   goalPulseOverlay: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     zIndex: 10,
     elevation: 10,
     borderWidth: 2,
-    borderColor: '#059669',
-    backgroundColor: 'rgba(16, 185, 129, 0.14)',
+    borderColor: '#2563EB',
+    backgroundColor: 'rgba(37, 99, 235, 0.14)',
     borderRadius: 10,
   },
   cardLive: {
@@ -544,7 +548,7 @@ const styles = StyleSheet.create({
   },
   startTimeText: {
     color: '#475569',
-    fontFamily: 'Outfit',
+    fontFamily: FONT_DISPLAY,
     fontSize: 11,
     fontWeight: '700',
     lineHeight: 15,
@@ -567,7 +571,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: '#64748B',
-    fontFamily: 'Outfit',
+    fontFamily: FONT_DISPLAY,
     fontSize: 10,
     lineHeight: 14,
     fontWeight: '800',
@@ -581,7 +585,7 @@ const styles = StyleSheet.create({
   },
   statusTextScheduled: {
     color: '#64748B',
-    fontFamily: 'Outfit',
+    fontFamily: FONT_DISPLAY,
     fontSize: 9,
     lineHeight: 13,
     fontWeight: '700',
@@ -605,7 +609,7 @@ const styles = StyleSheet.create({
   },
   teamName: {
     color: '#0F172A',
-    fontFamily: 'Plus Jakarta Sans',
+    fontFamily: FONT_SANS,
     flexShrink: 1,
     fontSize: 12,
     lineHeight: 18,
@@ -613,7 +617,7 @@ const styles = StyleSheet.create({
   },
   score: {
     color: '#000000',
-    fontFamily: 'Outfit',
+    fontFamily: FONT_DISPLAY,
     minWidth: 20,
     textAlign: 'right',
     fontSize: 14,

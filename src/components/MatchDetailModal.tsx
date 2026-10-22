@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,6 +11,9 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+
+const FONT_SANS = Platform.select({ web: 'Plus Jakarta Sans', default: undefined });
+const FONT_DISPLAY = Platform.select({ web: 'Outfit', default: undefined });
 import {
   HeadToHeadMatch,
   ClubProfile,
@@ -1503,11 +1507,7 @@ const HeadToHeadPanel: React.FC<HeadToHeadPanelProps> = ({
                 );
 
                 const dateObj = new Date(previousMatch.date);
-                const shortDate = dateObj.toLocaleDateString('pt-BR', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: '2-digit',
-                });
+                const shortDate = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${String(dateObj.getFullYear()).slice(-2)}`;
 
                 return (
                   <View key={previousMatch.id} style={styles.h2hMatchRowCard}>
@@ -1825,12 +1825,10 @@ const ClubProfileContent: React.FC<ClubProfileContentProps> = ({ profile }) => {
                   </Text>
                 )}
                 <Text style={styles.clubNextMatchDate}>
-                  {new Date(nextMatch.date).toLocaleString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
+                  {(() => {
+                    const d = new Date(nextMatch.date);
+                    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')} · ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                  })()}
                 </Text>
               </View>
               {nextMatch.homeTeamName && nextMatch.awayTeamName ? (
@@ -2189,7 +2187,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
     <MatchDetailWrapper
       sidePanel={sidePanel}
       visible={visible}
-      onClose={onClose}
+      onClose={() => (profileTeam ? setProfileTeam(null) : onClose())}
     >
       <View
         pointerEvents={sidePanel ? 'box-none' : 'auto'}
@@ -2623,10 +2621,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAF9',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingTop: 10,
-    paddingBottom: 18,
-    maxHeight: '76%',
+    paddingBottom: 24,
+    height: '92%',
+    maxHeight: '92%',
     borderTopWidth: 1,
     borderColor: '#DCE6E1',
   },
@@ -2775,7 +2774,7 @@ const styles = StyleSheet.create({
   },
   heroTeamName: {
     color: '#0F172A',
-    fontFamily: 'Plus Jakarta Sans',
+    fontFamily: FONT_SANS,
     fontSize: 13,
     lineHeight: 19,
     fontWeight: '700',
@@ -2783,7 +2782,7 @@ const styles = StyleSheet.create({
   },
   heroGoalScorer: {
     color: '#1E40AF',
-    fontFamily: 'Plus Jakarta Sans',
+    fontFamily: FONT_SANS,
     fontSize: 10,
     lineHeight: 15,
     fontWeight: '700',
@@ -2804,7 +2803,7 @@ const styles = StyleSheet.create({
   },
   heroScoreText: {
     color: '#0F172A',
-    fontFamily: 'Outfit',
+    fontFamily: FONT_DISPLAY,
     fontSize: 26,
     lineHeight: 32,
     fontWeight: '900',
@@ -2812,7 +2811,7 @@ const styles = StyleSheet.create({
   },
   heroScoreDash: {
     color: '#64748B',
-    fontFamily: 'Outfit',
+    fontFamily: FONT_DISPLAY,
     fontSize: 18,
     lineHeight: 22,
     fontWeight: '800',
@@ -2830,7 +2829,7 @@ const styles = StyleSheet.create({
   },
   heroStatusText: {
     color: '#475569',
-    fontFamily: 'Outfit',
+    fontFamily: FONT_DISPLAY,
     fontSize: 11,
     lineHeight: 15,
     fontWeight: '800',
@@ -3312,7 +3311,7 @@ const styles = StyleSheet.create({
   },
   clubFormBadgeText: {
     color: '#FFFFFF',
-    fontFamily: 'Outfit',
+    fontFamily: FONT_DISPLAY,
     fontSize: 11,
     lineHeight: 14,
     fontWeight: '800',
@@ -3341,7 +3340,7 @@ const styles = StyleSheet.create({
   },
   clubStatBoxValue: {
     color: '#0F172A',
-    fontFamily: 'Outfit',
+    fontFamily: FONT_DISPLAY,
     fontSize: 15,
     lineHeight: 19,
     fontWeight: '900',
@@ -3380,7 +3379,7 @@ const styles = StyleSheet.create({
   },
   clubSplitRecordValue: {
     color: '#0F172A',
-    fontFamily: 'Outfit',
+    fontFamily: FONT_DISPLAY,
     fontSize: 11,
     lineHeight: 15,
     fontWeight: '800',
@@ -3388,7 +3387,7 @@ const styles = StyleSheet.create({
   },
   clubProfileRecord: {
     color: '#0F172A',
-    fontFamily: 'Outfit',
+    fontFamily: FONT_DISPLAY,
     fontSize: 14,
     lineHeight: 18,
     fontWeight: '800',
@@ -3419,7 +3418,7 @@ const styles = StyleSheet.create({
   },
   clubNextMatchDate: {
     color: '#1D4ED8',
-    fontFamily: 'Outfit',
+    fontFamily: FONT_DISPLAY,
     fontSize: 10,
     lineHeight: 14,
     fontWeight: '700',
@@ -3478,7 +3477,7 @@ const styles = StyleSheet.create({
   },
   clubRosterJersey: {
     color: '#1D4ED8',
-    fontFamily: 'Outfit',
+    fontFamily: FONT_DISPLAY,
     fontSize: 11,
     lineHeight: 14,
     fontWeight: '800',
@@ -4297,7 +4296,7 @@ const styles = StyleSheet.create({
   },
   h2hLeagueGroupName: {
     color: '#0F172A',
-    fontFamily: 'Plus Jakarta Sans',
+    fontFamily: FONT_SANS,
     flexShrink: 1,
     fontSize: 12,
     lineHeight: 18,
@@ -4305,7 +4304,7 @@ const styles = StyleSheet.create({
   },
   h2hLeagueGroupSub: {
     color: '#2563EB',
-    fontFamily: 'Plus Jakarta Sans',
+    fontFamily: FONT_SANS,
     fontSize: 10,
     lineHeight: 14,
     fontWeight: '700',
@@ -4322,7 +4321,7 @@ const styles = StyleSheet.create({
   },
   h2hLeagueGroupCount: {
     color: '#1E40AF',
-    fontFamily: 'Outfit',
+    fontFamily: FONT_DISPLAY,
     fontSize: 11,
     lineHeight: 15,
     fontWeight: '800',
@@ -4348,7 +4347,7 @@ const styles = StyleSheet.create({
   },
   h2hStartTimeText: {
     color: '#475569',
-    fontFamily: 'Outfit',
+    fontFamily: FONT_DISPLAY,
     fontSize: 11,
     fontWeight: '700',
     lineHeight: 15,
@@ -4361,7 +4360,7 @@ const styles = StyleSheet.create({
   },
   h2hStatusTextDone: {
     color: '#64748B',
-    fontFamily: 'Outfit',
+    fontFamily: FONT_DISPLAY,
     fontSize: 10,
     lineHeight: 14,
     fontWeight: '800',
@@ -4386,7 +4385,7 @@ const styles = StyleSheet.create({
   },
   h2hTeamName: {
     color: '#0F172A',
-    fontFamily: 'Plus Jakarta Sans',
+    fontFamily: FONT_SANS,
     flexShrink: 1,
     fontSize: 12,
     lineHeight: 18,
@@ -4397,7 +4396,7 @@ const styles = StyleSheet.create({
   },
   h2hScoreText: {
     color: '#000000',
-    fontFamily: 'Outfit',
+    fontFamily: FONT_DISPLAY,
     minWidth: 20,
     textAlign: 'right',
     fontSize: 14,
@@ -4532,7 +4531,7 @@ const styles = StyleSheet.create({
   },
   eventPlayer: {
     color: '#0F172A',
-    fontFamily: 'Plus Jakarta Sans',
+    fontFamily: FONT_SANS,
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '600',
@@ -4541,14 +4540,14 @@ const styles = StyleSheet.create({
   },
   eventPlayerMainName: {
     color: '#0F172A',
-    fontFamily: 'Plus Jakarta Sans',
+    fontFamily: FONT_SANS,
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '600',
   },
   eventReasonSubtle: {
     color: '#64748B',
-    fontFamily: 'Plus Jakarta Sans',
+    fontFamily: FONT_SANS,
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '400',

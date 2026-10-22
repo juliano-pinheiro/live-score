@@ -1,6 +1,59 @@
 import React, { useEffect } from 'react';
-import { Platform } from 'react-native';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { HomeScreen } from './src/screens/HomeScreen';
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  errorMessage: string;
+}
+
+class AppErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  ErrorBoundaryState
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, errorMessage: '' };
+  }
+
+  static getDerivedStateFromError(error: unknown): ErrorBoundaryState {
+    return {
+      hasError: true,
+      errorMessage:
+        error instanceof Error ? error.message : 'Erro inesperado na interface.',
+    };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.error('Erro capturado pelo AppErrorBoundary:', error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorTitle}>PULSE SCORE</Text>
+          <Text style={styles.errorSubtitle}>
+            Ocorreu um erro temporário ao renderizar a tela.
+          </Text>
+          {Boolean(this.state.errorMessage) && (
+            <Text style={styles.errorDetail}>{this.state.errorMessage}</Text>
+          )}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => this.setState({ hasError: false, errorMessage: '' })}
+            style={styles.retryButton}
+          >
+            <Text style={styles.retryButtonText}>Recarregar aplicativo</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 export default function App() {
   useEffect(() => {
@@ -34,7 +87,51 @@ export default function App() {
     }
   }, []);
 
-  return <HomeScreen />;
+  return (
+    <AppErrorBoundary>
+      <SafeAreaProvider>
+        <HomeScreen />
+      </SafeAreaProvider>
+    </AppErrorBoundary>
+  );
 }
 
-
+const styles = StyleSheet.create({
+  errorContainer: {
+    flex: 1,
+    backgroundColor: '#0F172A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  errorTitle: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  errorSubtitle: {
+    color: '#94A3B8',
+    fontSize: 13,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  errorDetail: {
+    color: '#FCA5A5',
+    fontSize: 11,
+    textAlign: 'center',
+    marginBottom: 18,
+  },
+  retryButton: {
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+});

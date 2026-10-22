@@ -3,6 +3,7 @@ import {
   AppState,
   FlatList,
   Modal,
+  Platform,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -13,6 +14,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MatchCard } from '../components/MatchCard';
 import { MatchDetailModal } from '../components/MatchDetailModal';
 import { API_CONFIG } from '../config/api';
@@ -23,6 +25,38 @@ type MainTab = 'ALL' | 'FAVORITES' | 'COMPETITIONS';
 type StatusFilter = 'ALL' | 'LIVE' | 'FINISHED' | 'UPCOMING';
 
 const WEEKDAYS = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
+const WEEKDAYS_SHORT = ['dom.', 'seg.', 'ter.', 'qua.', 'qui.', 'sex.', 'sáb.'];
+const MONTHS_SHORT = [
+  'jan.',
+  'fev.',
+  'mar.',
+  'abr.',
+  'mai.',
+  'jun.',
+  'jul.',
+  'ago.',
+  'set.',
+  'out.',
+  'nov.',
+  'dez.',
+];
+const MONTHS_LONG = [
+  'JANEIRO',
+  'FEVEREIRO',
+  'MARÇO',
+  'ABRIL',
+  'MAIO',
+  'JUNHO',
+  'JULHO',
+  'AGOSTO',
+  'SETEMBRO',
+  'OUTUBRO',
+  'NOVEMBRO',
+  'DEZEMBRO',
+];
+
+const FONT_SANS = Platform.select({ web: 'Plus Jakarta Sans', default: undefined });
+const FONT_DISPLAY = Platform.select({ web: 'Outfit', default: undefined });
 
 interface MatchGroup {
   id: string;
@@ -167,6 +201,7 @@ export const HomeScreen: React.FC = () => {
   const [pinnedTimestamps, setPinnedTimestamps] = useState<Record<string, number>>({});
   const pinnedIdsRef = React.useRef<Set<string>>(new Set());
   const listRef = React.useRef<FlatList<MatchGroup>>(null);
+  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const showSideDetails = width >= 760;
   const showDesktopSidebar = width >= 1120;
@@ -286,12 +321,9 @@ export const HomeScreen: React.FC = () => {
           });
         });
         setApiError(null);
+        const now = new Date();
         setLastSyncTime(
-          new Date().toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-          })
+          `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
         );
       } catch (error) {
         console.error('Falha ao buscar partidas da API gratuita:', error);
@@ -569,10 +601,21 @@ export const HomeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
 
       {/* Top Navigation & Brand Bar */}
-      <View style={styles.topNavbar}>
+      <View
+        style={[
+          styles.topNavbar,
+          {
+            paddingTop:
+              Math.max(
+                insets.top,
+                Platform.OS === 'android' ? StatusBar.currentHeight ?? 0 : 0
+              ) + 10,
+          },
+        ]}
+      >
         <View style={styles.topNavbarInner}>
           <TouchableOpacity
             accessibilityRole="button"
@@ -774,19 +817,10 @@ export const HomeScreen: React.FC = () => {
                   <Text style={styles.selectedDateLabel}>
                     {isViewingToday
                       ? 'HOJE'
-                      : selectedDate
-                          .toLocaleDateString('pt-BR', {
-                            day: '2-digit',
-                            month: 'short',
-                          })
-                          .toUpperCase()}
+                      : `${String(selectedDate.getDate()).padStart(2, '0')} DE ${MONTHS_SHORT[selectedDate.getMonth()].toUpperCase()}`}
                   </Text>
                   <Text style={styles.dateSubLabel}>
-                    {selectedDate.toLocaleDateString('pt-BR', {
-                      weekday: 'short',
-                      day: '2-digit',
-                      month: 'short',
-                    })}
+                    {`${WEEKDAYS_SHORT[selectedDate.getDay()]}, ${String(selectedDate.getDate()).padStart(2, '0')} de ${MONTHS_SHORT[selectedDate.getMonth()]}`}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -937,7 +971,10 @@ export const HomeScreen: React.FC = () => {
               data={matchGroups}
               keyExtractor={(group) => group.id}
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.listContent}
+              contentContainerStyle={[
+                styles.listContent,
+                { paddingBottom: Math.max(20, insets.bottom + 18) },
+              ]}
               renderItem={({ item: group }) => (
                 <View style={styles.leagueGroup}>
                   <View style={styles.leagueGroupHeader}>
@@ -1153,12 +1190,7 @@ export const HomeScreen: React.FC = () => {
                   <Text style={styles.monthArrowText}>‹</Text>
                 </TouchableOpacity>
                 <Text style={styles.monthTitle}>
-                  {calendarMonth
-                    .toLocaleDateString('pt-BR', {
-                      month: 'long',
-                      year: 'numeric',
-                    })
-                    .toUpperCase()}
+                  {`${MONTHS_LONG[calendarMonth.getMonth()]} DE ${calendarMonth.getFullYear()}`}
                 </Text>
                 <TouchableOpacity
                   accessibilityRole="button"
@@ -1188,7 +1220,7 @@ export const HomeScreen: React.FC = () => {
                     <TouchableOpacity
                       key={getDateKey(day)}
                       accessibilityRole="button"
-                      accessibilityLabel={day.toLocaleDateString('pt-BR')}
+                      accessibilityLabel={getDateKey(day)}
                       accessibilityState={{ selected: isSelected }}
                       disabled={!isInMonth}
                       onPress={() => handleSelectDate(day)}
@@ -1364,8 +1396,8 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 680,
     alignSelf: 'center',
-    paddingHorizontal: 10,
-    paddingTop: 12,
+    paddingHorizontal: 8,
+    paddingTop: 10,
   },
   containerDesktop: {
     maxWidth: 1320,
@@ -1389,10 +1421,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: '#CBD5E1',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 12,
-    gap: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    marginBottom: 10,
+    gap: 8,
   },
   topControlsRow: {
     flexDirection: 'column',
@@ -1407,7 +1439,7 @@ const styles = StyleSheet.create({
   secondaryControlsRow: {
     flexDirection: 'column',
     gap: 8,
-    paddingTop: 10,
+    paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
   },
@@ -1425,8 +1457,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   tabButton: {
+    flex: 1,
     paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 8,
@@ -1436,8 +1469,9 @@ const styles = StyleSheet.create({
   },
   tabText: {
     color: '#334155',
+    fontFamily: FONT_SANS,
     fontSize: 11,
-    lineHeight: 14,
+    lineHeight: 15,
     fontWeight: '700',
     textAlign: 'center',
     fontVariant: ['tabular-nums'],
@@ -1449,25 +1483,26 @@ const styles = StyleSheet.create({
   dateSelectorRow: {
     minHeight: 34,
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderColor: '#BFDBFE',
     borderRadius: 10,
-    paddingHorizontal: 4,
+    paddingHorizontal: 6,
   },
   selectedDateLabel: {
     color: '#1E3A8A',
+    fontFamily: FONT_DISPLAY,
     fontSize: 10,
-    lineHeight: 13,
+    lineHeight: 14,
     fontWeight: '800',
     textAlign: 'center',
     fontVariant: ['tabular-nums'],
   },
   dateArrow: {
-    width: 28,
-    height: 26,
+    width: 30,
+    height: 28,
     borderRadius: 7,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1480,6 +1515,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   dateCenterButton: {
+    flex: 1,
     minWidth: 104,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1488,6 +1524,7 @@ const styles = StyleSheet.create({
   },
   dateSubLabel: {
     color: '#2563EB',
+    fontFamily: FONT_SANS,
     fontSize: 9,
     lineHeight: 12,
     fontWeight: '600',
@@ -1496,17 +1533,17 @@ const styles = StyleSheet.create({
   },
   statusFiltersRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   statusFilterButton: {
-    minHeight: 28,
+    flex: 1,
+    minHeight: 30,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
-    paddingHorizontal: 11,
+    gap: 4,
+    paddingHorizontal: 6,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: '#CBD5E1',
@@ -1916,7 +1953,7 @@ const styles = StyleSheet.create({
   },
   leagueGroupCountry: {
     color: '#2563EB',
-    fontFamily: 'Plus Jakarta Sans',
+    fontFamily: FONT_SANS,
     fontSize: 10,
     lineHeight: 14,
     fontWeight: '700',
@@ -1927,7 +1964,7 @@ const styles = StyleSheet.create({
   },
   leagueGroupName: {
     color: '#0F172A',
-    fontFamily: 'Plus Jakarta Sans',
+    fontFamily: FONT_SANS,
     flexShrink: 1,
     fontSize: 12,
     lineHeight: 18,
@@ -1950,7 +1987,7 @@ const styles = StyleSheet.create({
   },
   leagueGroupCount: {
     color: '#1E40AF',
-    fontFamily: 'Outfit',
+    fontFamily: FONT_DISPLAY,
     fontSize: 11,
     lineHeight: 15,
     fontWeight: '800',

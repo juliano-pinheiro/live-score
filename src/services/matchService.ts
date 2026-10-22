@@ -636,13 +636,12 @@ async function fetchEspnCoreResource<T>(
   reference: string,
   resourceName: string
 ): Promise<T> {
-  const url = new URL(reference);
-  if (url.hostname !== 'sports.core.api.espn.com') {
+  if (!/^https?:\/\/sports\.core\.api\.espn\.com\//i.test(reference.trim())) {
     throw new Error('A ESPN retornou uma referência inválida para o perfil.');
   }
-  url.protocol = 'https:';
+  const safeUrl = reference.trim().replace(/^http:\/\//i, 'https://');
 
-  const response = await fetch(url.toString());
+  const response = await fetch(safeUrl);
   if (!response.ok) {
     throw new Error(
       `A ESPN respondeu com HTTP ${response.status} ao buscar ${resourceName}.`
@@ -756,8 +755,7 @@ function getLeagueMetadata(event: ESPNEvent): LeagueMetadata {
 async function resolveLeagueName(event: ESPNEvent): Promise<void> {
   const leagueId = getLeagueId(event);
   const response = await fetch(
-    `${API_CONFIG.BASE_URL}/all/summary?event=${encodeURIComponent(event.id)}`,
-    { cache: 'no-store' }
+    `${API_CONFIG.BASE_URL}/all/summary?event=${encodeURIComponent(event.id)}&_=${Date.now()}`
   );
   if (!response.ok) {
     throw new Error(`resposta HTTP ${response.status}`);
@@ -856,10 +854,12 @@ function toMatch(event: ESPNEvent): Match | null {
     status,
     minute,
     minuteLabel,
-    startTime: new Date(event.date).toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    }),
+    startTime: (() => {
+      const kickoff = new Date(event.date);
+      const hh = String(kickoff.getHours()).padStart(2, '0');
+      const mm = String(kickoff.getMinutes()).padStart(2, '0');
+      return `${hh}:${mm}`;
+    })(),
     homeTeam: {
       id: home.id,
       name: home.team.displayName,
@@ -923,8 +923,7 @@ async function fetchRecentVARAlerts(
     liveMatches.map(async (match) => {
       try {
         const response = await fetch(
-          `${API_CONFIG.BASE_URL}/all/summary?event=${encodeURIComponent(match.id)}&_=${Date.now()}`,
-          { cache: 'no-store' }
+          `${API_CONFIG.BASE_URL}/all/summary?event=${encodeURIComponent(match.id)}&_=${Date.now()}`
         );
         if (!response.ok) {
           throw new Error(`resposta HTTP ${response.status}`);
@@ -1999,8 +1998,7 @@ export async function fetchMatchDetails(
   relatedMatches: Match[] = []
 ): Promise<MatchDetails> {
   const response = await fetch(
-    `${API_CONFIG.BASE_URL}/all/summary?event=${encodeURIComponent(match.id)}&_=${Date.now()}`,
-    { cache: 'no-store' }
+    `${API_CONFIG.BASE_URL}/all/summary?event=${encodeURIComponent(match.id)}&_=${Date.now()}`
   );
   if (!response.ok) {
     throw new Error(`A API respondeu com HTTP ${response.status} ao buscar os detalhes.`);
@@ -2090,7 +2088,7 @@ export async function fetchMatchesFromApi(
 ): Promise<Match[]> {
   const date = getLocalDateString(selectedDate);
   const url = `${API_CONFIG.BASE_URL}/all/scoreboard?dates=${date}&limit=500&_=${Date.now()}`;
-  const response = await fetch(url, { cache: 'no-store' });
+  const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`A API global de futebol respondeu com HTTP ${response.status}.`);
   }
