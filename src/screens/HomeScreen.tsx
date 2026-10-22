@@ -608,8 +608,18 @@ export const HomeScreen: React.FC = () => {
       ).length,
     [matches]
   );
-  const finishedCount = matches.filter((match) => match.status === 'FT').length;
-  const upcomingCount = matches.filter((match) => match.status === 'NS').length;
+  const finishedCount = useMemo(
+    () => matches.filter((match) => match.status === 'FT').length,
+    [matches]
+  );
+  const upcomingCount = useMemo(
+    () => matches.filter((match) => match.status === 'NS').length,
+    [matches]
+  );
+  const pinnedCount = useMemo(
+    () => matches.filter((match) => match.isPinned).length,
+    [matches]
+  );
 
   const shiftDate = (days: number) => {
     const nextDate = new Date(selectedDate);
@@ -763,6 +773,7 @@ export const HomeScreen: React.FC = () => {
                   ]}
                 >
                   <Text
+                    numberOfLines={1}
                     style={[
                       styles.tabText,
                       activeTab === 'ALL' && styles.tabTextActive,
@@ -773,6 +784,10 @@ export const HomeScreen: React.FC = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                  accessibilityRole="tab"
+                  accessibilityState={{
+                    selected: activeTab === 'FAVORITES',
+                  }}
                   onPress={() => {
                     setActiveTab('FAVORITES');
                     setStatusFilter('ALL');
@@ -784,13 +799,31 @@ export const HomeScreen: React.FC = () => {
                   ]}
                 >
                   <Text
+                    numberOfLines={1}
                     style={[
                       styles.tabText,
                       activeTab === 'FAVORITES' && styles.tabTextActive,
                     ]}
                   >
-                    Favoritos ({matches.filter((match) => match.isPinned).length})
+                    Favoritos
                   </Text>
+                  {pinnedCount > 0 && (
+                    <View
+                      style={[
+                        styles.tabBadge,
+                        activeTab === 'FAVORITES' && styles.tabBadgeActive,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.tabBadgeText,
+                          activeTab === 'FAVORITES' && styles.tabBadgeTextActive,
+                        ]}
+                      >
+                        {pinnedCount}
+                      </Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -807,6 +840,7 @@ export const HomeScreen: React.FC = () => {
                   ]}
                 >
                   <Text
+                    numberOfLines={1}
                     style={[
                       styles.tabText,
                       activeTab === 'COMPETITIONS' && styles.tabTextActive,
@@ -860,14 +894,16 @@ export const HomeScreen: React.FC = () => {
             >
               <View style={styles.statusFiltersRow}>
                 {[
-                  { id: 'LIVE' as const, label: `Ao Vivo (${liveCount})` },
+                  { id: 'LIVE' as const, label: 'Ao Vivo', count: liveCount },
                   {
                     id: 'FINISHED' as const,
-                    label: `Finalizado (${finishedCount})`,
+                    label: 'Finalizado',
+                    count: finishedCount,
                   },
                   {
                     id: 'UPCOMING' as const,
-                    label: `Próximos (${upcomingCount})`,
+                    label: 'Próximos',
+                    count: upcomingCount,
                   },
                 ].map((filter) => {
                   const isActive = statusFilter === filter.id;
@@ -888,15 +924,13 @@ export const HomeScreen: React.FC = () => {
                           styles.statusFilterFinishedIdle,
                         filter.id === 'UPCOMING' &&
                           styles.statusFilterUpcomingIdle,
-                        filter.id === 'LIVE' &&
-                          isActive &&
-                          styles.statusFilterLiveActive,
-                        filter.id === 'FINISHED' &&
-                          isActive &&
-                          styles.statusFilterFinishedActive,
-                        filter.id === 'UPCOMING' &&
-                          isActive &&
-                          styles.statusFilterUpcomingActive,
+                        isActive && (
+                          filter.id === 'LIVE'
+                            ? styles.statusFilterLiveActive
+                            : filter.id === 'FINISHED'
+                              ? styles.statusFilterFinishedActive
+                              : styles.statusFilterUpcomingActive
+                        ),
                       ]}
                     >
                       {filter.id === 'LIVE' && (
@@ -908,6 +942,7 @@ export const HomeScreen: React.FC = () => {
                         />
                       )}
                       <Text
+                        numberOfLines={1}
                         style={[
                           styles.statusFilterText,
                           filter.id === 'LIVE' && styles.statusFilterTextLive,
@@ -920,6 +955,33 @@ export const HomeScreen: React.FC = () => {
                       >
                         {filter.label}
                       </Text>
+                      <View
+                        style={[
+                          styles.statusFilterBadge,
+                          filter.id === 'LIVE' && styles.statusFilterBadgeLive,
+                          filter.id === 'FINISHED' &&
+                            styles.statusFilterBadgeFinished,
+                          filter.id === 'UPCOMING' &&
+                            styles.statusFilterBadgeUpcoming,
+                          isActive && styles.statusFilterBadgeActive,
+                        ]}
+                      >
+                        <Text
+                          numberOfLines={1}
+                          style={[
+                            styles.statusFilterBadgeText,
+                            filter.id === 'LIVE' &&
+                              styles.statusFilterBadgeTextLive,
+                            filter.id === 'FINISHED' &&
+                              styles.statusFilterBadgeTextFinished,
+                            filter.id === 'UPCOMING' &&
+                              styles.statusFilterBadgeTextUpcoming,
+                            isActive && styles.statusFilterBadgeTextActive,
+                          ]}
+                        >
+                          {filter.count}
+                        </Text>
+                      </View>
                     </TouchableOpacity>
                   );
                 })}
@@ -1470,17 +1532,20 @@ const styles = StyleSheet.create({
   tabsRow: {
     flexDirection: 'row',
     backgroundColor: '#F1F5F9',
-    borderRadius: 10,
+    borderRadius: 8,
     padding: 3,
     gap: 4,
   },
   tabButton: {
     flex: 1,
+    minHeight: 34,
+    flexDirection: 'row',
     paddingVertical: 6,
     paddingHorizontal: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
+    borderRadius: 6,
+    gap: 4,
   },
   tabButtonActive: {
     backgroundColor: '#1D4ED8',
@@ -1492,44 +1557,66 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     fontWeight: '700',
     textAlign: 'center',
-    fontVariant: ['tabular-nums'],
   },
   tabTextActive: {
     color: '#FFFFFF',
     fontWeight: '800',
   },
+  tabBadge: {
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#CBD5E1',
+  },
+  tabBadgeActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  tabBadgeText: {
+    color: '#334155',
+    fontFamily: FONT_SANS,
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+  },
+  tabBadgeTextActive: {
+    color: '#FFFFFF',
+  },
   dateSelectorRow: {
-    minHeight: 34,
+    height: 36,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#BFDBFE',
-    borderRadius: 10,
-    paddingHorizontal: 6,
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    paddingHorizontal: 4,
   },
   selectedDateLabel: {
-    color: '#1E3A8A',
+    color: '#0F172A',
     fontFamily: FONT_DISPLAY,
-    fontSize: 10,
+    fontSize: 11,
     lineHeight: 14,
     fontWeight: '800',
     textAlign: 'center',
     fontVariant: ['tabular-nums'],
   },
   dateArrow: {
-    width: 30,
+    width: 32,
     height: 28,
-    borderRadius: 7,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#DBEAFE',
+    backgroundColor: '#F1F5F9',
   },
   dateArrowText: {
-    color: '#1D4ED8',
-    fontSize: 18,
-    lineHeight: 20,
+    color: '#334155',
+    fontSize: 16,
+    lineHeight: 18,
     fontWeight: '800',
   },
   dateCenterButton: {
@@ -1541,7 +1628,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   dateSubLabel: {
-    color: '#2563EB',
+    color: '#64748B',
     fontFamily: FONT_SANS,
     fontSize: 9,
     lineHeight: 12,
@@ -1556,81 +1643,124 @@ const styles = StyleSheet.create({
   },
   statusFilterButton: {
     flex: 1,
-    minHeight: 30,
+    height: 36,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
     paddingHorizontal: 6,
-    borderRadius: 999,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
-    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
   },
   statusFilterLiveIdle: {
-    backgroundColor: '#FFF1F2',
-    borderColor: '#FECDD3',
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECACA',
   },
   statusFilterFinishedIdle: {
-    backgroundColor: '#EEF2FF',
-    borderColor: '#C7D2FE',
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
   },
   statusFilterUpcomingIdle: {
-    backgroundColor: '#FFFBEB',
-    borderColor: '#FDE68A',
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
   },
   statusFilterLiveActive: {
-    backgroundColor: '#E11D48',
-    borderColor: '#E11D48',
+    backgroundColor: '#DC2626',
+    borderColor: '#DC2626',
   },
   statusFilterFinishedActive: {
-    backgroundColor: '#4338CA',
-    borderColor: '#4338CA',
+    backgroundColor: '#1E293B',
+    borderColor: '#1E293B',
   },
   statusFilterUpcomingActive: {
-    backgroundColor: '#D97706',
-    borderColor: '#D97706',
+    backgroundColor: '#2563EB',
+    borderColor: '#2563EB',
   },
   filterLiveDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#E11D48',
+    backgroundColor: '#DC2626',
+    marginRight: 4,
   },
   filterLiveDotActive: {
     backgroundColor: '#FFFFFF',
   },
   statusFilterText: {
-    color: '#1E293B',
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: '800',
-    fontVariant: ['tabular-nums'],
+    color: '#475569',
+    fontFamily: FONT_SANS,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '700',
   },
   statusFilterTextLive: {
-    color: '#BE123C',
+    color: '#DC2626',
   },
   statusFilterTextFinished: {
-    color: '#3730A3',
+    color: '#475569',
   },
   statusFilterTextUpcoming: {
-    color: '#B45309',
+    color: '#475569',
   },
   statusFilterTextActive: {
     color: '#FFFFFF',
+    fontWeight: '800',
+  },
+  statusFilterBadge: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
+    backgroundColor: '#E2E8F0',
+  },
+  statusFilterBadgeLive: {
+    backgroundColor: '#FEE2E2',
+  },
+  statusFilterBadgeFinished: {
+    backgroundColor: '#E2E8F0',
+  },
+  statusFilterBadgeUpcoming: {
+    backgroundColor: '#E2E8F0',
+  },
+  statusFilterBadgeActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+  },
+  statusFilterBadgeText: {
+    color: '#334155',
+    fontFamily: FONT_SANS,
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+  },
+  statusFilterBadgeTextLive: {
+    color: '#B91C1C',
+  },
+  statusFilterBadgeTextFinished: {
+    color: '#475569',
+  },
+  statusFilterBadgeTextUpcoming: {
+    color: '#475569',
+  },
+  statusFilterBadgeTextActive: {
+    color: '#FFFFFF',
   },
   lowerLeagueToggle: {
-    minHeight: 28,
+    minHeight: 32,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 6,
     paddingLeft: 10,
     paddingRight: 4,
-    borderRadius: 999,
+    borderRadius: 8,
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: '#E2E8F0',
   },
   lowerLeagueText: {
     color: '#334155',
