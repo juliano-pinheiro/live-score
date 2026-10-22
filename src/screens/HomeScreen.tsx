@@ -601,7 +601,7 @@ export const HomeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      <StatusBar barStyle="light-content" />
 
       {/* Top Navigation & Brand Bar */}
       <View

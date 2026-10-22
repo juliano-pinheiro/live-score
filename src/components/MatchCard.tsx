@@ -48,6 +48,9 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   const homeRedCards = match.homeTeam.redCards ?? 0;
   const awayRedCards = match.awayTeam.redCards ?? 0;
   const isLive = match.status === '1H' || match.status === '2H' || match.status === 'HT';
+  const isFinished = match.status === 'FT';
+  const isHomeWinner = isFinished && match.homeTeam.score > match.awayTeam.score;
+  const isAwayWinner = isFinished && match.awayTeam.score > match.homeTeam.score;
   const alertTeam =
     match.recentAlert?.team ??
     (match.recentAlert?.type === 'GOAL' ? match.recentGoalTeam : undefined) ??
@@ -333,7 +336,14 @@ export const MatchCard: React.FC<MatchCardProps> = ({
               color={match.homeTeam.badgeColor}
               size={16}
             />
-            <Text style={styles.teamName} numberOfLines={1}>
+            <Text
+              style={[
+                styles.teamName,
+                isFinished && isHomeWinner && styles.teamNameWinner,
+                isFinished && isAwayWinner && styles.teamNameLoser,
+              ]}
+              numberOfLines={1}
+            >
               {match.homeTeam.name}
             </Text>
             {homeRedCards > 0 && (
@@ -367,6 +377,12 @@ export const MatchCard: React.FC<MatchCardProps> = ({
             style={[
               styles.score,
               isLive && styles.scoreLive,
+              isFinished &&
+                (isHomeWinner
+                  ? styles.scoreWinner
+                  : isAwayWinner
+                  ? styles.scoreLoser
+                  : null),
               animatingHome
                 ? {
                     opacity: homeScoreEntrance,
@@ -398,7 +414,14 @@ export const MatchCard: React.FC<MatchCardProps> = ({
               color={match.awayTeam.badgeColor}
               size={16}
             />
-            <Text style={styles.teamName} numberOfLines={1}>
+            <Text
+              style={[
+                styles.teamName,
+                isFinished && isAwayWinner && styles.teamNameWinner,
+                isFinished && isHomeWinner && styles.teamNameLoser,
+              ]}
+              numberOfLines={1}
+            >
               {match.awayTeam.name}
             </Text>
             {awayRedCards > 0 && (
@@ -432,6 +455,12 @@ export const MatchCard: React.FC<MatchCardProps> = ({
             style={[
               styles.score,
               isLive && styles.scoreLive,
+              isFinished &&
+                (isAwayWinner
+                  ? styles.scoreWinner
+                  : isHomeWinner
+                  ? styles.scoreLoser
+                  : null),
               animatingAway
                 ? {
                     opacity: awayScoreEntrance,
@@ -519,7 +548,7 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
   },
   goalPulseOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 10,
     elevation: 10,
     borderWidth: 2,
@@ -615,6 +644,14 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: '600',
   },
+  teamNameWinner: {
+    color: '#000000',
+    fontWeight: '800',
+  },
+  teamNameLoser: {
+    color: '#64748B',
+    fontWeight: '500',
+  },
   score: {
     color: '#000000',
     fontFamily: FONT_DISPLAY,
@@ -624,6 +661,16 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
+  },
+  scoreWinner: {
+    color: '#000000',
+    fontWeight: '900',
+    fontSize: 15,
+  },
+  scoreLoser: {
+    color: '#64748B',
+    fontWeight: '600',
+    opacity: 0.65,
   },
   scoreLive: {
     color: '#D71920',

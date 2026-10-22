@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Modal,
+  PanResponder,
   Platform,
   ScrollView,
   StyleSheet,
@@ -1962,7 +1964,149 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   const { width } = useWindowDimensions();
   const isWide = width >= 900;
 
+  const translateY = useRef(new Animated.Value(0)).current;
+  const isScrollAtTopRef = useRef(true);
+  const profileTeamRef = useRef(profileTeam);
+  profileTeamRef.current = profileTeam;
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  const dismissModal = () => {
+    if (profileTeamRef.current) {
+      setProfileTeam(null);
+      return;
+    }
+    if (!sidePanel && !isWide) {
+      Animated.timing(translateY, {
+        toValue: 800,
+        duration: 180,
+        useNativeDriver: true,
+      }).start(() => {
+        translateY.setValue(0);
+        onCloseRef.current();
+      });
+    } else {
+      onCloseRef.current();
+    }
+  };
+
+  const topBarPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        if (sidePanel || isWide) return false;
+        return (
+          gestureState.dy > 5 &&
+          Math.abs(gestureState.dy) > Math.abs(gestureState.dx)
+        );
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          translateY.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (
+          gestureState.dy > 70 ||
+          (gestureState.dy > 25 && gestureState.vy > 0.35)
+        ) {
+          Animated.timing(translateY, {
+            toValue: 800,
+            duration: 180,
+            useNativeDriver: true,
+          }).start(() => {
+            translateY.setValue(0);
+            if (profileTeamRef.current) {
+              setProfileTeam(null);
+            } else {
+              onCloseRef.current();
+            }
+          });
+        } else {
+          Animated.spring(translateY, {
+            toValue: 0,
+            bounciness: 3,
+            speed: 16,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+      onPanResponderTerminate: () => {
+        Animated.spring(translateY, {
+          toValue: 0,
+          bounciness: 3,
+          speed: 16,
+          useNativeDriver: true,
+        }).start();
+      },
+    })
+  ).current;
+
+  const sheetPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onStartShouldSetPanResponderCapture: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        if (sidePanel || isWide) return false;
+        return (
+          isScrollAtTopRef.current &&
+          gestureState.dy > 8 &&
+          Math.abs(gestureState.dy) > Math.abs(gestureState.dx) * 1.2
+        );
+      },
+      onMoveShouldSetPanResponderCapture: (_, gestureState) => {
+        if (sidePanel || isWide) return false;
+        return (
+          isScrollAtTopRef.current &&
+          gestureState.dy > 12 &&
+          Math.abs(gestureState.dy) > Math.abs(gestureState.dx) * 1.4
+        );
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          translateY.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (
+          gestureState.dy > 100 ||
+          (gestureState.dy > 30 && gestureState.vy > 0.4)
+        ) {
+          Animated.timing(translateY, {
+            toValue: 800,
+            duration: 180,
+            useNativeDriver: true,
+          }).start(() => {
+            translateY.setValue(0);
+            if (profileTeamRef.current) {
+              setProfileTeam(null);
+            } else {
+              onCloseRef.current();
+            }
+          });
+        } else {
+          Animated.spring(translateY, {
+            toValue: 0,
+            bounciness: 3,
+            speed: 16,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+      onPanResponderTerminate: () => {
+        Animated.spring(translateY, {
+          toValue: 0,
+          bounciness: 3,
+          speed: 16,
+          useNativeDriver: true,
+        }).start();
+      },
+    })
+  ).current;
+
   useEffect(() => {
+    translateY.setValue(0);
+    isScrollAtTopRef.current = true;
     setDetails(null);
     setDetailsError(null);
     setActiveTab('SUMMARY');
@@ -2064,8 +2208,11 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   const matchMinute = details?.minute ?? match.minute;
   const matchMinuteLabel = details?.minuteLabel ?? match.minuteLabel;
   const isLive = matchStatus === '1H' || matchStatus === '2H' || matchStatus === 'HT';
+  const isFinished = matchStatus === 'FT';
   const homeTeam = details?.homeTeam ?? match.homeTeam;
   const awayTeam = details?.awayTeam ?? match.awayTeam;
+  const isHomeWinner = isFinished && homeTeam.score > awayTeam.score;
+  const isAwayWinner = isFinished && awayTeam.score > homeTeam.score;
   const matchStats = details?.stats ?? match.stats;
   const matchEvents = details?.events ?? match.events;
   const standings = details?.standings ?? null;
@@ -2187,7 +2334,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
     <MatchDetailWrapper
       sidePanel={sidePanel}
       visible={visible}
-      onClose={() => (profileTeam ? setProfileTeam(null) : onClose())}
+      onClose={() => (profileTeam ? setProfileTeam(null) : dismissModal())}
     >
       <View
         pointerEvents={sidePanel ? 'box-none' : 'auto'}
@@ -2197,16 +2344,40 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
           sidePanel && styles.backdropSidePanel,
         ]}
       >
-        <View
+        {!sidePanel && (
+          <TouchableOpacity
+            style={StyleSheet.absoluteFill}
+            activeOpacity={1}
+            onPress={() => (profileTeam ? setProfileTeam(null) : dismissModal())}
+          />
+        )}
+        <Animated.View
           style={[
             styles.sheet,
             isWide && styles.sheetWide,
             sidePanel && styles.sheetSidePanel,
+            !sidePanel &&
+              !isWide && {
+                transform: [{ translateY }],
+              },
           ]}
+          {...sheetPanResponder.panHandlers}
         >
+          {/* Barra de arraste para mobile */}
+          {!sidePanel && !isWide && (
+            <View
+              style={styles.dragHandleArea}
+              {...topBarPanResponder.panHandlers}
+            >
+              <View style={styles.handle} />
+            </View>
+          )}
+
           {/* Barra superior de arraste e botão fechar */}
-          <View style={styles.sheetTopBar}>
-            {!sidePanel && !isWide && <View style={styles.handle} />}
+          <View
+            style={styles.sheetTopBar}
+            {...topBarPanResponder.panHandlers}
+          >
             <Text style={styles.modalTitle}>
               {profileTeam ? 'Perfil do clube' : 'Detalhes da partida'}
             </Text>
@@ -2215,7 +2386,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
               accessibilityLabel={
                 profileTeam ? 'Voltar aos detalhes' : 'Fechar detalhes'
               }
-              onPress={() => (profileTeam ? setProfileTeam(null) : onClose())}
+              onPress={() => (profileTeam ? setProfileTeam(null) : dismissModal())}
               style={styles.closeBtn}
             >
               <Text style={styles.closeBtnText}>
@@ -2224,7 +2395,14 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
             </TouchableOpacity>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            scrollEventThrottle={16}
+            onScroll={(event) => {
+              const y = event.nativeEvent.contentOffset.y;
+              isScrollAtTopRef.current = y <= 2;
+            }}
+          >
             {profileTeam ? (
               <View>
                 <View style={styles.teamSearchContainer}>
@@ -2334,7 +2512,14 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                     color={match.homeTeam.badgeColor}
                     size={48}
                   />
-                  <Text style={styles.heroTeamName} numberOfLines={1}>
+                  <Text
+                    style={[
+                      styles.heroTeamName,
+                      isFinished && isHomeWinner && styles.heroTeamNameWinner,
+                      isFinished && isAwayWinner && styles.heroTeamNameLoser,
+                    ]}
+                    numberOfLines={1}
+                  >
                     {match.homeTeam.name}
                   </Text>
                 </TouchableOpacity>
@@ -2351,9 +2536,42 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
               <View style={styles.heroCenterCol}>
                 <View style={styles.heroScoreRow}>
-                  <Text style={styles.heroScoreText}>{homeTeam.score}</Text>
-                  <Text style={styles.heroScoreDash}>-</Text>
-                  <Text style={styles.heroScoreText}>{awayTeam.score}</Text>
+                  <Text
+                    style={[
+                      styles.heroScoreText,
+                      isLive && styles.heroScoreLive,
+                      isFinished &&
+                        (isHomeWinner
+                          ? styles.heroScoreWinner
+                          : isAwayWinner
+                          ? styles.heroScoreLoser
+                          : styles.heroScoreFinished),
+                    ]}
+                  >
+                    {homeTeam.score}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.heroScoreDash,
+                      isLive && styles.heroScoreDashLive,
+                    ]}
+                  >
+                    -
+                  </Text>
+                  <Text
+                    style={[
+                      styles.heroScoreText,
+                      isLive && styles.heroScoreLive,
+                      isFinished &&
+                        (isAwayWinner
+                          ? styles.heroScoreWinner
+                          : isHomeWinner
+                          ? styles.heroScoreLoser
+                          : styles.heroScoreFinished),
+                    ]}
+                  >
+                    {awayTeam.score}
+                  </Text>
                 </View>
                 <View
                   style={[
@@ -2392,7 +2610,14 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                     color={match.awayTeam.badgeColor}
                     size={48}
                   />
-                  <Text style={styles.heroTeamName} numberOfLines={1}>
+                  <Text
+                    style={[
+                      styles.heroTeamName,
+                      isFinished && isAwayWinner && styles.heroTeamNameWinner,
+                      isFinished && isHomeWinner && styles.heroTeamNameLoser,
+                    ]}
+                    numberOfLines={1}
+                  >
                     {match.awayTeam.name}
                   </Text>
                 </TouchableOpacity>
@@ -2595,7 +2820,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
               </>
             )}
           </ScrollView>
-        </View>
+        </Animated.View>
       </View>
     </MatchDetailWrapper>
   );
@@ -2674,10 +2899,16 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     fontWeight: '800',
   },
+  dragHandleArea: {
+    width: '100%',
+    alignItems: 'center',
+    paddingTop: 2,
+    paddingBottom: 8,
+  },
   handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
+    width: 44,
+    height: 5,
+    borderRadius: 3,
     backgroundColor: '#CBD5E1',
   },
   closeBtn: {
@@ -2808,6 +3039,35 @@ const styles = StyleSheet.create({
     lineHeight: 32,
     fontWeight: '900',
     fontVariant: ['tabular-nums'],
+  },
+  heroScoreLive: {
+    color: '#D71920',
+  },
+  heroScoreDashLive: {
+    color: '#D71920',
+  },
+  heroScoreFinished: {
+    color: '#000000',
+    fontWeight: '800',
+  },
+  heroScoreWinner: {
+    color: '#000000',
+    fontWeight: '900',
+    fontSize: 28,
+  },
+  heroScoreLoser: {
+    color: '#64748B',
+    fontWeight: '600',
+    fontSize: 24,
+    opacity: 0.65,
+  },
+  heroTeamNameWinner: {
+    color: '#000000',
+    fontWeight: '800',
+  },
+  heroTeamNameLoser: {
+    color: '#64748B',
+    fontWeight: '500',
   },
   heroScoreDash: {
     color: '#64748B',
