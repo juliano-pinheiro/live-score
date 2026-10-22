@@ -17,7 +17,9 @@ import {
 const FONT_SANS = Platform.select({ web: 'Plus Jakarta Sans', default: undefined });
 const FONT_DISPLAY = Platform.select({ web: 'Outfit', default: undefined });
 const FONT_SCORE = Platform.select({
-  web: 'Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
+  web: "'Roboto Condensed', 'Barlow Condensed', 'DIN Alternate', -apple-system, sans-serif",
+  android: 'sans-serif-condensed',
+  ios: 'DIN Alternate',
   default: undefined,
 });
 import {
@@ -2972,37 +2974,39 @@ const styles = StyleSheet.create({
   heroScoreRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 5,
+    justifyContent: 'center',
+    marginBottom: 3,
   },
   heroScoreText: {
     color: '#0F172A',
     fontFamily: FONT_SCORE,
-    fontSize: 27,
-    lineHeight: 33,
-    fontWeight: '500',
+    fontSize: 34,
+    lineHeight: 40,
+    fontWeight: '700',
     fontVariant: ['tabular-nums'],
+    letterSpacing: 0.5,
   },
   heroScoreLive: {
-    color: '#D71920',
-    fontWeight: '500',
+    color: '#BA0C2F',
+    fontWeight: '700',
   },
   heroScoreDashLive: {
-    color: '#D71920',
-    fontWeight: '400',
+    color: '#BA0C2F',
+    fontWeight: '700',
   },
   heroScoreFinished: {
     color: '#000000',
-    fontWeight: '500',
+    fontWeight: '700',
   },
   heroScoreWinner: {
     color: '#000000',
-    fontWeight: '700',
-    fontSize: 28,
+    fontWeight: '800',
+    fontSize: 36,
   },
   heroScoreLoser: {
     color: '#64748B',
-    fontWeight: '400',
-    fontSize: 25,
+    fontWeight: '600',
+    fontSize: 30,
     opacity: 0.65,
   },
   heroTeamNameWinner: {
@@ -3016,14 +3020,14 @@ const styles = StyleSheet.create({
   heroScoreDash: {
     color: '#94A3B8',
     fontFamily: FONT_SCORE,
-    fontSize: 18,
-    lineHeight: 24,
-    fontWeight: '400',
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: '700',
     marginHorizontal: 8,
   },
   heroStatusPill: {
     paddingHorizontal: 4,
-    paddingVertical: 2,
+    paddingVertical: 1,
   },
   heroStatusLive: {
     backgroundColor: 'transparent',
@@ -3033,15 +3037,16 @@ const styles = StyleSheet.create({
   },
   heroStatusText: {
     color: '#475569',
-    fontFamily: FONT_SANS,
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: '600',
+    fontFamily: FONT_SCORE,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '700',
     letterSpacing: 0.5,
     fontVariant: ['tabular-nums'],
   },
   heroStatusTextLive: {
-    color: '#D71920',
+    color: '#BA0C2F',
+    fontWeight: '700',
   },
   sectionBox: {
     backgroundColor: '#FFFFFF',

@@ -13,7 +13,9 @@ import { Match } from '../types/match';
 const FONT_SANS = Platform.select({ web: 'Plus Jakarta Sans', default: undefined });
 const FONT_DISPLAY = Platform.select({ web: 'Outfit', default: undefined });
 const FONT_SCORE = Platform.select({
-  web: 'Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
+  web: "'Roboto Condensed', 'Barlow Condensed', 'DIN Alternate', -apple-system, sans-serif",
+  android: 'sans-serif-condensed',
+  ios: 'DIN Alternate',
   default: undefined,
 });
 
@@ -643,8 +645,8 @@ const styles = StyleSheet.create({
     opacity: 0.65,
   },
   scoreLive: {
-    color: '#D71920',
-    fontWeight: '600',
+    color: '#BA0C2F',
+    fontWeight: '700',
   },
   redCard: {
     minWidth: 10,
