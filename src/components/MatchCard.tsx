@@ -40,8 +40,6 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   const awayScoreScale = useRef(new Animated.Value(1)).current;
   const homeScoreHighlight = useRef(new Animated.Value(0)).current;
   const awayScoreHighlight = useRef(new Animated.Value(0)).current;
-  const homeScoreEntrance = useRef(new Animated.Value(1)).current;
-  const awayScoreEntrance = useRef(new Animated.Value(1)).current;
   const previousScores = useRef({
     home: match.homeTeam.score,
     away: match.awayTeam.score,
@@ -73,11 +71,10 @@ export const MatchCard: React.FC<MatchCardProps> = ({
     const { home, away } = previousScores.current;
     if (home !== match.homeTeam.score) {
       setAnimatingHome(true);
-      homeScoreEntrance.setValue(0);
       Animated.parallel([
         Animated.sequence([
           Animated.timing(homeScoreScale, {
-            toValue: 1.45,
+            toValue: 1.35,
             duration: 170,
             useNativeDriver: false,
           }),
@@ -87,21 +84,16 @@ export const MatchCard: React.FC<MatchCardProps> = ({
             useNativeDriver: false,
           }),
         ]),
-        Animated.timing(homeScoreEntrance, {
-          toValue: 1,
-          duration: 320,
-          useNativeDriver: false,
-        }),
         Animated.sequence([
           Animated.timing(homeScoreHighlight, {
             toValue: 1,
-            duration: 220,
+            duration: 200,
             useNativeDriver: false,
           }),
-          Animated.delay(900),
+          Animated.delay(1200),
           Animated.timing(homeScoreHighlight, {
             toValue: 0,
-            duration: 550,
+            duration: 450,
             useNativeDriver: false,
           }),
         ]),
@@ -109,11 +101,10 @@ export const MatchCard: React.FC<MatchCardProps> = ({
     }
     if (away !== match.awayTeam.score) {
       setAnimatingAway(true);
-      awayScoreEntrance.setValue(0);
       Animated.parallel([
         Animated.sequence([
           Animated.timing(awayScoreScale, {
-            toValue: 1.45,
+            toValue: 1.35,
             duration: 170,
             useNativeDriver: false,
           }),
@@ -123,21 +114,16 @@ export const MatchCard: React.FC<MatchCardProps> = ({
             useNativeDriver: false,
           }),
         ]),
-        Animated.timing(awayScoreEntrance, {
-          toValue: 1,
-          duration: 320,
-          useNativeDriver: false,
-        }),
         Animated.sequence([
           Animated.timing(awayScoreHighlight, {
             toValue: 1,
-            duration: 220,
+            duration: 200,
             useNativeDriver: false,
           }),
-          Animated.delay(900),
+          Animated.delay(1200),
           Animated.timing(awayScoreHighlight, {
             toValue: 0,
-            duration: 550,
+            duration: 450,
             useNativeDriver: false,
           }),
         ]),
@@ -149,10 +135,8 @@ export const MatchCard: React.FC<MatchCardProps> = ({
     };
   }, [
     awayScoreScale,
-    awayScoreEntrance,
     awayScoreHighlight,
     homeScoreScale,
-    homeScoreEntrance,
     homeScoreHighlight,
     match.awayTeam.score,
     match.homeTeam.score,
@@ -389,19 +373,10 @@ export const MatchCard: React.FC<MatchCardProps> = ({
                   : null),
               animatingHome
                 ? {
-                    opacity: homeScoreEntrance,
-                    transform: [
-                      { scale: homeScoreScale },
-                      {
-                        translateY: homeScoreEntrance.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [6, 0],
-                        }),
-                      },
-                    ],
+                    transform: [{ scale: homeScoreScale }],
                     color: homeScoreHighlight.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [isLive ? '#D71920' : '#000000', '#078B61'],
+                      outputRange: [isLive ? '#D71920' : '#000000', '#16A34A'],
                     }),
                   }
                 : null,
@@ -467,19 +442,10 @@ export const MatchCard: React.FC<MatchCardProps> = ({
                   : null),
               animatingAway
                 ? {
-                    opacity: awayScoreEntrance,
-                    transform: [
-                      { scale: awayScoreScale },
-                      {
-                        translateY: awayScoreEntrance.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [6, 0],
-                        }),
-                      },
-                    ],
+                    transform: [{ scale: awayScoreScale }],
                     color: awayScoreHighlight.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [isLive ? '#D71920' : '#000000', '#078B61'],
+                      outputRange: [isLive ? '#D71920' : '#000000', '#16A34A'],
                     }),
                   }
                 : null,

@@ -2056,13 +2056,13 @@ export async function fetchMatchDetails(
     standingsAreProjected,
     homeTeam: {
       ...match.homeTeam,
-      score: Number(home.score ?? match.homeTeam.score),
-      redCards: getRedCards(home.id) ?? match.homeTeam.redCards,
+      score: Math.max(match.homeTeam.score, Number(home.score ?? match.homeTeam.score)),
+      redCards: Math.max(getRedCards(home.id) ?? 0, match.homeTeam.redCards ?? 0) || null,
     },
     awayTeam: {
       ...match.awayTeam,
-      score: Number(away.score ?? match.awayTeam.score),
-      redCards: getRedCards(away.id) ?? match.awayTeam.redCards,
+      score: Math.max(match.awayTeam.score, Number(away.score ?? match.awayTeam.score)),
+      redCards: Math.max(getRedCards(away.id) ?? 0, match.awayTeam.redCards ?? 0) || null,
     },
     status: matchStatus,
     minute:

@@ -223,12 +223,14 @@ export const HomeScreen: React.FC = () => {
             currentMatches.map((currentMatch) => {
               const update = updatesById.get(currentMatch.id);
               if (!update) return currentMatch;
-              const homeScored = update.homeTeam.score > currentMatch.homeTeam.score;
-              const awayScored = update.awayTeam.score > currentMatch.awayTeam.score;
+              const resolvedHomeScore = Math.max(currentMatch.homeTeam.score, update.homeTeam.score);
+              const resolvedAwayScore = Math.max(currentMatch.awayTeam.score, update.awayTeam.score);
+              const homeScored = resolvedHomeScore > currentMatch.homeTeam.score;
+              const awayScored = resolvedAwayScore > currentMatch.awayTeam.score;
               const goalAlert =
                 homeScored || awayScored
                   ? {
-                      id: `${currentMatch.id}-${update.homeTeam.score}-${update.awayTeam.score}`,
+                      id: `${currentMatch.id}-${resolvedHomeScore}-${resolvedAwayScore}`,
                       type: 'GOAL' as const,
                       team: homeScored ? ('HOME' as const) : ('AWAY' as const),
                       createdAt: Date.now(),
@@ -241,13 +243,15 @@ export const HomeScreen: React.FC = () => {
                 minuteLabel: update.minuteLabel,
                 homeTeam: {
                   ...currentMatch.homeTeam,
-                  score: update.homeTeam.score,
-                  redCards: update.homeTeam.redCards,
+                  score: resolvedHomeScore,
+                  redCards:
+                    Math.max(currentMatch.homeTeam.redCards ?? 0, update.homeTeam.redCards ?? 0) || null,
                 },
                 awayTeam: {
                   ...currentMatch.awayTeam,
-                  score: update.awayTeam.score,
-                  redCards: update.awayTeam.redCards,
+                  score: resolvedAwayScore,
+                  redCards:
+                    Math.max(currentMatch.awayTeam.redCards ?? 0, update.awayTeam.redCards ?? 0) || null,
                 },
                 recentGoalTeam: homeScored
                   ? 'HOME'
@@ -271,14 +275,16 @@ export const HomeScreen: React.FC = () => {
           );
           return apiMatches.map((match) => {
             const previous = previousById.get(match.id);
+            const resolvedHomeScore = Math.max(previous?.homeTeam.score ?? 0, match.homeTeam.score);
+            const resolvedAwayScore = Math.max(previous?.awayTeam.score ?? 0, match.awayTeam.score);
             const homeScored =
-              previous && match.homeTeam.score > previous.homeTeam.score;
+              previous && resolvedHomeScore > previous.homeTeam.score;
             const awayScored =
-              previous && match.awayTeam.score > previous.awayTeam.score;
+              previous && resolvedAwayScore > previous.awayTeam.score;
             let recentAlert: Match['recentAlert'];
             if (homeScored || awayScored) {
               recentAlert = {
-                id: `${match.id}-${match.homeTeam.score}-${match.awayTeam.score}`,
+                id: `${match.id}-${resolvedHomeScore}-${resolvedAwayScore}`,
                 type: 'GOAL',
                 team: homeScored ? 'HOME' : 'AWAY',
                 createdAt: Date.now(),
@@ -308,6 +314,18 @@ export const HomeScreen: React.FC = () => {
 
             return {
               ...match,
+              homeTeam: {
+                ...match.homeTeam,
+                score: resolvedHomeScore,
+                redCards:
+                  Math.max(previous?.homeTeam.redCards ?? 0, match.homeTeam.redCards ?? 0) || null,
+              },
+              awayTeam: {
+                ...match.awayTeam,
+                score: resolvedAwayScore,
+                redCards:
+                  Math.max(previous?.awayTeam.redCards ?? 0, match.awayTeam.redCards ?? 0) || null,
+              },
               recentAlert,
               recentGoalTeam: homeScored
                 ? 'HOME'
