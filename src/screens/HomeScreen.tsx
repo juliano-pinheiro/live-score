@@ -292,6 +292,9 @@ export const HomeScreen: React.FC = () => {
 
             return {
               ...match,
+              events: previous?.events ?? match.events,
+              stats: previous?.stats ?? match.stats,
+              additionalStats: previous?.additionalStats ?? match.additionalStats,
               homeTeam: {
                 ...match.homeTeam,
                 score: resolvedHomeScore,

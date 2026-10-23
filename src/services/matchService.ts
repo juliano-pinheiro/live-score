@@ -1800,7 +1800,9 @@ function getMatchEvents(
     const finalPlayerName =
       type === 'VAR'
         ? varParsed?.playerName || varParsed?.decision || 'Revisão do VAR'
-        : primaryPlayerName || 'Evento da partida';
+        : type === 'GOAL' && (!primaryPlayerName || /^(goal|gol|scoring play|gol marcado)$/i.test(primaryPlayerName.trim()))
+        ? 'Gol'
+        : primaryPlayerName || (type === 'GOAL' ? 'Gol' : 'Evento da partida');
 
     return [
       {

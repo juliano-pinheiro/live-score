@@ -2307,17 +2307,28 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
       isActive = false;
       clearInterval(interval);
     };
-  }, [match?.id, visible, refreshDetailsKey]);
+  }, [match?.id, visible, refreshDetailsKey, match?.homeTeam.score, match?.awayTeam.score]);
 
   if (!match) return null;
 
   const matchStatus = details?.status ?? match.status;
-  const matchMinute = details?.minute ?? match.minute;
+  const matchMinute = Math.max(match.minute ?? 0, details?.minute ?? 0) || details?.minute || match.minute;
   const matchMinuteLabel = details?.minuteLabel ?? match.minuteLabel;
   const isLive = matchStatus === '1H' || matchStatus === '2H' || matchStatus === 'HT';
   const isFinished = matchStatus === 'FT';
-  const homeTeam = details?.homeTeam ?? match.homeTeam;
-  const awayTeam = details?.awayTeam ?? match.awayTeam;
+
+  // Placar instantâneo: reflete imediatamente a pontuação mais recente (seja do feed de jogos ou do detalhe)
+  const homeScore = Math.max(match.homeTeam.score, details?.homeTeam.score ?? 0);
+  const awayScore = Math.max(match.awayTeam.score, details?.awayTeam.score ?? 0);
+
+  const homeTeam: TeamInfo = {
+    ...(details?.homeTeam ?? match.homeTeam),
+    score: homeScore,
+  };
+  const awayTeam: TeamInfo = {
+    ...(details?.awayTeam ?? match.awayTeam),
+    score: awayScore,
+  };
   const isHomeWinner = isFinished && homeTeam.score > awayTeam.score;
   const isAwayWinner = isFinished && awayTeam.score > homeTeam.score;
 
@@ -2409,7 +2420,77 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
     awayScoreHighlight,
   ]);
   const matchStats = details?.stats ?? match.stats;
-  const matchEvents = details?.events ?? match.events;
+  const rawMatchEvents = details?.events ?? match.events ?? [];
+
+  // Identifica se há gols no placar que ainda não possuem evento/autor retornado pela API
+  const homeGoalsInEvents = rawMatchEvents.filter(
+    (event) => event.type === 'GOAL' && event.team === 'HOME'
+  );
+  const awayGoalsInEvents = rawMatchEvents.filter(
+    (event) => event.type === 'GOAL' && event.team === 'AWAY'
+  );
+
+  const missingHomeGoals = Math.max(0, homeTeam.score - homeGoalsInEvents.length);
+  const missingAwayGoals = Math.max(0, awayTeam.score - awayGoalsInEvents.length);
+
+  const provisionalGoals = useMemo(() => {
+    if (missingHomeGoals === 0 && missingAwayGoals === 0) return [];
+
+    const list: MatchEvent[] = [];
+    const currentMin = matchMinute ?? match.minute ?? 0;
+    const currentPeriod =
+      matchStatus === '2H' || (currentMin > 45 && matchStatus !== '1H') ? 2 : 1;
+    const currentTimeStr =
+      matchMinuteLabel ?? (currentMin > 0 ? `${currentMin}'` : '');
+
+    for (let i = 0; i < missingHomeGoals; i++) {
+      const idx = homeGoalsInEvents.length + i + 1;
+      list.push({
+        id: `provisional-goal-home-${match.id}-${idx}`,
+        minute: currentMin,
+        time: currentTimeStr,
+        period: currentPeriod,
+        type: 'GOAL',
+        label: 'Gol',
+        team: 'HOME',
+        playerName: 'Gol',
+        detail: 'Gol confirmado no placar',
+      });
+    }
+
+    for (let i = 0; i < missingAwayGoals; i++) {
+      const idx = awayGoalsInEvents.length + i + 1;
+      list.push({
+        id: `provisional-goal-away-${match.id}-${idx}`,
+        minute: currentMin,
+        time: currentTimeStr,
+        period: currentPeriod,
+        type: 'GOAL',
+        label: 'Gol',
+        team: 'AWAY',
+        playerName: 'Gol',
+        detail: 'Gol confirmado no placar',
+      });
+    }
+
+    return list;
+  }, [
+    missingHomeGoals,
+    missingAwayGoals,
+    homeGoalsInEvents.length,
+    awayGoalsInEvents.length,
+    match.id,
+    matchMinute,
+    match.minute,
+    matchMinuteLabel,
+    matchStatus,
+  ]);
+
+  const matchEvents = useMemo(() => {
+    if (provisionalGoals.length === 0) return rawMatchEvents;
+    return [...rawMatchEvents, ...provisionalGoals];
+  }, [rawMatchEvents, provisionalGoals]);
+
   const standings = details?.standings ?? null;
   const lineups = details?.lineups ?? null;
   const headToHead = details?.headToHead ?? null;
@@ -2427,12 +2508,14 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
       .filter((event) => event.type === 'GOAL' && event.team === team)
       .sort((a, b) => a.period - b.period || a.minute - b.minute);
   const getGoalTime = (event: MatchEvent) => {
-    const time = event.time.trim();
+    const time = (event.time ?? '').trim();
     return time
       ? /['′]$/.test(time)
         ? time
         : `${time}'`
-      : `${event.minute}'`;
+      : event.minute > 0
+      ? `${event.minute}'`
+      : '';
   };
   const hasSecondHalfStarted =
     matchStatus === '2H' || matchStatus === 'FT' || secondHalfEvents.length > 0;
@@ -2834,21 +2917,29 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 return (
                   <View style={styles.heroScorersContainer}>
                     <View style={styles.heroScorersHomeCol}>
-                      {homeGoals.map((hGoal) => (
-                        <Text key={hGoal.id} style={styles.heroScorerTextHome} numberOfLines={1}>
-                          {hGoal.playerName} {getGoalTime(hGoal)}
-                        </Text>
-                      ))}
+                      {homeGoals.map((hGoal) => {
+                        const timeStr = getGoalTime(hGoal);
+                        const displayText = timeStr ? `${hGoal.playerName} ${timeStr}` : hGoal.playerName;
+                        return (
+                          <Text key={hGoal.id} style={styles.heroScorerTextHome} numberOfLines={1}>
+                            {displayText}
+                          </Text>
+                        );
+                      })}
                     </View>
                     <View style={styles.heroScorerBallCol}>
                       <Text style={styles.heroScorerBall}>⚽</Text>
                     </View>
                     <View style={styles.heroScorersAwayCol}>
-                      {awayGoals.map((aGoal) => (
-                        <Text key={aGoal.id} style={styles.heroScorerTextAway} numberOfLines={1}>
-                          {aGoal.playerName} {getGoalTime(aGoal)}
-                        </Text>
-                      ))}
+                      {awayGoals.map((aGoal) => {
+                        const timeStr = getGoalTime(aGoal);
+                        const displayText = timeStr ? `${aGoal.playerName} ${timeStr}` : aGoal.playerName;
+                        return (
+                          <Text key={aGoal.id} style={styles.heroScorerTextAway} numberOfLines={1}>
+                            {displayText}
+                          </Text>
+                        );
+                      })}
                     </View>
                   </View>
                 );
