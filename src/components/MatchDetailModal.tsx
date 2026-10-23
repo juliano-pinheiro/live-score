@@ -2315,9 +2315,29 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   const isLive = matchStatus === '1H' || matchStatus === '2H' || matchStatus === 'HT';
   const isFinished = matchStatus === 'FT';
 
-  // Placar instantâneo: reflete imediatamente a pontuação mais recente (seja do feed de jogos ou do detalhe)
-  const homeScore = Math.max(match?.homeTeam.score ?? 0, details?.homeTeam.score ?? 0);
-  const awayScore = Math.max(match?.awayTeam.score ?? 0, details?.awayTeam.score ?? 0);
+  const matchStats = details?.stats ?? match?.stats ?? null;
+  const rawMatchEvents = details?.events ?? match?.events ?? [];
+
+  // Gols já confirmados em eventos recebidos da API
+  const homeGoalsInEvents = rawMatchEvents.filter(
+    (event) => event.type === 'GOAL' && event.team === 'HOME'
+  );
+  const awayGoalsInEvents = rawMatchEvents.filter(
+    (event) => event.type === 'GOAL' && event.team === 'AWAY'
+  );
+
+  // Placar instantâneo: reflete imediatamente a pontuação mais recente e no MÍNIMO
+  // a quantidade de gols confirmados em eventos (impedindo que um gol apareça em eventos/autores sem atualizar o placar)
+  const homeScore = Math.max(
+    match?.homeTeam.score ?? 0,
+    details?.homeTeam.score ?? 0,
+    homeGoalsInEvents.length
+  );
+  const awayScore = Math.max(
+    match?.awayTeam.score ?? 0,
+    details?.awayTeam.score ?? 0,
+    awayGoalsInEvents.length
+  );
 
   const homeTeam: TeamInfo = {
     ...(details?.homeTeam ?? match?.homeTeam ?? { id: '', name: '', shortName: '', badgeColor: '#38BDF8', score: 0, redCards: null }),
@@ -2329,6 +2349,9 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   };
   const isHomeWinner = isFinished && homeTeam.score > awayTeam.score;
   const isAwayWinner = isFinished && awayTeam.score > homeTeam.score;
+
+  const missingHomeGoals = Math.max(0, homeTeam.score - homeGoalsInEvents.length);
+  const missingAwayGoals = Math.max(0, awayTeam.score - awayGoalsInEvents.length);
 
   useEffect(() => {
     if (!match) return;
@@ -2418,19 +2441,6 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
     homeScoreHighlight,
     awayScoreHighlight,
   ]);
-  const matchStats = details?.stats ?? match?.stats ?? null;
-  const rawMatchEvents = details?.events ?? match?.events ?? [];
-
-  // Identifica se há gols no placar que ainda não possuem evento/autor retornado pela API
-  const homeGoalsInEvents = rawMatchEvents.filter(
-    (event) => event.type === 'GOAL' && event.team === 'HOME'
-  );
-  const awayGoalsInEvents = rawMatchEvents.filter(
-    (event) => event.type === 'GOAL' && event.team === 'AWAY'
-  );
-
-  const missingHomeGoals = Math.max(0, homeTeam.score - homeGoalsInEvents.length);
-  const missingAwayGoals = Math.max(0, awayTeam.score - awayGoalsInEvents.length);
 
   const provisionalGoals = useMemo(() => {
     if (!match || (missingHomeGoals === 0 && missingAwayGoals === 0)) return [];

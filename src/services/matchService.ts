@@ -978,6 +978,28 @@ async function fetchRecentVARAlerts(
               )
             : undefined;
 
+        const keyEvents = summary.keyEvents ?? [];
+        const eventHomeGoals = keyEvents.filter((e) => {
+          const rawType = (e.type?.text ?? e.type?.type ?? '').toLowerCase();
+          return (rawType.includes('goal') || Boolean(e.scoringPlay)) && !rawType.includes('miss') && e.team?.id === match.homeTeam.id;
+        }).length;
+        const eventAwayGoals = keyEvents.filter((e) => {
+          const rawType = (e.type?.text ?? e.type?.type ?? '').toLowerCase();
+          return (rawType.includes('goal') || Boolean(e.scoringPlay)) && !rawType.includes('miss') && e.team?.id === match.awayTeam.id;
+        }).length;
+
+        const compHomeScore = homeComp?.score !== undefined ? Number(homeComp.score) : undefined;
+        const compAwayScore = awayComp?.score !== undefined ? Number(awayComp.score) : undefined;
+
+        const resolvedHomeScore =
+          compHomeScore !== undefined || eventHomeGoals > 0
+            ? Math.max(compHomeScore ?? 0, eventHomeGoals)
+            : undefined;
+        const resolvedAwayScore =
+          compAwayScore !== undefined || eventAwayGoals > 0
+            ? Math.max(compAwayScore ?? 0, eventAwayGoals)
+            : undefined;
+
         const alert = {
           alertId: review?.id,
           alertTeam:
@@ -988,8 +1010,8 @@ async function fetchRecentVARAlerts(
               : undefined,
           homeRedCards: getRedCardCount('home'),
           awayRedCards: getRedCardCount('away'),
-          homeScore: homeComp?.score !== undefined ? Number(homeComp.score) : undefined,
-          awayScore: awayComp?.score !== undefined ? Number(awayComp.score) : undefined,
+          homeScore: resolvedHomeScore,
+          awayScore: resolvedAwayScore,
           status: nextStatus,
           minute: nextMinute,
           minuteLabel: nextMinuteLabel,
@@ -2171,22 +2193,26 @@ export async function fetchMatchDetails(
     return value === undefined ? null : value;
   };
 
+  const events = getMatchEvents(summary, home.id, away.id);
+  const eventHomeGoals = events.filter((e) => e.type === 'GOAL' && e.team === 'HOME').length;
+  const eventAwayGoals = events.filter((e) => e.type === 'GOAL' && e.team === 'AWAY').length;
+
   return {
     ...statistics,
     info: getMatchInfo(summary, match),
-    events: getMatchEvents(summary, home.id, away.id),
+    events,
     lineups: getMatchLineups(summary),
     headToHead: getHeadToHead(summary),
     standings,
     standingsAreProjected,
     homeTeam: {
       ...match.homeTeam,
-      score: Math.max(match.homeTeam.score, Number(home.score ?? match.homeTeam.score)),
+      score: Math.max(match.homeTeam.score, Number(home.score ?? match.homeTeam.score), eventHomeGoals),
       redCards: Math.max(getRedCards(home.id) ?? 0, match.homeTeam.redCards ?? 0) || null,
     },
     awayTeam: {
       ...match.awayTeam,
-      score: Math.max(match.awayTeam.score, Number(away.score ?? match.awayTeam.score)),
+      score: Math.max(match.awayTeam.score, Number(away.score ?? match.awayTeam.score), eventAwayGoals),
       redCards: Math.max(getRedCards(away.id) ?? 0, match.awayTeam.redCards ?? 0) || null,
     },
     status: matchStatus,
