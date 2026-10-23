@@ -17,6 +17,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MatchCard } from '../components/MatchCard';
 import { MatchDetailModal } from '../components/MatchDetailModal';
+import { CountryFlag } from '../components/CountryFlag';
 import { API_CONFIG } from '../config/api';
 import { fetchMatchesFromApi } from '../services/matchService';
 import { Match } from '../types/match';
@@ -123,42 +124,6 @@ function getKickoffMinutes(startTime: string): number {
   const time = startTime.match(/^(\d{1,2}):(\d{2})$/);
   if (!time) return Number.MAX_SAFE_INTEGER;
   return Number(time[1]) * 60 + Number(time[2]);
-}
-
-function getCountryFlag(country: string): string {
-  const flags: Record<string, string> = {
-    Argentina: '🇦🇷',
-    Austrália: '🇦🇺',
-    Brasil: '🇧🇷',
-    Chile: '🇨🇱',
-    China: '🇨🇳',
-    Colômbia: '🇨🇴',
-    Equador: '🇪🇨',
-    Espanha: '🇪🇸',
-    'Estados Unidos': '🇺🇸',
-    França: '🇫🇷',
-    Holanda: '🇳🇱',
-    'Países Baixos': '🇳🇱',
-    Inglaterra: '🇬🇧',
-    Itália: '🇮🇹',
-    México: '🇲🇽',
-    Paraguai: '🇵🇾',
-    Peru: '🇵🇪',
-    Portugal: '🇵🇹',
-    Escócia: '🏴',
-    Suécia: '🇸🇪',
-    Dinamarca: '🇩🇰',
-    Áustria: '🇦🇹',
-    Turquia: '🇹🇷',
-    Índia: '🇮🇳',
-    'Arábia Saudita': '🇸🇦',
-    'El Salvador': '🇸🇻',
-    Uruguai: '🇺🇾',
-    Alemanha: '🇩🇪',
-    África: '🌍',
-    Internacional: '🌍',
-  };
-  return flags[country] ?? '🌍';
 }
 
 function getDateKey(date: Date): string {
@@ -695,11 +660,10 @@ export const HomeScreen: React.FC = () => {
                     ]}
                   >
                     <View style={styles.leagueSidebarFlagBox}>
-                      <Text style={styles.leagueSidebarFlagText}>
-                        {league.id === 'ALL'
-                          ? '🏆'
-                          : getCountryFlag(league.country)}
-                      </Text>
+                      <CountryFlag
+                        country={league.id === 'ALL' ? 'ALL' : league.country}
+                        size={18}
+                      />
                     </View>
                     <View style={styles.leagueItemText}>
                       <Text
@@ -1059,9 +1023,10 @@ export const HomeScreen: React.FC = () => {
                 <View style={styles.leagueGroup}>
                   <View style={styles.leagueGroupHeader}>
                     <View style={styles.leagueBadge}>
-                      <Text style={styles.leagueBadgeText}>
-                        {getCountryFlag(group.leagueCountry)}
-                      </Text>
+                      <CountryFlag
+                        country={group.leagueCountry}
+                        size={18}
+                      />
                     </View>
                     <View style={styles.leagueGroupTitle}>
                       <Text style={styles.leagueGroupName} numberOfLines={1}>
