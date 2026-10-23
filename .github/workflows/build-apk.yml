@@ -48,21 +48,21 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease -x lint --no-daemon
-          cp app/build/outputs/apk/release/app-release.apk ../PulseScore.apk
+          cp app/build/outputs/apk/release/app-release.apk ../NextScore.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PulseScore-apk
-          path: ./PulseScore.apk
+          name: NextScore-apk
+          path: ./NextScore.apk
 
       - name: Publish APK to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: "PulseScore Android APK (Latest)"
-          body: "APK Android gerado automaticamente. Baixe o arquivo `PulseScore.apk` abaixo para instalar no celular."
+          name: "NextScore Android APK (Latest)"
+          body: "APK Android gerado automaticamente. Baixe o arquivo `NextScore.apk` abaixo para instalar no celular."
           prerelease: false
-          files: ./PulseScore.apk
+          files: ./NextScore.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "PulseScore",
-    "slug": "pulse-score-clean",
+    "name": "Next Score",
+    "slug": "next-score",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "backgroundColor": "#F4F7F6",
     "icon": "./assets/icon.png",
     "android": {
-      "package": "com.pulsescore.app",
+      "package": "com.nextscore.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#F4F7F6"

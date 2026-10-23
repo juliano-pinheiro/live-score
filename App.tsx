@@ -33,7 +33,7 @@ class AppErrorBoundary extends React.Component<
     if (this.state.hasError) {
       return (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorTitle}>PULSE SCORE</Text>
+          <Text style={styles.errorTitle}>NEXT SCORE</Text>
           <Text style={styles.errorSubtitle}>
             Ocorreu um erro temporário ao renderizar a tela.
           </Text>
@@ -59,7 +59,7 @@ export default function App() {
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof document === 'undefined') return;
 
-    const fontLinkId = 'pulsescore-google-fonts';
+    const fontLinkId = 'nextscore-google-fonts';
     if (!document.getElementById(fontLinkId)) {
       const link = document.createElement('link');
       link.id = fontLinkId;
@@ -69,7 +69,7 @@ export default function App() {
       document.head.appendChild(link);
     }
 
-    const styleId = 'pulsescore-global-typography';
+    const styleId = 'nextscore-global-typography';
     if (!document.getElementById(styleId)) {
       const style = document.createElement('style');
       style.id = styleId;

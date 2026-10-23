@@ -638,7 +638,7 @@ export const HomeScreen: React.FC = () => {
               <Text style={styles.brandLogoIcon}>⚽</Text>
             </View>
             <View style={styles.brandRow}>
-              <Text style={styles.brandTitle}>PULSE</Text>
+              <Text style={styles.brandTitle}>NEXT</Text>
               <Text style={styles.brandAccent}>SCORE</Text>
             </View>
           </TouchableOpacity>
@@ -1152,7 +1152,7 @@ export const HomeScreen: React.FC = () => {
                   <Text style={styles.infoPanelHeroEmoji}>🏟️</Text>
                 </View>
                 <Text style={styles.infoPanelEyebrow}>
-                  CENTRAL DA PARTIDA • PULSESCORE
+                  CENTRAL DA PARTIDA • NEXT SCORE
                 </Text>
                 <Text style={styles.infoPanelTitle}>
                   Selecione um confronto ao lado
