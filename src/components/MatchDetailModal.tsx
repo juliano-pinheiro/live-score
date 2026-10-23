@@ -2485,19 +2485,13 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                   </Text>
                 </TouchableOpacity>
                 {goalsForTeam('HOME').map((event) => (
-                  <View key={event.id} style={styles.heroGoalRow}>
-                    <Text
-                      style={styles.heroGoalScorer}
-                      numberOfLines={1}
-                    >
-                      ⚽ {event.playerName} {getGoalTime(event)}
-                    </Text>
-                    {Boolean(event.assistPlayerName) && (
-                      <Text style={styles.heroGoalAssist} numberOfLines={1}>
-                        👟 {event.assistPlayerName}
-                      </Text>
-                    )}
-                  </View>
+                  <Text
+                    key={event.id}
+                    style={styles.heroGoalScorer}
+                    numberOfLines={1}
+                  >
+                    ⚽ {event.playerName} {getGoalTime(event)}
+                  </Text>
                 ))}
               </View>
 
@@ -2589,19 +2583,13 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                   </Text>
                 </TouchableOpacity>
                 {goalsForTeam('AWAY').map((event) => (
-                  <View key={event.id} style={styles.heroGoalRow}>
-                    <Text
-                      style={styles.heroGoalScorer}
-                      numberOfLines={1}
-                    >
-                      ⚽ {event.playerName} {getGoalTime(event)}
-                    </Text>
-                    {Boolean(event.assistPlayerName) && (
-                      <Text style={styles.heroGoalAssist} numberOfLines={1}>
-                        👟 {event.assistPlayerName}
-                      </Text>
-                    )}
-                  </View>
+                  <Text
+                    key={event.id}
+                    style={styles.heroGoalScorer}
+                    numberOfLines={1}
+                  >
+                    ⚽ {event.playerName} {getGoalTime(event)}
+                  </Text>
                 ))}
               </View>
             </View>
@@ -2985,28 +2973,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
-  heroGoalRow: {
-    alignItems: 'center',
-    marginTop: 2,
-    maxWidth: '100%',
-  },
   heroGoalScorer: {
     color: '#1E40AF',
     fontFamily: FONT_SANS,
     fontSize: 10,
-    lineHeight: 14,
+    lineHeight: 15,
     fontWeight: '700',
     textAlign: 'center',
+    marginTop: 2,
+    maxWidth: '100%',
     fontVariant: ['tabular-nums'],
-  },
-  heroGoalAssist: {
-    color: '#64748B',
-    fontFamily: FONT_SANS,
-    fontSize: 9,
-    lineHeight: 12,
-    fontWeight: '500',
-    textAlign: 'center',
-    marginTop: 1,
   },
   heroCenterCol: {
     alignItems: 'center',
