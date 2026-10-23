@@ -164,6 +164,19 @@ export const HomeScreen: React.FC = () => {
   const [apiError, setApiError] = useState<string | null>(null);
   const [lastSyncTime, setLastSyncTime] = useState<string>('Agora');
   const [pinnedTimestamps, setPinnedTimestamps] = useState<Record<string, number>>({});
+  const [collapsedLeagues, setCollapsedLeagues] = useState<Set<string>>(new Set());
+
+  const toggleCollapseLeague = (groupId: string) => {
+    setCollapsedLeagues((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  };
   const pinnedIdsRef = React.useRef<Set<string>>(new Set());
   const listRef = React.useRef<FlatList<MatchGroup>>(null);
   const insets = useSafeAreaInsets();
@@ -1019,40 +1032,82 @@ export const HomeScreen: React.FC = () => {
                 styles.listContent,
                 { paddingBottom: Math.max(20, insets.bottom + 18) },
               ]}
-              renderItem={({ item: group }) => (
-                <View style={styles.leagueGroup}>
-                  <View style={styles.leagueGroupHeader}>
-                    <View style={styles.leagueBadge}>
-                      <CountryFlag
-                        country={group.leagueCountry}
-                        size={18}
-                      />
-                    </View>
-                    <View style={styles.leagueGroupTitle}>
-                      <Text style={styles.leagueGroupName} numberOfLines={1}>
-                        {group.leagueName}
-                      </Text>
-                      <Text style={styles.leagueGroupCountry} numberOfLines={1}>
-                        {group.leagueCountry}
-                      </Text>
-                    </View>
-                    <View style={styles.leagueGroupCountPill}>
-                      <Text style={styles.leagueGroupCount}>
-                        {group.matches.length}
-                      </Text>
-                    </View>
+              renderItem={({ item: group }) => {
+                const isPinned = group.id.startsWith('pinned-');
+                const isCollapsed = collapsedLeagues.has(group.id);
+                return (
+                  <View style={[styles.leagueGroup, isPinned && styles.leagueGroupPinned]}>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${isCollapsed ? 'Expandir' : 'Recolher'} ${group.leagueName}`}
+                      onPress={() => toggleCollapseLeague(group.id)}
+                      style={[
+                        styles.leagueGroupHeader,
+                        isPinned && styles.leagueGroupHeaderPinned,
+                        isCollapsed && styles.leagueGroupHeaderCollapsed,
+                      ]}
+                    >
+                      <View style={[styles.leagueBadge, isPinned && styles.leagueBadgePinned]}>
+                        <CountryFlag
+                          country={group.leagueCountry}
+                          size={18}
+                        />
+                      </View>
+                      <View style={styles.leagueGroupTitle}>
+                        <Text
+                          style={[
+                            styles.leagueGroupName,
+                            isPinned && styles.leagueGroupNamePinned,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {group.leagueName}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.leagueGroupCountry,
+                            isPinned && styles.leagueGroupCountryPinned,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {group.leagueCountry}
+                        </Text>
+                      </View>
+                      <View style={styles.leagueGroupHeaderRight}>
+                        <View
+                          style={[
+                            styles.leagueGroupCountPill,
+                            isPinned && styles.leagueGroupCountPillPinned,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.leagueGroupCount,
+                              isPinned && styles.leagueGroupCountPinned,
+                            ]}
+                          >
+                            {group.matches.length}
+                          </Text>
+                        </View>
+                        <Text style={styles.leagueCollapseChevron}>
+                          {isCollapsed ? '▼' : '▲'}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                    {!isCollapsed &&
+                      group.matches.map((match) => (
+                        <MatchCard
+                          key={match.id}
+                          match={match}
+                          isSelected={selectedMatchId === match.id}
+                          onPress={(selected) => setSelectedMatchId(selected.id)}
+                          onTogglePin={handleTogglePin}
+                        />
+                      ))}
                   </View>
-                  {group.matches.map((match) => (
-                    <MatchCard
-                      key={match.id}
-                      match={match}
-                      isSelected={selectedMatchId === match.id}
-                      onPress={(selected) => setSelectedMatchId(selected.id)}
-                      onTogglePin={handleTogglePin}
-                    />
-                  ))}
-                </View>
-              )}
+                );
+              }}
               ListEmptyComponent={
                 <View style={styles.emptyBox}>
                   <Text style={styles.emptyTitle}>
@@ -2058,6 +2113,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF3C7',
     borderBottomColor: '#FDE68A',
     borderLeftColor: '#D97706',
+  },
+  leagueGroupHeaderCollapsed: {
+    borderBottomWidth: 0,
+  },
+  leagueGroupHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  leagueCollapseChevron: {
+    color: '#94A3B8',
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: '700',
+    paddingHorizontal: 2,
   },
   leagueGroupTitle: {
     flex: 1,
