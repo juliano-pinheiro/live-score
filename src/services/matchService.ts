@@ -1595,6 +1595,16 @@ function getMatchEvents(
       shortName ||
       rawType;
 
+    const assistMatch = isGoal
+      ? /(?:assisted\s+by|assistência\s+de)\s+([A-ZÀ-ÖØ-Þ][a-zà-öø-ÿ'.-]+(?:\s+[A-ZÀ-ÖØ-Þ][a-zà-öø-ÿ'.-]+)*)/i.exec(
+          event.text ?? ''
+        )
+      : null;
+    const assistFromParticipants =
+      isGoal && participantNames.length >= 2 ? participantNames[1] : undefined;
+    const assistPlayerName =
+      assistFromParticipants || (assistMatch ? assistMatch[1].trim() : undefined);
+
     const isGoalkeeperSaveEvent = (() => {
       if (!isPenaltyNonGoal) return false;
       const normalizedPlayer = primaryPlayerName.trim().toLowerCase();
@@ -1690,6 +1700,7 @@ function getMatchEvents(
         label,
         team,
         playerName: primaryPlayerName || 'Evento da partida',
+        assistPlayerName: assistPlayerName || undefined,
         detail: event.text,
       },
     ];

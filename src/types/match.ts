@@ -106,6 +106,7 @@ export interface MatchEvent {
   label: string;
   team?: 'HOME' | 'AWAY';
   playerName: string;
+  assistPlayerName?: string;
   detail?: string;
 }
 

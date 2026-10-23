@@ -334,36 +334,54 @@ const MatchEventsList: React.FC<MatchEventsListProps> = ({ events }) => {
               </Text>
             </Text>
           ) : (
-            <Text
+            <View
               style={[
-                styles.eventPlayer,
-                event.team === 'AWAY' && styles.eventPlayerAway,
+                styles.eventPlayerCol,
+                event.team === 'AWAY' && styles.eventPlayerColAway,
               ]}
-              numberOfLines={1}
             >
-              {event.team === 'AWAY' && eventSecondaryReason ? (
-                <>
-                  <Text style={styles.eventReasonSubtle}>
-                    {eventSecondaryReason}{' '}
-                  </Text>
-                  <Text style={styles.eventPlayerMainName}>
-                    {event.playerName}
-                  </Text>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.eventPlayerMainName}>
-                    {event.playerName}
-                  </Text>
-                  {eventSecondaryReason ? (
+              <Text
+                style={[
+                  styles.eventPlayer,
+                  event.team === 'AWAY' && styles.eventPlayerAway,
+                ]}
+                numberOfLines={1}
+              >
+                {event.team === 'AWAY' && eventSecondaryReason ? (
+                  <>
                     <Text style={styles.eventReasonSubtle}>
-                      {'  '}
-                      {eventSecondaryReason}
+                      {eventSecondaryReason}{' '}
                     </Text>
-                  ) : null}
-                </>
+                    <Text style={styles.eventPlayerMainName}>
+                      {event.playerName}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.eventPlayerMainName}>
+                      {event.playerName}
+                    </Text>
+                    {eventSecondaryReason ? (
+                      <Text style={styles.eventReasonSubtle}>
+                        {'  '}
+                        {eventSecondaryReason}
+                      </Text>
+                    ) : null}
+                  </>
+                )}
+              </Text>
+              {Boolean(event.assistPlayerName) && (
+                <Text
+                  style={[
+                    styles.eventAssistText,
+                    event.team === 'AWAY' && styles.eventAssistTextAway,
+                  ]}
+                  numberOfLines={1}
+                >
+                  Assistência: {event.assistPlayerName}
+                </Text>
               )}
-            </Text>
+            </View>
           );
 
         return (
@@ -2467,13 +2485,19 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                   </Text>
                 </TouchableOpacity>
                 {goalsForTeam('HOME').map((event) => (
-                  <Text
-                    key={event.id}
-                    style={styles.heroGoalScorer}
-                    numberOfLines={1}
-                  >
-                    ⚽ {event.playerName} {getGoalTime(event)}
-                  </Text>
+                  <View key={event.id} style={styles.heroGoalRow}>
+                    <Text
+                      style={styles.heroGoalScorer}
+                      numberOfLines={1}
+                    >
+                      ⚽ {event.playerName} {getGoalTime(event)}
+                    </Text>
+                    {Boolean(event.assistPlayerName) && (
+                      <Text style={styles.heroGoalAssist} numberOfLines={1}>
+                        👟 {event.assistPlayerName}
+                      </Text>
+                    )}
+                  </View>
                 ))}
               </View>
 
@@ -2565,13 +2589,19 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                   </Text>
                 </TouchableOpacity>
                 {goalsForTeam('AWAY').map((event) => (
-                  <Text
-                    key={event.id}
-                    style={styles.heroGoalScorer}
-                    numberOfLines={1}
-                  >
-                    ⚽ {event.playerName} {getGoalTime(event)}
-                  </Text>
+                  <View key={event.id} style={styles.heroGoalRow}>
+                    <Text
+                      style={styles.heroGoalScorer}
+                      numberOfLines={1}
+                    >
+                      ⚽ {event.playerName} {getGoalTime(event)}
+                    </Text>
+                    {Boolean(event.assistPlayerName) && (
+                      <Text style={styles.heroGoalAssist} numberOfLines={1}>
+                        👟 {event.assistPlayerName}
+                      </Text>
+                    )}
+                  </View>
                 ))}
               </View>
             </View>
@@ -2955,16 +2985,28 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
+  heroGoalRow: {
+    alignItems: 'center',
+    marginTop: 2,
+    maxWidth: '100%',
+  },
   heroGoalScorer: {
     color: '#1E40AF',
     fontFamily: FONT_SANS,
     fontSize: 10,
-    lineHeight: 15,
+    lineHeight: 14,
     fontWeight: '700',
     textAlign: 'center',
-    marginTop: 2,
-    maxWidth: '100%',
     fontVariant: ['tabular-nums'],
+  },
+  heroGoalAssist: {
+    color: '#64748B',
+    fontFamily: FONT_SANS,
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: '500',
+    textAlign: 'center',
+    marginTop: 1,
   },
   heroCenterCol: {
     alignItems: 'center',
@@ -4762,6 +4804,24 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   eventPlayerAway: {
+    textAlign: 'right',
+  },
+  eventPlayerCol: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
+  },
+  eventPlayerColAway: {
+    alignItems: 'flex-end',
+  },
+  eventAssistText: {
+    color: '#64748B',
+    fontFamily: FONT_SANS,
+    fontSize: 9.5,
+    lineHeight: 13,
+    fontWeight: '500',
+  },
+  eventAssistTextAway: {
     textAlign: 'right',
   },
   eventSubPlayerIn: {
