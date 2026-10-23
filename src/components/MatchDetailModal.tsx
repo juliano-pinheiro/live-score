@@ -213,22 +213,32 @@ function getVARDetails(event: MatchEvent): {
   const lower = combined.toLowerCase();
 
   const isOverturned =
-    /overturn|disallow|cancel|anulado|recusado|no goal|no penalty|rescind|anula[çc][ãa]o/i.test(
+    /overturn|disallow|cancel|anulado|recusado|no goal|no penalty|not given|rescind|anula[çc][ãa]o/i.test(
       lower
     );
   const isConfirmed =
-    /confirm|awarded|given|stands|marcado|concedido|validado/i.test(lower);
+    /confirm|awarded|given|stands|marcado|concedido|validado|dado|award/i.test(
+      lower
+    );
   const isOffside = /offside|impedimento/i.test(lower);
   const isHandball =
     /handball|hand ball|toque de m[ãa]o|m[ãa]o/i.test(lower);
   const isFoul = /foul|falta/i.test(lower);
-  const isGoal = /goal|gol/i.test(lower);
   const isPenalty = /penalty|p[êe]nalti/i.test(lower);
+  const isGoal = /goal|gol/i.test(lower);
   const isRedCard = /red card|cart[ãa]o vermelho/i.test(lower);
 
   let decisionTitle = 'Revisão do VAR';
 
-  if (isGoal) {
+  if (isPenalty) {
+    if (isOverturned) {
+      decisionTitle = 'Pênalti anulado pelo VAR';
+    } else if (isConfirmed) {
+      decisionTitle = 'Pênalti marcado pelo VAR';
+    } else {
+      decisionTitle = 'Checagem de pênalti pelo VAR';
+    }
+  } else if (isGoal) {
     if (isOverturned) {
       if (isOffside) {
         decisionTitle = 'Gol anulado (Impedimento)';
@@ -243,14 +253,6 @@ function getVARDetails(event: MatchEvent): {
       decisionTitle = 'Gol confirmado pelo VAR';
     } else {
       decisionTitle = 'Checagem de gol pelo VAR';
-    }
-  } else if (isPenalty) {
-    if (isOverturned) {
-      decisionTitle = 'Pênalti cancelado pelo VAR';
-    } else if (isConfirmed) {
-      decisionTitle = 'Pênalti marcado pelo VAR';
-    } else {
-      decisionTitle = 'Checagem de pênalti pelo VAR';
     }
   } else if (isRedCard) {
     if (isOverturned) {
@@ -401,7 +403,11 @@ const MatchEventsList: React.FC<MatchEventsListProps> = ({ events }) => {
             : [];
         const eventSecondaryReason =
           event.type === 'PENALTY_MISSED'
-            ? 'Pênalti perdido'
+            ? /trave/i.test(event.label) || /trave|post|bar/i.test(event.detail ?? '')
+              ? 'Pênalti na trave'
+              : /defendid/i.test(event.label) || /saved|defendid/i.test(event.detail ?? '')
+              ? 'Pênalti defendido'
+              : 'Pênalti perdido'
             : event.type === 'GOAL' && /own goal|gol contra/i.test(event.detail ?? '')
             ? 'Gol contra'
             : event.type === 'GOAL' && /penalty|pênalti/i.test(event.detail ?? '')

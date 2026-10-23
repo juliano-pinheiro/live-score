@@ -1524,11 +1524,13 @@ function parseVARDecision(
   const combined = `${rawType} ${shortText} ${text}`.toLowerCase();
 
   const isOverturned =
-    /overturn|disallow|cancel|anulado|recusado|no goal|no penalty|rescind|anula[çc][ãa]o/i.test(
+    /overturn|disallow|cancel|anulado|recusado|no goal|no penalty|not given|rescind|anula[çc][ãa]o/i.test(
       combined
     );
   const isConfirmed =
-    /confirm|awarded|given|stands|marcado|concedido|validado/i.test(combined);
+    /confirm|awarded|given|stands|marcado|concedido|validado|dado|award/i.test(
+      combined
+    );
   const isOffside = /offside|impedimento/i.test(combined);
   const isHandball =
     /handball|hand ball|toque de m[ãa]o|m[ãa]o/i.test(combined);
@@ -1539,7 +1541,15 @@ function parseVARDecision(
 
   let decision = 'Revisão do VAR';
 
-  if (isGoal) {
+  if (isPenalty) {
+    if (isOverturned) {
+      decision = 'Pênalti anulado pelo VAR';
+    } else if (isConfirmed) {
+      decision = 'Pênalti marcado pelo VAR';
+    } else {
+      decision = 'Checagem de pênalti pelo VAR';
+    }
+  } else if (isGoal) {
     if (isOverturned) {
       if (isOffside) {
         decision = 'Gol anulado (Impedimento)';
@@ -1554,14 +1564,6 @@ function parseVARDecision(
       decision = 'Gol confirmado pelo VAR';
     } else {
       decision = 'Checagem de gol pelo VAR';
-    }
-  } else if (isPenalty) {
-    if (isOverturned) {
-      decision = 'Pênalti cancelado pelo VAR';
-    } else if (isConfirmed) {
-      decision = 'Pênalti marcado pelo VAR';
-    } else {
-      decision = 'Checagem de pênalti pelo VAR';
     }
   } else if (isRedCard) {
     if (isOverturned) {
@@ -1635,17 +1637,20 @@ function getMatchEvents(
     const rawType = event.type?.text ?? event.type?.type ?? '';
     const normalizedType = rawType.toLowerCase();
     const description = `${event.text ?? ''} ${event.shortText ?? ''}`;
-    const isGoal = normalizedType.includes('goal') || Boolean(event.scoringPlay);
-    const isPenaltyNonGoal =
-      !isGoal &&
-      /penalty/i.test(`${rawType} ${description}`);
-    const isRedCard = normalizedType.includes('red card');
-    const isYellowCard = normalizedType.includes('yellow card');
-    const isSubstitution = normalizedType.includes('substitution');
     const isVAR =
       /\bvar\b|video assistant referee|video review/i.test(
         `${rawType} ${description}`
       );
+    const isGoal = normalizedType.includes('goal') || Boolean(event.scoringPlay);
+    const isPenaltyMissed =
+      !isGoal &&
+      !isVAR &&
+      /penalty\s*(?:-?\s*)?(?:missed|saved|struck|fail|post|bar)|(?:missed|saved)\s*(?:-?\s*)?penalty|p[êe]nalti\s*(?:-?\s*)?(?:perdido|defendido|desperdi[çc]ado)|(?:perdeu|defendeu)\s*(?:o\s*)?p[êe]nalti/i.test(
+        `${rawType} ${description}`
+      );
+    const isRedCard = normalizedType.includes('red card');
+    const isYellowCard = normalizedType.includes('yellow card');
+    const isSubstitution = normalizedType.includes('substitution');
     const isKickoff =
       normalizedType.includes('kickoff') ||
       normalizedType.includes('start of 1st half');
@@ -1688,7 +1693,7 @@ function getMatchEvents(
       assistFromParticipants || (assistMatch ? assistMatch[1].trim() : undefined);
 
     const isGoalkeeperSaveEvent = (() => {
-      if (!isPenaltyNonGoal) return false;
+      if (!isPenaltyMissed) return false;
       const normalizedPlayer = primaryPlayerName.trim().toLowerCase();
       if (goalkeeperNames.has(normalizedPlayer)) return true;
       const escapedName = primaryPlayerName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -1716,9 +1721,22 @@ function getMatchEvents(
       return [];
     }
 
+    const penaltyMissedReason = (() => {
+      if (!isPenaltyMissed) return null;
+      if (/post|bar|trave|madeira|woodwork/i.test(`${rawType} ${description}`)) {
+        return 'Pênalti na trave';
+      }
+      if (/saved|defendid|defendeu/i.test(`${rawType} ${description}`)) {
+        return 'Pênalti defendido';
+      }
+      return 'Pênalti perdido';
+    })();
+
     const type: MatchEvent['type'] = isGoal
       ? 'GOAL'
-      : isPenaltyNonGoal
+      : isVAR
+      ? 'VAR'
+      : isPenaltyMissed
       ? 'PENALTY_MISSED'
       : isRedCard
       ? 'RED_CARD'
@@ -1726,8 +1744,6 @@ function getMatchEvents(
       ? 'YELLOW_CARD'
       : isSubstitution
       ? 'SUBSTITUTION'
-      : isVAR
-      ? 'VAR'
       : isKickoff
       ? 'KICKOFF'
       : isHalftime
@@ -1762,7 +1778,7 @@ function getMatchEvents(
       type === 'GOAL'
         ? 'Gol'
         : type === 'PENALTY_MISSED'
-        ? 'Pênalti perdido'
+        ? (penaltyMissedReason ?? 'Pênalti perdido')
         : type === 'RED_CARD'
         ? 'Cartão vermelho'
         : type === 'YELLOW_CARD'
