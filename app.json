@@ -6,9 +6,11 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "backgroundColor": "#F4F7F6",
+    "icon": "./assets/icon.png",
     "android": {
       "package": "com.pulsescore.app",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#F4F7F6"
       }
     }
