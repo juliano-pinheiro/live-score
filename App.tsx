@@ -74,13 +74,14 @@ export default function App() {
       const style = document.createElement('style');
       style.id = styleId;
       style.textContent = `
-        * {
-          -webkit-font-smoothing: antialiased !important;
-          -moz-osx-font-smoothing: grayscale !important;
-          text-rendering: geometricPrecision !important;
-        }
         html, body, #root, input, button {
-          font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+          font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          text-rendering: optimizeLegibility;
+        }
+        /* Crisp pixel rendering and tabular alignment for numbers */
+        [class*="r-fontVariant-"], [class*="tabular-nums"] {
+          font-variant-numeric: tabular-nums lining-nums !important;
+          text-rendering: optimizeLegibility !important;
         }
       `;
       document.head.appendChild(style);

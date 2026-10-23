@@ -17,7 +17,7 @@ import {
 const FONT_SANS = Platform.select({ web: 'Plus Jakarta Sans', default: undefined });
 const FONT_DISPLAY = Platform.select({ web: 'Outfit', default: undefined });
 const FONT_SCORE = Platform.select({
-  web: "'Oswald', 'Barlow Semi Condensed', 'DIN Alternate', 'Trebuchet MS', sans-serif",
+  web: "'Barlow Semi Condensed', 'Oswald', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
   android: 'sans-serif-condensed',
   ios: 'DIN Alternate',
   default: undefined,
@@ -2982,30 +2982,30 @@ const styles = StyleSheet.create({
     fontFamily: FONT_SCORE,
     fontSize: 28,
     lineHeight: 32,
-    fontWeight: '600',
+    fontWeight: '700',
     fontVariant: ['tabular-nums'],
     letterSpacing: 0.5,
   },
   heroScoreLive: {
     color: '#CB1818',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   heroScoreDashLive: {
     color: '#CB1818',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   heroScoreFinished: {
     color: '#0F172A',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   heroScoreWinner: {
     color: '#000000',
-    fontWeight: '700',
+    fontWeight: '800',
     fontSize: 30,
   },
   heroScoreLoser: {
     color: '#94A3B8',
-    fontWeight: '400',
+    fontWeight: '500',
     fontSize: 26,
     opacity: 0.65,
   },
@@ -3022,7 +3022,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_SCORE,
     fontSize: 22,
     lineHeight: 26,
-    fontWeight: '600',
+    fontWeight: '700',
     marginHorizontal: 8,
   },
   heroStatusPill: {

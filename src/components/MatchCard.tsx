@@ -13,7 +13,7 @@ import { Match } from '../types/match';
 const FONT_SANS = Platform.select({ web: 'Plus Jakarta Sans', default: undefined });
 const FONT_DISPLAY = Platform.select({ web: 'Outfit', default: undefined });
 const FONT_SCORE = Platform.select({
-  web: "'Oswald', 'Barlow Semi Condensed', 'DIN Alternate', 'Trebuchet MS', sans-serif",
+  web: "'Barlow Semi Condensed', 'Oswald', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
   android: 'sans-serif-condensed',
   ios: 'DIN Alternate',
   default: undefined,
@@ -629,25 +629,25 @@ const styles = StyleSheet.create({
     fontFamily: FONT_SCORE,
     minWidth: 20,
     textAlign: 'right',
-    fontSize: 14,
+    fontSize: 14.5,
     lineHeight: 18,
-    fontWeight: '600',
+    fontWeight: '700',
     fontVariant: ['tabular-nums'],
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   scoreWinner: {
     color: '#000000',
-    fontWeight: '700',
-    fontSize: 14,
+    fontWeight: '800',
+    fontSize: 14.5,
   },
   scoreLoser: {
     color: '#94A3B8',
-    fontWeight: '400',
+    fontWeight: '500',
     opacity: 0.65,
   },
   scoreLive: {
     color: '#CB1818',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   redCard: {
     minWidth: 10,
