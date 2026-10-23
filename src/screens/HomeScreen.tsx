@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AppState,
   FlatList,
@@ -149,6 +149,136 @@ function getMonthDays(date: Date): Date[] {
   });
 }
 
+interface LeagueGroupItemProps {
+  group: MatchGroup;
+  isCollapsed: boolean;
+  selectedMatchId: string | null;
+  onToggleCollapse: (groupId: string) => void;
+  onSelectMatch: (match: Match) => void;
+  onTogglePin: (matchId: string) => void;
+}
+
+const LeagueGroupItem = React.memo<LeagueGroupItemProps>(
+  ({
+    group,
+    isCollapsed,
+    selectedMatchId,
+    onToggleCollapse,
+    onSelectMatch,
+    onTogglePin,
+  }) => {
+    const isPinned = group.id.startsWith('pinned-');
+    return (
+      <View style={[styles.leagueGroup, isPinned && styles.leagueGroupPinned]}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={`${isCollapsed ? 'Expandir' : 'Recolher'} ${group.leagueName}`}
+          onPress={() => onToggleCollapse(group.id)}
+          style={[
+            styles.leagueGroupHeader,
+            isPinned && styles.leagueGroupHeaderPinned,
+            isCollapsed && styles.leagueGroupHeaderCollapsed,
+          ]}
+        >
+          <View style={[styles.leagueBadge, isPinned && styles.leagueBadgePinned]}>
+            <CountryFlag country={group.leagueCountry} size={18} />
+          </View>
+          <View style={styles.leagueGroupTitle}>
+            <Text
+              style={[
+                styles.leagueGroupName,
+                isPinned && styles.leagueGroupNamePinned,
+              ]}
+              numberOfLines={1}
+            >
+              {group.leagueName}
+            </Text>
+            <Text
+              style={[
+                styles.leagueGroupCountry,
+                isPinned && styles.leagueGroupCountryPinned,
+              ]}
+              numberOfLines={1}
+            >
+              {group.leagueCountry}
+            </Text>
+          </View>
+          <View style={styles.leagueGroupHeaderRight}>
+            <View
+              style={[
+                styles.leagueGroupCountPill,
+                isPinned && styles.leagueGroupCountPillPinned,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.leagueGroupCount,
+                  isPinned && styles.leagueGroupCountPinned,
+                ]}
+              >
+                {group.matches.length}
+              </Text>
+            </View>
+            <Text style={styles.leagueCollapseChevron}>
+              {isCollapsed ? '▼' : '▲'}
+            </Text>
+          </View>
+        </TouchableOpacity>
+        {!isCollapsed &&
+          group.matches.map((match) => (
+            <MatchCard
+              key={match.id}
+              match={match}
+              isSelected={selectedMatchId === match.id}
+              onPress={onSelectMatch}
+              onTogglePin={onTogglePin}
+            />
+          ))}
+      </View>
+    );
+  },
+  (prev, next) => {
+    if (prev.isCollapsed !== next.isCollapsed) return false;
+    if (prev.onToggleCollapse !== next.onToggleCollapse) return false;
+    if (prev.onSelectMatch !== next.onSelectMatch) return false;
+    if (prev.onTogglePin !== next.onTogglePin) return false;
+
+    const prevHasSelected = prev.group.matches.some((m) => m.id === prev.selectedMatchId);
+    const nextHasSelected = next.group.matches.some((m) => m.id === next.selectedMatchId);
+    if (prevHasSelected !== nextHasSelected) return false;
+    if (prevHasSelected && prev.selectedMatchId !== next.selectedMatchId) return false;
+
+    if (prev.group === next.group) return true;
+    if (prev.group.id !== next.group.id) return false;
+    if (prev.group.matches.length !== next.group.matches.length) return false;
+
+    if (prev.isCollapsed && next.isCollapsed) return true;
+
+    for (let i = 0; i < prev.group.matches.length; i++) {
+      const pm = prev.group.matches[i];
+      const nm = next.group.matches[i];
+      if (
+        pm.id !== nm.id ||
+        pm.status !== nm.status ||
+        pm.minute !== nm.minute ||
+        pm.minuteLabel !== nm.minuteLabel ||
+        pm.homeTeam.score !== nm.homeTeam.score ||
+        pm.awayTeam.score !== nm.awayTeam.score ||
+        pm.homeTeam.redCards !== nm.homeTeam.redCards ||
+        pm.awayTeam.redCards !== nm.awayTeam.redCards ||
+        pm.isPinned !== nm.isPinned ||
+        pm.recentAlert?.id !== nm.recentAlert?.id ||
+        pm.recentAlert?.type !== nm.recentAlert?.type ||
+        pm.recentGoalTeam !== nm.recentGoalTeam
+      ) {
+        return false;
+      }
+    }
+    return true;
+  }
+);
+
 export const HomeScreen: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [activeTab, setActiveTab] = useState<MainTab>('ALL');
@@ -166,7 +296,11 @@ export const HomeScreen: React.FC = () => {
   const [pinnedTimestamps, setPinnedTimestamps] = useState<Record<string, number>>({});
   const [collapsedLeagues, setCollapsedLeagues] = useState<Set<string>>(new Set());
 
-  const toggleCollapseLeague = (groupId: string) => {
+  const handleSelectMatch = useCallback((selected: Match) => {
+    setSelectedMatchId(selected.id);
+  }, []);
+
+  const toggleCollapseLeague = useCallback((groupId: string) => {
     setCollapsedLeagues((prev) => {
       const next = new Set(prev);
       if (next.has(groupId)) {
@@ -176,7 +310,7 @@ export const HomeScreen: React.FC = () => {
       }
       return next;
     });
-  };
+  }, []);
   const pinnedIdsRef = React.useRef<Set<string>>(new Set());
   const listRef = React.useRef<FlatList<MatchGroup>>(null);
   const insets = useSafeAreaInsets();
@@ -362,7 +496,7 @@ export const HomeScreen: React.FC = () => {
     if (isCalendarVisible) setCalendarMonth(selectedDate);
   }, [isCalendarVisible, selectedDate]);
 
-  const handleTogglePin = (matchId: string) => {
+  const handleTogglePin = useCallback((matchId: string) => {
     const isCurrentlyPinned = pinnedIdsRef.current.has(matchId);
     if (isCurrentlyPinned) {
       pinnedIdsRef.current.delete(matchId);
@@ -384,7 +518,7 @@ export const HomeScreen: React.FC = () => {
         m.id === matchId ? { ...m, isPinned: !isCurrentlyPinned } : m
       )
     );
-  };
+  }, []);
 
   const handleRefresh = () => {
     setIsLoading(true);
@@ -607,6 +741,22 @@ export const HomeScreen: React.FC = () => {
     nextDate.setDate(nextDate.getDate() + days);
     handleSelectDate(nextDate);
   };
+
+  const renderLeagueGroup = useCallback(
+    ({ item: group }: { item: MatchGroup }) => (
+      <LeagueGroupItem
+        group={group}
+        isCollapsed={collapsedLeagues.has(group.id)}
+        selectedMatchId={selectedMatchId}
+        onToggleCollapse={toggleCollapseLeague}
+        onSelectMatch={handleSelectMatch}
+        onTogglePin={handleTogglePin}
+      />
+    ),
+    [collapsedLeagues, selectedMatchId, toggleCollapseLeague, handleSelectMatch, handleTogglePin]
+  );
+
+  const groupKeyExtractor = useCallback((group: MatchGroup) => group.id, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -1029,88 +1179,18 @@ export const HomeScreen: React.FC = () => {
             <FlatList
               ref={listRef}
               data={matchGroups}
-              keyExtractor={(group) => group.id}
+              keyExtractor={groupKeyExtractor}
+              renderItem={renderLeagueGroup}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={[
                 styles.listContent,
                 { paddingBottom: Math.max(20, insets.bottom + 18) },
               ]}
-              renderItem={({ item: group }) => {
-                const isPinned = group.id.startsWith('pinned-');
-                const isCollapsed = collapsedLeagues.has(group.id);
-                return (
-                  <View style={[styles.leagueGroup, isPinned && styles.leagueGroupPinned]}>
-                    <TouchableOpacity
-                      activeOpacity={0.7}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${isCollapsed ? 'Expandir' : 'Recolher'} ${group.leagueName}`}
-                      onPress={() => toggleCollapseLeague(group.id)}
-                      style={[
-                        styles.leagueGroupHeader,
-                        isPinned && styles.leagueGroupHeaderPinned,
-                        isCollapsed && styles.leagueGroupHeaderCollapsed,
-                      ]}
-                    >
-                      <View style={[styles.leagueBadge, isPinned && styles.leagueBadgePinned]}>
-                        <CountryFlag
-                          country={group.leagueCountry}
-                          size={18}
-                        />
-                      </View>
-                      <View style={styles.leagueGroupTitle}>
-                        <Text
-                          style={[
-                            styles.leagueGroupName,
-                            isPinned && styles.leagueGroupNamePinned,
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {group.leagueName}
-                        </Text>
-                        <Text
-                          style={[
-                            styles.leagueGroupCountry,
-                            isPinned && styles.leagueGroupCountryPinned,
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {group.leagueCountry}
-                        </Text>
-                      </View>
-                      <View style={styles.leagueGroupHeaderRight}>
-                        <View
-                          style={[
-                            styles.leagueGroupCountPill,
-                            isPinned && styles.leagueGroupCountPillPinned,
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.leagueGroupCount,
-                              isPinned && styles.leagueGroupCountPinned,
-                            ]}
-                          >
-                            {group.matches.length}
-                          </Text>
-                        </View>
-                        <Text style={styles.leagueCollapseChevron}>
-                          {isCollapsed ? '▼' : '▲'}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                    {!isCollapsed &&
-                      group.matches.map((match) => (
-                        <MatchCard
-                          key={match.id}
-                          match={match}
-                          isSelected={selectedMatchId === match.id}
-                          onPress={(selected) => setSelectedMatchId(selected.id)}
-                          onTogglePin={handleTogglePin}
-                        />
-                      ))}
-                  </View>
-                );
-              }}
+              initialNumToRender={6}
+              maxToRenderPerBatch={6}
+              windowSize={5}
+              updateCellsBatchingPeriod={40}
+              removeClippedSubviews={Platform.OS !== 'web'}
               ListEmptyComponent={
                 <View style={styles.emptyBox}>
                   <Text style={styles.emptyTitle}>

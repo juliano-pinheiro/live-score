@@ -8,7 +8,7 @@ interface TeamCrestProps {
   size: number;
 }
 
-export const TeamCrest: React.FC<TeamCrestProps> = ({
+export const TeamCrest = React.memo<TeamCrestProps>(({
   logoUrl,
   shortName,
   color,
@@ -25,6 +25,7 @@ export const TeamCrest: React.FC<TeamCrestProps> = ({
       <Image
         accessibilityLabel={`Escudo do ${shortName}`}
         onError={() => setHasLoadError(true)}
+        fadeDuration={0}
         resizeMode="contain"
         source={{ uri: logoUrl }}
         style={{ width: size, height: size }}
@@ -44,7 +45,7 @@ export const TeamCrest: React.FC<TeamCrestProps> = ({
       </Text>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   fallback: {

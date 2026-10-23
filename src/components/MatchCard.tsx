@@ -26,7 +26,7 @@ interface MatchCardProps {
   onTogglePin: (matchId: string) => void;
 }
 
-export const MatchCard: React.FC<MatchCardProps> = ({
+const MatchCardComponent: React.FC<MatchCardProps> = ({
   match,
   isSelected = false,
   onPress,
@@ -78,12 +78,12 @@ export const MatchCard: React.FC<MatchCardProps> = ({
           Animated.timing(homeScoreScale, {
             toValue: 1.35,
             duration: 170,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
           Animated.spring(homeScoreScale, {
             toValue: 1,
             friction: 4,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
         ]),
         Animated.sequence([
@@ -108,12 +108,12 @@ export const MatchCard: React.FC<MatchCardProps> = ({
           Animated.timing(awayScoreScale, {
             toValue: 1.35,
             duration: 170,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
           Animated.spring(awayScoreScale, {
             toValue: 1,
             friction: 4,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
         ]),
         Animated.sequence([
@@ -156,12 +156,12 @@ export const MatchCard: React.FC<MatchCardProps> = ({
         Animated.timing(goalPulseOpacity, {
           toValue: 0.85,
           duration: 500,
-          useNativeDriver: false,
+          useNativeDriver: true,
         }),
         Animated.timing(goalPulseOpacity, {
           toValue: 0,
           duration: 500,
-          useNativeDriver: false,
+          useNativeDriver: true,
         }),
       ]),
       { iterations: 3 }
@@ -725,4 +725,25 @@ const styles = StyleSheet.create({
   pinIconActive: {
     color: '#FACC15',
   },
+});
+
+export const MatchCard = React.memo<MatchCardProps>(MatchCardComponent, (prevProps, nextProps) => {
+  if (prevProps.isSelected !== nextProps.isSelected) return false;
+  if (prevProps.match === nextProps.match) return true;
+  const prev = prevProps.match;
+  const next = nextProps.match;
+  return (
+    prev.id === next.id &&
+    prev.status === next.status &&
+    prev.minute === next.minute &&
+    prev.minuteLabel === next.minuteLabel &&
+    prev.isPinned === next.isPinned &&
+    prev.homeTeam.score === next.homeTeam.score &&
+    prev.awayTeam.score === next.awayTeam.score &&
+    prev.homeTeam.redCards === next.homeTeam.redCards &&
+    prev.awayTeam.redCards === next.awayTeam.redCards &&
+    prev.recentAlert?.id === next.recentAlert?.id &&
+    prev.recentAlert?.type === next.recentAlert?.type &&
+    prev.recentGoalTeam === next.recentGoalTeam
+  );
 });

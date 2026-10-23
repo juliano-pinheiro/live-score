@@ -87,7 +87,7 @@ interface CountryFlagProps {
   style?: object;
 }
 
-export const CountryFlag: React.FC<CountryFlagProps> = ({
+export const CountryFlag = React.memo<CountryFlagProps>(({
   country,
   size = 19,
   style,
@@ -130,6 +130,7 @@ export const CountryFlag: React.FC<CountryFlagProps> = ({
           source={{ uri: `https://flagcdn.com/w40/${code}.png` }}
           style={{ width: size, height, borderRadius: 2 }}
           resizeMode="cover"
+          fadeDuration={0}
           onError={() => setHasError(true)}
         />
       </View>
@@ -141,7 +142,7 @@ export const CountryFlag: React.FC<CountryFlagProps> = ({
       {country.slice(0, 2).toUpperCase()}
     </Text>
   );
-};
+});
 
 const styles = StyleSheet.create({
   flagWrapper: {
