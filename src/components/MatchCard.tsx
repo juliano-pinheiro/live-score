@@ -13,7 +13,7 @@ import { Match } from '../types/match';
 const FONT_SANS = Platform.select({ web: 'Plus Jakarta Sans', default: undefined });
 const FONT_DISPLAY = Platform.select({ web: 'Outfit', default: undefined });
 const FONT_SCORE = Platform.select({
-  web: "'Roboto Condensed', 'Barlow Condensed', 'DIN Alternate', -apple-system, sans-serif",
+  web: "'Oswald', 'Barlow Semi Condensed', 'DIN Alternate', 'Trebuchet MS', sans-serif",
   android: 'sans-serif-condensed',
   ios: 'DIN Alternate',
   default: undefined,
@@ -378,7 +378,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
                     transform: [{ scale: homeScoreScale }],
                     color: homeScoreHighlight.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [isLive ? '#D71920' : '#000000', '#16A34A'],
+                      outputRange: [isLive ? '#CB1818' : '#000000', '#16A34A'],
                     }),
                   }
                 : null,
@@ -447,7 +447,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
                     transform: [{ scale: awayScoreScale }],
                     color: awayScoreHighlight.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [isLive ? '#D71920' : '#000000', '#16A34A'],
+                      outputRange: [isLive ? '#CB1818' : '#000000', '#16A34A'],
                     }),
                   }
                 : null,
@@ -564,7 +564,7 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 3,
-    backgroundColor: '#E11D48',
+    backgroundColor: '#CB1818',
     marginRight: 3,
   },
   liveDotHalftime: {
@@ -579,7 +579,7 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   statusTextLive: {
-    color: '#E11D48',
+    color: '#CB1818',
   },
   statusTextHalftime: {
     color: '#D97706',
@@ -625,28 +625,29 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   score: {
-    color: '#000000',
+    color: '#0F172A',
     fontFamily: FONT_SCORE,
-    minWidth: 20,
+    minWidth: 22,
     textAlign: 'right',
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 16,
+    lineHeight: 20,
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
+    letterSpacing: 0.5,
   },
   scoreWinner: {
     color: '#000000',
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 16,
   },
   scoreLoser: {
-    color: '#64748B',
+    color: '#94A3B8',
     fontWeight: '400',
     opacity: 0.65,
   },
   scoreLive: {
-    color: '#BA0C2F',
-    fontWeight: '700',
+    color: '#CB1818',
+    fontWeight: '600',
   },
   redCard: {
     minWidth: 10,

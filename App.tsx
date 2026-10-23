@@ -65,7 +65,7 @@ export default function App() {
       link.id = fontLinkId;
       link.rel = 'stylesheet';
       link.href =
-        'https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,700&display=swap';
+        'https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700;800&family=Oswald:wght@500;600;700&family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto+Condensed:wght@500;600;700;800&display=swap';
       document.head.appendChild(link);
     }
 
@@ -79,7 +79,7 @@ export default function App() {
           -moz-osx-font-smoothing: grayscale !important;
           text-rendering: geometricPrecision !important;
         }
-        html, body, #root, input, button, [class*="css-text"] {
+        html, body, #root, input, button {
           font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
         }
       `;
