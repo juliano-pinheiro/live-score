@@ -2980,11 +2980,11 @@ const styles = StyleSheet.create({
   heroScoreText: {
     color: '#0F172A',
     fontFamily: FONT_SCORE,
-    fontSize: 38,
-    lineHeight: 42,
+    fontSize: 28,
+    lineHeight: 32,
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
-    letterSpacing: 0.8,
+    letterSpacing: 0.5,
   },
   heroScoreLive: {
     color: '#CB1818',
@@ -3001,12 +3001,12 @@ const styles = StyleSheet.create({
   heroScoreWinner: {
     color: '#000000',
     fontWeight: '700',
-    fontSize: 40,
+    fontSize: 30,
   },
   heroScoreLoser: {
     color: '#94A3B8',
     fontWeight: '400',
-    fontSize: 34,
+    fontSize: 26,
     opacity: 0.65,
   },
   heroTeamNameWinner: {
@@ -3020,10 +3020,10 @@ const styles = StyleSheet.create({
   heroScoreDash: {
     color: '#94A3B8',
     fontFamily: FONT_SCORE,
-    fontSize: 28,
-    lineHeight: 34,
+    fontSize: 22,
+    lineHeight: 26,
     fontWeight: '600',
-    marginHorizontal: 10,
+    marginHorizontal: 8,
   },
   heroStatusPill: {
     paddingHorizontal: 4,
@@ -3038,8 +3038,8 @@ const styles = StyleSheet.create({
   heroStatusText: {
     color: '#475569',
     fontFamily: FONT_SCORE,
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 12,
+    lineHeight: 16,
     fontWeight: '600',
     letterSpacing: 0.5,
     fontVariant: ['tabular-nums'],
@@ -4608,8 +4608,8 @@ const styles = StyleSheet.create({
     fontFamily: FONT_SCORE,
     minWidth: 20,
     textAlign: 'right',
-    fontSize: 15,
-    lineHeight: 19,
+    fontSize: 13.5,
+    lineHeight: 17,
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },

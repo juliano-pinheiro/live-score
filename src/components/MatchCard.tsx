@@ -627,18 +627,18 @@ const styles = StyleSheet.create({
   score: {
     color: '#0F172A',
     fontFamily: FONT_SCORE,
-    minWidth: 22,
+    minWidth: 20,
     textAlign: 'right',
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 14,
+    lineHeight: 18,
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   scoreWinner: {
     color: '#000000',
     fontWeight: '700',
-    fontSize: 16,
+    fontSize: 14,
   },
   scoreLoser: {
     color: '#94A3B8',
