@@ -2581,36 +2581,27 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
               {(() => {
                 const homeGoals = goalsForTeam('HOME');
                 const awayGoals = goalsForTeam('AWAY');
-                const maxGoals = Math.max(homeGoals.length, awayGoals.length);
-                if (maxGoals === 0) return null;
+                if (homeGoals.length === 0 && awayGoals.length === 0) return null;
 
                 return (
                   <View style={styles.heroScorersContainer}>
-                    {Array.from({ length: maxGoals }).map((_, index) => {
-                      const hGoal = homeGoals[index];
-                      const aGoal = awayGoals[index];
-                      return (
-                        <View key={`hero-scorer-row-${index}`} style={styles.heroScorersRow}>
-                          <View style={styles.heroScorersHomeCol}>
-                            {hGoal ? (
-                              <Text style={styles.heroScorerTextHome} numberOfLines={1}>
-                                {hGoal.playerName} {getGoalTime(hGoal)}
-                              </Text>
-                            ) : null}
-                          </View>
-                          <View style={styles.heroScorerBallCol}>
-                            <Text style={styles.heroScorerBall}>⚽</Text>
-                          </View>
-                          <View style={styles.heroScorersAwayCol}>
-                            {aGoal ? (
-                              <Text style={styles.heroScorerTextAway} numberOfLines={1}>
-                                {aGoal.playerName} {getGoalTime(aGoal)}
-                              </Text>
-                            ) : null}
-                          </View>
-                        </View>
-                      );
-                    })}
+                    <View style={styles.heroScorersHomeCol}>
+                      {homeGoals.map((hGoal) => (
+                        <Text key={hGoal.id} style={styles.heroScorerTextHome} numberOfLines={1}>
+                          {hGoal.playerName} {getGoalTime(hGoal)}
+                        </Text>
+                      ))}
+                    </View>
+                    <View style={styles.heroScorerBallCol}>
+                      <Text style={styles.heroScorerBall}>⚽</Text>
+                    </View>
+                    <View style={styles.heroScorersAwayCol}>
+                      {awayGoals.map((aGoal) => (
+                        <Text key={aGoal.id} style={styles.heroScorerTextAway} numberOfLines={1}>
+                          {aGoal.playerName} {getGoalTime(aGoal)}
+                        </Text>
+                      ))}
+                    </View>
                   </View>
                 );
               })()}
@@ -2988,23 +2979,21 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   heroScorersContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     width: '100%',
     marginTop: 8,
     paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
-    gap: 4,
-  },
-  heroScorersRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
   },
   heroScorersHomeCol: {
     flex: 1,
     alignItems: 'flex-end',
+    justifyContent: 'center',
     paddingRight: 6,
+    gap: 2,
   },
   heroScorerTextHome: {
     color: '#64748B',
@@ -3027,7 +3016,9 @@ const styles = StyleSheet.create({
   heroScorersAwayCol: {
     flex: 1,
     alignItems: 'flex-start',
+    justifyContent: 'center',
     paddingLeft: 6,
+    gap: 2,
   },
   heroScorerTextAway: {
     color: '#64748B',
