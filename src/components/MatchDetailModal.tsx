@@ -198,12 +198,110 @@ const MatchStatisticsOverview: React.FC<MatchStatisticsOverviewProps> = ({
   );
 };
 
+const isPeriodMarkerEvent = (event: MatchEvent) =>
+  event.type === 'HALF_TIME' ||
+  event.type === 'SECOND_HALF' ||
+  /intervalo|half.?time|in[íi]cio do 2[ºoªa]?\s*tempo|start (?:of )?2nd half/i.test(
+    `${event.label} ${event.playerName} ${event.detail ?? ''}`
+  );
+
+function getVARDetails(event: MatchEvent): {
+  decisionTitle: string;
+  subtitle?: string;
+} {
+  const combined = `${event.label} ${event.playerName} ${event.detail ?? ''}`;
+  const lower = combined.toLowerCase();
+
+  const isOverturned =
+    /overturn|disallow|cancel|anulado|recusado|no goal|no penalty|rescind|anula[çc][ãa]o/i.test(
+      lower
+    );
+  const isConfirmed =
+    /confirm|awarded|given|stands|marcado|concedido|validado/i.test(lower);
+  const isOffside = /offside|impedimento/i.test(lower);
+  const isHandball =
+    /handball|hand ball|toque de m[ãa]o|m[ãa]o/i.test(lower);
+  const isFoul = /foul|falta/i.test(lower);
+  const isGoal = /goal|gol/i.test(lower);
+  const isPenalty = /penalty|p[êe]nalti/i.test(lower);
+  const isRedCard = /red card|cart[ãa]o vermelho/i.test(lower);
+
+  let decisionTitle = 'Revisão do VAR';
+
+  if (isGoal) {
+    if (isOverturned) {
+      if (isOffside) {
+        decisionTitle = 'Gol anulado (Impedimento)';
+      } else if (isHandball) {
+        decisionTitle = 'Gol anulado (Toque de mão)';
+      } else if (isFoul) {
+        decisionTitle = 'Gol anulado (Falta)';
+      } else {
+        decisionTitle = 'Gol anulado pelo VAR';
+      }
+    } else if (isConfirmed) {
+      decisionTitle = 'Gol confirmado pelo VAR';
+    } else {
+      decisionTitle = 'Checagem de gol pelo VAR';
+    }
+  } else if (isPenalty) {
+    if (isOverturned) {
+      decisionTitle = 'Pênalti cancelado pelo VAR';
+    } else if (isConfirmed) {
+      decisionTitle = 'Pênalti marcado pelo VAR';
+    } else {
+      decisionTitle = 'Checagem de pênalti pelo VAR';
+    }
+  } else if (isRedCard) {
+    if (isOverturned) {
+      decisionTitle = 'Cartão vermelho cancelado pelo VAR';
+    } else {
+      decisionTitle = 'Cartão vermelho após VAR';
+    }
+  } else if (/card|cart[ãa]o/i.test(lower)) {
+    decisionTitle = isOverturned
+      ? 'Cartão cancelado pelo VAR'
+      : 'Cartão após revisão do VAR';
+  } else if (isOverturned) {
+    decisionTitle = 'Decisão alterada pelo VAR';
+  } else if (/stand|mantid/i.test(lower)) {
+    decisionTitle = 'Decisão de campo mantida';
+  } else if (
+    event.label &&
+    event.label !== 'Revisão do VAR' &&
+    event.label !== 'Video Review' &&
+    event.label !== 'VAR'
+  ) {
+    decisionTitle = event.label;
+  }
+
+  let subtitle: string | undefined = undefined;
+  const isGenericName =
+    /video review|var|delay|revis[ãa]o|evento da partida/i.test(
+      event.playerName
+    );
+  if (!isGenericName && event.playerName && event.playerName !== decisionTitle) {
+    subtitle = event.playerName;
+  } else {
+    const playerMatch = `${event.detail ?? ''}`.match(
+      /\(([A-ZÀ-ÖØ-Þ][a-zà-öø-ÿ'.-]+(?:\s+[A-ZÀ-ÖØ-Þ][a-zà-öø-ÿ'.-]+)+)\)/
+    );
+    if (playerMatch?.[1]) {
+      subtitle = playerMatch[1];
+    }
+  }
+
+  return { decisionTitle, subtitle };
+}
+
 interface MatchEventsListProps {
   events: MatchEvent[];
 }
 
 const MatchEventsList: React.FC<MatchEventsListProps> = ({ events }) => {
-  const visibleEvents = events.filter((event) => event.type !== 'KICKOFF');
+  const visibleEvents = events.filter(
+    (event) => event.type !== 'KICKOFF' && !isPeriodMarkerEvent(event)
+  );
   return visibleEvents.length ? (
     <View>
       {visibleEvents.map((event) => {
@@ -223,37 +321,27 @@ const MatchEventsList: React.FC<MatchEventsListProps> = ({ events }) => {
         const minute = minuteMatch
           ? `${minuteMatch[1]}'`
           : rawMinute || '—';
-        if (
-          event.type === 'HALF_TIME' ||
-          event.type === 'SECOND_HALF' ||
-          isFullTimeEvent
-        ) {
-          const isSecondHalfStart = event.type === 'SECOND_HALF';
-          const markerLabel = isFullTimeEvent
-            ? 'FIM DE JOGO'
-            : isSecondHalfStart
-            ? 'INÍCIO DO 2º TEMPO'
-            : 'INTERVALO';
+        if (isFullTimeEvent) {
           return (
             <View
               key={event.id}
-              accessibilityLabel={`${markerLabel}${minute !== '—' ? ` aos ${minute}` : ''}`}
+              accessibilityLabel={`FIM DE JOGO${minute !== '—' ? ` aos ${minute}` : ''}`}
               style={styles.eventHalfTime}
             >
               <View style={styles.eventHalfTimeLine} />
               <View style={styles.eventHalfTimePill}>
-                {isFullTimeEvent && (
-                  <Text style={styles.eventFullTimeIcon}>🏁</Text>
-                )}
+                <Text style={styles.eventFullTimeIcon}>🏁</Text>
                 {minute !== '—' && (
                   <Text style={styles.eventHalfTimeMinute}>{minute}</Text>
                 )}
-                <Text style={styles.eventHalfTimeText}>{markerLabel}</Text>
+                <Text style={styles.eventHalfTimeText}>FIM DE JOGO</Text>
               </View>
               <View style={styles.eventHalfTimeLine} />
             </View>
           );
         }
+        const isVAREvent = event.type === 'VAR';
+        const varDetails = isVAREvent ? getVARDetails(event) : null;
         const iconLabel =
           event.type === 'GOAL'
             ? 'Gol'
@@ -263,9 +351,11 @@ const MatchEventsList: React.FC<MatchEventsListProps> = ({ events }) => {
             ? 'Cartão amarelo'
             : event.type === 'RED_CARD'
             ? 'Cartão vermelho'
-          : event.type === 'SUBSTITUTION'
-          ? 'Substituição'
-          : event.label || tagLabel;
+            : event.type === 'SUBSTITUTION'
+            ? 'Substituição'
+            : event.type === 'VAR'
+            ? 'VAR'
+            : event.label || tagLabel;
         const eventIcon = (
           <View
             accessibilityLabel={iconLabel}
@@ -286,6 +376,10 @@ const MatchEventsList: React.FC<MatchEventsListProps> = ({ events }) => {
                     : styles.eventRedCard,
                 ]}
               />
+            ) : event.type === 'VAR' ? (
+              <View style={styles.eventVarBadge}>
+                <Text style={styles.eventVarBadgeText}>VAR</Text>
+              </View>
             ) : (
               <Text
                 style={[
@@ -312,12 +406,40 @@ const MatchEventsList: React.FC<MatchEventsListProps> = ({ events }) => {
             ? 'Gol contra'
             : event.type === 'GOAL' && /penalty|pênalti/i.test(event.detail ?? '')
             ? 'Pênalti'
-            : event.type === 'VAR'
-            ? 'Revisão do VAR'
             : null;
 
         const eventPlayer =
-          substitutionPlayers.length >= 2 ? (
+          isVAREvent && varDetails ? (
+            <View
+              style={[
+                styles.eventPlayerCol,
+                event.team === 'AWAY' && styles.eventPlayerColAway,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.eventPlayer,
+                  event.team === 'AWAY' && styles.eventPlayerAway,
+                ]}
+                numberOfLines={1}
+              >
+                <Text style={styles.eventVarDecisionText}>
+                  {varDetails.decisionTitle}
+                </Text>
+              </Text>
+              {Boolean(varDetails.subtitle) && (
+                <Text
+                  style={[
+                    styles.eventVarSubtitle,
+                    event.team === 'AWAY' && styles.eventVarSubtitleAway,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {varDetails.subtitle}
+                </Text>
+              )}
+            </View>
+          ) : substitutionPlayers.length >= 2 ? (
             <Text
               style={[
                 styles.eventPlayer,
@@ -2289,10 +2411,10 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   const hasAdditionalStats = Boolean(details?.additionalStats.length);
   const hasStatistics = Boolean(matchStats || hasAdditionalStats);
   const firstHalfEvents = (matchEvents ?? [])
-    .filter((event) => event.period === 1)
+    .filter((event) => event.period === 1 && !isPeriodMarkerEvent(event))
     .reverse();
   const secondHalfEvents = (matchEvents ?? [])
-    .filter((event) => event.period >= 2)
+    .filter((event) => event.period >= 2 && !isPeriodMarkerEvent(event))
     .reverse();
   const goalsForTeam = (team: 'HOME' | 'AWAY') =>
     (matchEvents ?? [])
@@ -4880,11 +5002,44 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   eventIcon: {
-    width: 20,
+    minWidth: 20,
     height: 16,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
+  },
+  eventVarBadge: {
+    backgroundColor: '#1E40AF',
+    paddingHorizontal: 4,
+    paddingVertical: 1.5,
+    borderRadius: 3.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 26,
+  },
+  eventVarBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 8.5,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    lineHeight: 11,
+    fontVariant: ['tabular-nums'],
+  },
+  eventVarDecisionText: {
+    color: '#0F172A',
+    fontSize: 12.5,
+    lineHeight: 16,
+    fontWeight: '700',
+  },
+  eventVarSubtitle: {
+    color: '#64748B',
+    fontSize: 10.5,
+    lineHeight: 14,
+    fontWeight: '500',
+    marginTop: 1,
+  },
+  eventVarSubtitleAway: {
+    textAlign: 'right',
   },
   eventTagText: {
     color: '#334155',

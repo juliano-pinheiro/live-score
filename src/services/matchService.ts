@@ -1515,6 +1515,88 @@ function getMatchInfo(summary: ESPNMatchSummary, match?: Match): MatchInfoItem[]
   return items;
 }
 
+function parseVARDecision(
+  text: string,
+  shortText: string,
+  rawType: string,
+  participantNames: string[]
+): { decision: string; playerName?: string } {
+  const combined = `${rawType} ${shortText} ${text}`.toLowerCase();
+
+  const isOverturned =
+    /overturn|disallow|cancel|anulado|recusado|no goal|no penalty|rescind|anula[çc][ãa]o/i.test(
+      combined
+    );
+  const isConfirmed =
+    /confirm|awarded|given|stands|marcado|concedido|validado/i.test(combined);
+  const isOffside = /offside|impedimento/i.test(combined);
+  const isHandball =
+    /handball|hand ball|toque de m[ãa]o|m[ãa]o/i.test(combined);
+  const isFoul = /foul|falta/i.test(combined);
+  const isGoal = /goal|gol/i.test(combined);
+  const isPenalty = /penalty|p[êe]nalti/i.test(combined);
+  const isRedCard = /red card|cart[ãa]o vermelho/i.test(combined);
+
+  let decision = 'Revisão do VAR';
+
+  if (isGoal) {
+    if (isOverturned) {
+      if (isOffside) {
+        decision = 'Gol anulado (Impedimento)';
+      } else if (isHandball) {
+        decision = 'Gol anulado (Toque de mão)';
+      } else if (isFoul) {
+        decision = 'Gol anulado (Falta)';
+      } else {
+        decision = 'Gol anulado pelo VAR';
+      }
+    } else if (isConfirmed) {
+      decision = 'Gol confirmado pelo VAR';
+    } else {
+      decision = 'Checagem de gol pelo VAR';
+    }
+  } else if (isPenalty) {
+    if (isOverturned) {
+      decision = 'Pênalti cancelado pelo VAR';
+    } else if (isConfirmed) {
+      decision = 'Pênalti marcado pelo VAR';
+    } else {
+      decision = 'Checagem de pênalti pelo VAR';
+    }
+  } else if (isRedCard) {
+    if (isOverturned) {
+      decision = 'Cartão vermelho cancelado pelo VAR';
+    } else {
+      decision = 'Cartão vermelho após VAR';
+    }
+  } else if (/card|cart[ãa]o/i.test(combined)) {
+    decision = isOverturned
+      ? 'Cartão cancelado pelo VAR'
+      : 'Cartão após revisão do VAR';
+  } else if (isOverturned) {
+    decision = 'Decisão alterada pelo VAR';
+  } else if (/stand|mantid/i.test(combined)) {
+    decision = 'Decisão de campo mantida';
+  }
+
+  let playerName: string | undefined = undefined;
+  if (
+    participantNames[0] &&
+    !/var|video|review|delay/i.test(participantNames[0])
+  ) {
+    playerName = participantNames[0];
+  } else {
+    const playerMatch = `${shortText} ${text}`.match(
+      /\(([A-ZÀ-ÖØ-Þ][a-zà-öø-ÿ'.-]+(?:\s+[A-ZÀ-ÖØ-Þ][a-zà-öø-ÿ'.-]+)+)\)/
+    );
+    if (playerMatch?.[1]) {
+      playerName = playerMatch[1];
+    }
+  }
+
+  return { decision, playerName };
+}
+
 function getMatchEvents(
   summary: ESPNMatchSummary,
   homeTeamId: string,
@@ -1667,6 +1749,15 @@ function getMatchEvents(
     const eventPeriod =
       typeof event.period === 'number' ? event.period : event.period?.number;
     const period = eventPeriod ?? (minute > 45 ? 2 : 1);
+    const varParsed = isVAR
+      ? parseVARDecision(
+          event.text ?? '',
+          event.shortText ?? '',
+          rawType,
+          participantNames
+        )
+      : null;
+
     const label =
       type === 'GOAL'
         ? 'Gol'
@@ -1679,7 +1770,7 @@ function getMatchEvents(
         : type === 'SUBSTITUTION'
         ? 'Substituição'
         : type === 'VAR'
-        ? 'Revisão do VAR'
+        ? varParsed?.decision ?? 'Revisão do VAR'
         : type === 'KICKOFF'
         ? 'Início do jogo'
         : type === 'HALF_TIME'
@@ -1690,6 +1781,11 @@ function getMatchEvents(
         ? 'Fim de jogo'
         : rawType || 'Evento';
 
+    const finalPlayerName =
+      type === 'VAR'
+        ? varParsed?.playerName || varParsed?.decision || 'Revisão do VAR'
+        : primaryPlayerName || 'Evento da partida';
+
     return [
       {
         id: event.id,
@@ -1699,7 +1795,7 @@ function getMatchEvents(
         type,
         label,
         team,
-        playerName: primaryPlayerName || 'Evento da partida',
+        playerName: finalPlayerName,
         assistPlayerName: assistPlayerName || undefined,
         detail: event.text,
       },
