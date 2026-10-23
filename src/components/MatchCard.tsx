@@ -13,9 +13,9 @@ import { Match } from '../types/match';
 const FONT_SANS = Platform.select({ web: 'Plus Jakarta Sans', default: undefined });
 const FONT_DISPLAY = Platform.select({ web: 'Outfit', default: undefined });
 const FONT_SCORE = Platform.select({
-  web: "'Barlow Semi Condensed', 'Oswald', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-  android: 'sans-serif-condensed',
-  ios: 'DIN Alternate',
+  web: "'Chivo Mono', 'DM Mono', monospace, -apple-system, sans-serif",
+  android: 'monospace',
+  ios: 'Menlo',
   default: undefined,
 });
 
