@@ -2309,30 +2309,29 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
     };
   }, [match?.id, visible, refreshDetailsKey, match?.homeTeam.score, match?.awayTeam.score]);
 
-  if (!match) return null;
-
-  const matchStatus = details?.status ?? match.status;
-  const matchMinute = Math.max(match.minute ?? 0, details?.minute ?? 0) || details?.minute || match.minute;
-  const matchMinuteLabel = details?.minuteLabel ?? match.minuteLabel;
+  const matchStatus = details?.status ?? match?.status ?? 'NS';
+  const matchMinute = Math.max(match?.minute ?? 0, details?.minute ?? 0) || details?.minute || match?.minute || null;
+  const matchMinuteLabel = details?.minuteLabel ?? match?.minuteLabel ?? null;
   const isLive = matchStatus === '1H' || matchStatus === '2H' || matchStatus === 'HT';
   const isFinished = matchStatus === 'FT';
 
   // Placar instantâneo: reflete imediatamente a pontuação mais recente (seja do feed de jogos ou do detalhe)
-  const homeScore = Math.max(match.homeTeam.score, details?.homeTeam.score ?? 0);
-  const awayScore = Math.max(match.awayTeam.score, details?.awayTeam.score ?? 0);
+  const homeScore = Math.max(match?.homeTeam.score ?? 0, details?.homeTeam.score ?? 0);
+  const awayScore = Math.max(match?.awayTeam.score ?? 0, details?.awayTeam.score ?? 0);
 
   const homeTeam: TeamInfo = {
-    ...(details?.homeTeam ?? match.homeTeam),
+    ...(details?.homeTeam ?? match?.homeTeam ?? { id: '', name: '', shortName: '', badgeColor: '#38BDF8', score: 0, redCards: null }),
     score: homeScore,
   };
   const awayTeam: TeamInfo = {
-    ...(details?.awayTeam ?? match.awayTeam),
+    ...(details?.awayTeam ?? match?.awayTeam ?? { id: '', name: '', shortName: '', badgeColor: '#F43F5E', score: 0, redCards: null }),
     score: awayScore,
   };
   const isHomeWinner = isFinished && homeTeam.score > awayTeam.score;
   const isAwayWinner = isFinished && awayTeam.score > homeTeam.score;
 
   useEffect(() => {
+    if (!match) return;
     if (!previousScores.current) {
       previousScores.current = {
         home: homeTeam.score,
@@ -2419,8 +2418,8 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
     homeScoreHighlight,
     awayScoreHighlight,
   ]);
-  const matchStats = details?.stats ?? match.stats;
-  const rawMatchEvents = details?.events ?? match.events ?? [];
+  const matchStats = details?.stats ?? match?.stats ?? null;
+  const rawMatchEvents = details?.events ?? match?.events ?? [];
 
   // Identifica se há gols no placar que ainda não possuem evento/autor retornado pela API
   const homeGoalsInEvents = rawMatchEvents.filter(
@@ -2434,10 +2433,10 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   const missingAwayGoals = Math.max(0, awayTeam.score - awayGoalsInEvents.length);
 
   const provisionalGoals = useMemo(() => {
-    if (missingHomeGoals === 0 && missingAwayGoals === 0) return [];
+    if (!match || (missingHomeGoals === 0 && missingAwayGoals === 0)) return [];
 
     const list: MatchEvent[] = [];
-    const currentMin = matchMinute ?? match.minute ?? 0;
+    const currentMin = matchMinute ?? match?.minute ?? 0;
     const currentPeriod =
       matchStatus === '2H' || (currentMin > 45 && matchStatus !== '1H') ? 2 : 1;
     const currentTimeStr =
@@ -2475,13 +2474,12 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
     return list;
   }, [
+    match,
     missingHomeGoals,
     missingAwayGoals,
     homeGoalsInEvents.length,
     awayGoalsInEvents.length,
-    match.id,
     matchMinute,
-    match.minute,
     matchMinuteLabel,
     matchStatus,
   ]);
@@ -2490,6 +2488,8 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
     if (provisionalGoals.length === 0) return rawMatchEvents;
     return [...rawMatchEvents, ...provisionalGoals];
   }, [rawMatchEvents, provisionalGoals]);
+
+  if (!match) return null;
 
   const standings = details?.standings ?? null;
   const lineups = details?.lineups ?? null;

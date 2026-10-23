@@ -1330,13 +1330,15 @@ export const HomeScreen: React.FC = () => {
             )}
           </View>
         ) : (
-          <MatchDetailModal
-            match={selectedMatch}
-            matches={matches}
-            visible={Boolean(selectedMatch)}
-            sidePanel={false}
-            onClose={() => setSelectedMatchId(null)}
-          />
+          Boolean(selectedMatch) && (
+            <MatchDetailModal
+              match={selectedMatch}
+              matches={matches}
+              visible={Boolean(selectedMatch)}
+              sidePanel={false}
+              onClose={() => setSelectedMatchId(null)}
+            />
+          )
         )}
 
         <Modal
