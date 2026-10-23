@@ -3119,7 +3119,7 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     fontSize: 13,
     lineHeight: 17,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   dragHandleArea: {
     width: '100%',
@@ -4060,7 +4060,7 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontSize: 10,
     lineHeight: 14,
-    fontWeight: '800',
+    fontWeight: '700',
     letterSpacing: 0.9,
     marginBottom: 6,
   },

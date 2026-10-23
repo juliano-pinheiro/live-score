@@ -1520,12 +1520,12 @@ const styles = StyleSheet.create({
     fontFamily: FONT_SANS,
     fontSize: 11,
     lineHeight: 15,
-    fontWeight: '700',
+    fontWeight: '600',
     textAlign: 'center',
   },
   tabTextActive: {
     color: '#FFFFFF',
-    fontWeight: '800',
+    fontWeight: '700',
   },
   tabBadge: {
     minWidth: 16,
@@ -1544,7 +1544,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_SANS,
     fontSize: 9,
     lineHeight: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
   tabBadgeTextActive: {
@@ -1566,7 +1566,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_DISPLAY,
     fontSize: 11,
     lineHeight: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     textAlign: 'center',
     fontVariant: ['tabular-nums'],
   },
@@ -1582,7 +1582,7 @@ const styles = StyleSheet.create({
     color: '#334155',
     fontSize: 16,
     lineHeight: 18,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   dateCenterButton: {
     flex: 1,
@@ -1657,7 +1657,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_SANS,
     fontSize: 11,
     lineHeight: 14,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   statusFilterTextLive: {
     color: '#DC2626',
@@ -1670,7 +1670,7 @@ const styles = StyleSheet.create({
   },
   statusFilterTextActive: {
     color: '#FFFFFF',
-    fontWeight: '800',
+    fontWeight: '700',
   },
   statusFilterBadge: {
     minWidth: 18,
@@ -1699,7 +1699,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_SANS,
     fontSize: 9,
     lineHeight: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
   statusFilterBadgeTextLive: {
@@ -1814,7 +1814,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 10,
     lineHeight: 13,
-    fontWeight: '800',
+    fontWeight: '700',
     letterSpacing: 0.8,
   },
   sidebarBadgeCount: {
@@ -1822,7 +1822,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#93C5FD',
     fontSize: 10,
     lineHeight: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 999,
@@ -1868,11 +1868,11 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     fontSize: 11,
     lineHeight: 14,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   leagueItemNameActive: {
     color: '#1D4ED8',
-    fontWeight: '800',
+    fontWeight: '700',
   },
   leagueItemCountry: {
     color: '#64748B',
@@ -1896,7 +1896,7 @@ const styles = StyleSheet.create({
     color: '#334155',
     fontSize: 10,
     lineHeight: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
   leagueCountActive: {
@@ -2081,7 +2081,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     fontSize: 12,
     lineHeight: 18,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   leagueGroupNamePinned: {
     color: '#92400E',
@@ -2103,7 +2103,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_DISPLAY,
     fontSize: 11,
     lineHeight: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
   leagueGroupCountPinned: {

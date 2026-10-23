@@ -74,14 +74,25 @@ export default function App() {
       const style = document.createElement('style');
       style.id = styleId;
       style.textContent = `
+        *, *::before, *::after {
+          -webkit-font-smoothing: antialiased !important;
+          -moz-osx-font-smoothing: grayscale !important;
+          text-rendering: optimizeLegibility !important;
+        }
         html, body, #root, input, button {
           font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          text-rendering: optimizeLegibility;
+          -webkit-font-smoothing: antialiased !important;
+          -moz-osx-font-smoothing: grayscale !important;
+          text-rendering: optimizeLegibility !important;
+        }
+        [class*="css-text"], [class*="r-"], [class*="css-view"] {
+          -webkit-font-smoothing: antialiased !important;
+          -moz-osx-font-smoothing: grayscale !important;
+          text-rendering: optimizeLegibility !important;
         }
         /* Crisp pixel rendering and tabular alignment for numbers */
         [class*="r-fontVariant-"], [class*="tabular-nums"] {
           font-variant-numeric: tabular-nums lining-nums !important;
-          text-rendering: optimizeLegibility !important;
         }
       `;
       document.head.appendChild(style);

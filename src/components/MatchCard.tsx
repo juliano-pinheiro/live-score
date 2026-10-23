@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
     color: '#475569',
     fontFamily: FONT_DISPLAY,
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '600',
     lineHeight: 15,
     fontVariant: ['tabular-nums'],
   },
@@ -575,7 +575,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_DISPLAY,
     fontSize: 10,
     lineHeight: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
   statusTextLive: {
@@ -589,7 +589,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_DISPLAY,
     fontSize: 9,
     lineHeight: 13,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   teamsColumn: {
     flex: 1,
@@ -614,15 +614,15 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     fontSize: 12,
     lineHeight: 18,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   teamNameWinner: {
     color: '#000000',
-    fontWeight: '800',
+    fontWeight: '600',
   },
   teamNameLoser: {
     color: '#64748B',
-    fontWeight: '500',
+    fontWeight: '400',
   },
   score: {
     color: '#0F172A',
