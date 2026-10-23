@@ -2984,17 +2984,22 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 </TouchableOpacity>
               </View>
             ) : activeTab === 'SUMMARY' ? (
-              <View style={styles.sectionBox}>
+              <>
                 {hasSecondHalfStarted && (
-                  <>
-                    <Text style={styles.sectionTitle}>SEGUNDO TEMPO</Text>
+                  <View style={styles.sectionBox}>
+                    <Text style={[styles.sectionTitle, styles.sectionTitleCentered]}>
+                      SEGUNDO TEMPO
+                    </Text>
                     <MatchEventsList events={secondHalfEvents} />
-                    <View style={styles.halfDivider} />
-                  </>
+                  </View>
                 )}
-                <Text style={styles.sectionTitle}>PRIMEIRO TEMPO</Text>
-                <MatchEventsList events={firstHalfEvents} />
-              </View>
+                <View style={styles.sectionBox}>
+                  <Text style={[styles.sectionTitle, styles.sectionTitleCentered]}>
+                    PRIMEIRO TEMPO
+                  </Text>
+                  <MatchEventsList events={firstHalfEvents} />
+                </View>
+              </>
             ) : activeTab === 'STATS' ? (
               <View style={styles.sectionBox}>
                 {hasStatistics ? (
@@ -4063,6 +4068,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.9,
     marginBottom: 6,
+  },
+  sectionTitleCentered: {
+    textAlign: 'center',
+    marginBottom: 8,
   },
   loadingBox: {
     alignItems: 'center',
