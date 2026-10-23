@@ -1990,6 +1990,13 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
   const translateY = useRef(new Animated.Value(0)).current;
   const isScrollAtTopRef = useRef(true);
+  const homeScoreScale = useRef(new Animated.Value(1)).current;
+  const awayScoreScale = useRef(new Animated.Value(1)).current;
+  const homeScoreHighlight = useRef(new Animated.Value(0)).current;
+  const awayScoreHighlight = useRef(new Animated.Value(0)).current;
+  const [animatingHome, setAnimatingHome] = useState(false);
+  const [animatingAway, setAnimatingAway] = useState(false);
+  const previousScores = useRef<{ home: number; away: number } | null>(null);
   const profileTeamRef = useRef(profileTeam);
   profileTeamRef.current = profileTeam;
   const onCloseRef = useRef(onClose);
@@ -2080,6 +2087,13 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
     setProfileTeam(null);
     setClubProfile(null);
     setTeamSearch('');
+    previousScores.current = null;
+    homeScoreScale.setValue(1);
+    awayScoreScale.setValue(1);
+    homeScoreHighlight.setValue(0);
+    awayScoreHighlight.setValue(0);
+    setAnimatingHome(false);
+    setAnimatingAway(false);
   }, [match?.id, visible]);
 
   useEffect(() => {
@@ -2178,6 +2192,94 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   const awayTeam = details?.awayTeam ?? match.awayTeam;
   const isHomeWinner = isFinished && homeTeam.score > awayTeam.score;
   const isAwayWinner = isFinished && awayTeam.score > homeTeam.score;
+
+  useEffect(() => {
+    if (!previousScores.current) {
+      previousScores.current = {
+        home: homeTeam.score,
+        away: awayTeam.score,
+      };
+      return;
+    }
+
+    const { home, away } = previousScores.current;
+
+    if (home !== homeTeam.score) {
+      setAnimatingHome(true);
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(homeScoreScale, {
+            toValue: 1.45,
+            duration: 180,
+            useNativeDriver: false,
+          }),
+          Animated.spring(homeScoreScale, {
+            toValue: 1,
+            friction: 3.5,
+            tension: 130,
+            useNativeDriver: false,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(homeScoreHighlight, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: false,
+          }),
+          Animated.delay(1200),
+          Animated.timing(homeScoreHighlight, {
+            toValue: 0,
+            duration: 450,
+            useNativeDriver: false,
+          }),
+        ]),
+      ]).start(() => setAnimatingHome(false));
+    }
+
+    if (away !== awayTeam.score) {
+      setAnimatingAway(true);
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(awayScoreScale, {
+            toValue: 1.45,
+            duration: 180,
+            useNativeDriver: false,
+          }),
+          Animated.spring(awayScoreScale, {
+            toValue: 1,
+            friction: 3.5,
+            tension: 130,
+            useNativeDriver: false,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(awayScoreHighlight, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: false,
+          }),
+          Animated.delay(1200),
+          Animated.timing(awayScoreHighlight, {
+            toValue: 0,
+            duration: 450,
+            useNativeDriver: false,
+          }),
+        ]),
+      ]).start(() => setAnimatingAway(false));
+    }
+
+    previousScores.current = {
+      home: homeTeam.score,
+      away: awayTeam.score,
+    };
+  }, [
+    homeTeam.score,
+    awayTeam.score,
+    homeScoreScale,
+    awayScoreScale,
+    homeScoreHighlight,
+    awayScoreHighlight,
+  ]);
   const matchStats = details?.stats ?? match.stats;
   const matchEvents = details?.events ?? match.events;
   const standings = details?.standings ?? null;
@@ -2489,7 +2591,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
                 <View style={styles.heroCenterCol}>
                   <View style={styles.heroScoreRow}>
-                    <Text
+                    <Animated.Text
                       style={[
                         styles.heroScoreText,
                         isLive && styles.heroScoreLive,
@@ -2499,10 +2601,19 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                             : isAwayWinner
                             ? styles.heroScoreLoser
                             : styles.heroScoreFinished),
+                        animatingHome
+                          ? {
+                              transform: [{ scale: homeScoreScale }],
+                              color: homeScoreHighlight.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [isLive ? '#CB1818' : '#0F172A', '#16A34A'],
+                              }),
+                            }
+                          : null,
                       ]}
                     >
                       {homeTeam.score}
-                    </Text>
+                    </Animated.Text>
                     <Text
                       style={[
                         styles.heroScoreDash,
@@ -2511,7 +2622,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                     >
                       -
                     </Text>
-                    <Text
+                    <Animated.Text
                       style={[
                         styles.heroScoreText,
                         isLive && styles.heroScoreLive,
@@ -2521,10 +2632,19 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                             : isHomeWinner
                             ? styles.heroScoreLoser
                             : styles.heroScoreFinished),
+                        animatingAway
+                          ? {
+                              transform: [{ scale: awayScoreScale }],
+                              color: awayScoreHighlight.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [isLive ? '#CB1818' : '#0F172A', '#16A34A'],
+                              }),
+                            }
+                          : null,
                       ]}
                     >
                       {awayTeam.score}
-                    </Text>
+                    </Animated.Text>
                   </View>
                   <View
                     style={[
