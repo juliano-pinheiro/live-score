@@ -59,6 +59,8 @@ export default function App() {
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof document === 'undefined') return;
 
+    document.title = 'Next Score';
+
     const fontLinkId = 'nextscore-google-fonts';
     if (!document.getElementById(fontLinkId)) {
       const link = document.createElement('link');
