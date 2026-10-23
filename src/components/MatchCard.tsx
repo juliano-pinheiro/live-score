@@ -631,23 +631,23 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     fontSize: 14.5,
     lineHeight: 18,
-    fontWeight: '700',
+    fontWeight: '500',
     fontVariant: ['tabular-nums'],
     letterSpacing: 0.2,
   },
   scoreWinner: {
     color: '#000000',
-    fontWeight: '800',
+    fontWeight: '500',
     fontSize: 14.5,
   },
   scoreLoser: {
     color: '#94A3B8',
-    fontWeight: '500',
+    fontWeight: '400',
     opacity: 0.65,
   },
   scoreLive: {
     color: '#CB1818',
-    fontWeight: '700',
+    fontWeight: '500',
   },
   redCard: {
     minWidth: 10,

@@ -65,7 +65,7 @@ export default function App() {
       link.id = fontLinkId;
       link.rel = 'stylesheet';
       link.href =
-        'https://fonts.googleapis.com/css2?family=Chivo+Mono:wght@600;700;800&family=DM+Mono:wght@500;600;700&family=Barlow+Semi+Condensed:wght@600;700;800&family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap';
+        'https://fonts.googleapis.com/css2?family=Chivo+Mono:wght@400;500;600;700;800&family=DM+Mono:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700;800&family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap';
       document.head.appendChild(link);
     }
 
