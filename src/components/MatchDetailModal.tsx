@@ -2459,139 +2459,161 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
             {/* Placar Expandido */}
             <View style={styles.heroScoreboard}>
-              <View style={styles.heroTeamCol}>
-                <TouchableOpacity
-                  accessibilityRole="button"
-                  accessibilityLabel={`Ver perfil de ${match.homeTeam.name}`}
-                  activeOpacity={0.75}
-                  onPress={() => handleOpenClubProfile(match.homeTeam)}
-                  style={styles.heroTeamButton}
-                >
-                  <TeamCrest
-                    logoUrl={match.homeTeam.logoUrl}
-                    shortName={match.homeTeam.shortName}
-                    color={match.homeTeam.badgeColor}
-                    size={48}
-                  />
-                  <Text
+              <View style={styles.heroScoreboardTopRow}>
+                <View style={styles.heroTeamCol}>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={`Ver perfil de ${match.homeTeam.name}`}
+                    activeOpacity={0.75}
+                    onPress={() => handleOpenClubProfile(match.homeTeam)}
+                    style={styles.heroTeamButton}
+                  >
+                    <TeamCrest
+                      logoUrl={match.homeTeam.logoUrl}
+                      shortName={match.homeTeam.shortName}
+                      color={match.homeTeam.badgeColor}
+                      size={48}
+                    />
+                    <Text
+                      style={[
+                        styles.heroTeamName,
+                        isFinished && isHomeWinner && styles.heroTeamNameWinner,
+                        isFinished && isAwayWinner && styles.heroTeamNameLoser,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {match.homeTeam.name}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.heroCenterCol}>
+                  <View style={styles.heroScoreRow}>
+                    <Text
+                      style={[
+                        styles.heroScoreText,
+                        isLive && styles.heroScoreLive,
+                        isFinished &&
+                          (isHomeWinner
+                            ? styles.heroScoreWinner
+                            : isAwayWinner
+                            ? styles.heroScoreLoser
+                            : styles.heroScoreFinished),
+                      ]}
+                    >
+                      {homeTeam.score}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.heroScoreDash,
+                        isLive && styles.heroScoreDashLive,
+                      ]}
+                    >
+                      -
+                    </Text>
+                    <Text
+                      style={[
+                        styles.heroScoreText,
+                        isLive && styles.heroScoreLive,
+                        isFinished &&
+                          (isAwayWinner
+                            ? styles.heroScoreWinner
+                            : isHomeWinner
+                            ? styles.heroScoreLoser
+                            : styles.heroScoreFinished),
+                      ]}
+                    >
+                      {awayTeam.score}
+                    </Text>
+                  </View>
+                  <View
                     style={[
-                      styles.heroTeamName,
-                      isFinished && isHomeWinner && styles.heroTeamNameWinner,
-                      isFinished && isAwayWinner && styles.heroTeamNameLoser,
+                      styles.heroStatusPill,
+                      isLive ? styles.heroStatusLive : styles.heroStatusDone,
                     ]}
-                    numberOfLines={1}
                   >
-                    {match.homeTeam.name}
-                  </Text>
-                </TouchableOpacity>
-                {goalsForTeam('HOME').map((event) => (
-                  <Text
-                    key={event.id}
-                    style={styles.heroGoalScorer}
-                    numberOfLines={1}
+                    <Text
+                      style={[
+                        styles.heroStatusText,
+                        isLive && styles.heroStatusTextLive,
+                      ]}
+                    >
+                      {matchStatus === 'HT'
+                        ? 'INTERVALO'
+                        : matchStatus === 'FT'
+                        ? 'ENCERRADO'
+                        : matchStatus === 'NS'
+                        ? match.startTime
+                        : `${matchMinuteLabel ?? matchMinute ?? ''}'`}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.heroTeamCol}>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={`Ver perfil de ${match.awayTeam.name}`}
+                    activeOpacity={0.75}
+                    onPress={() => handleOpenClubProfile(match.awayTeam)}
+                    style={styles.heroTeamButton}
                   >
-                    ⚽ {event.playerName} {getGoalTime(event)}
-                  </Text>
-                ))}
+                    <TeamCrest
+                      logoUrl={match.awayTeam.logoUrl}
+                      shortName={match.awayTeam.shortName}
+                      color={match.awayTeam.badgeColor}
+                      size={48}
+                    />
+                    <Text
+                      style={[
+                        styles.heroTeamName,
+                        isFinished && isAwayWinner && styles.heroTeamNameWinner,
+                        isFinished && isHomeWinner && styles.heroTeamNameLoser,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {match.awayTeam.name}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
-              <View style={styles.heroCenterCol}>
-                <View style={styles.heroScoreRow}>
-                  <Text
-                    style={[
-                      styles.heroScoreText,
-                      isLive && styles.heroScoreLive,
-                      isFinished &&
-                        (isHomeWinner
-                          ? styles.heroScoreWinner
-                          : isAwayWinner
-                          ? styles.heroScoreLoser
-                          : styles.heroScoreFinished),
-                    ]}
-                  >
-                    {homeTeam.score}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.heroScoreDash,
-                      isLive && styles.heroScoreDashLive,
-                    ]}
-                  >
-                    -
-                  </Text>
-                  <Text
-                    style={[
-                      styles.heroScoreText,
-                      isLive && styles.heroScoreLive,
-                      isFinished &&
-                        (isAwayWinner
-                          ? styles.heroScoreWinner
-                          : isHomeWinner
-                          ? styles.heroScoreLoser
-                          : styles.heroScoreFinished),
-                    ]}
-                  >
-                    {awayTeam.score}
-                  </Text>
-                </View>
-                <View
-                  style={[
-                    styles.heroStatusPill,
-                    isLive ? styles.heroStatusLive : styles.heroStatusDone,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.heroStatusText,
-                      isLive && styles.heroStatusTextLive,
-                    ]}
-                  >
-                    {matchStatus === 'HT'
-                      ? 'INTERVALO'
-                      : matchStatus === 'FT'
-                      ? 'ENCERRADO'
-                      : matchStatus === 'NS'
-                      ? match.startTime
-                      : `${matchMinuteLabel ?? matchMinute ?? ''}'`}
-                  </Text>
-                </View>
-              </View>
+              {/* Linha Centralizada de Gols: Mandante  ⚽  Visitante */}
+              {(() => {
+                const homeGoals = goalsForTeam('HOME');
+                const awayGoals = goalsForTeam('AWAY');
+                const maxGoals = Math.max(homeGoals.length, awayGoals.length);
+                if (maxGoals === 0) return null;
 
-              <View style={styles.heroTeamCol}>
-                <TouchableOpacity
-                  accessibilityRole="button"
-                  accessibilityLabel={`Ver perfil de ${match.awayTeam.name}`}
-                  activeOpacity={0.75}
-                  onPress={() => handleOpenClubProfile(match.awayTeam)}
-                  style={styles.heroTeamButton}
-                >
-                  <TeamCrest
-                    logoUrl={match.awayTeam.logoUrl}
-                    shortName={match.awayTeam.shortName}
-                    color={match.awayTeam.badgeColor}
-                    size={48}
-                  />
-                  <Text
-                    style={[
-                      styles.heroTeamName,
-                      isFinished && isAwayWinner && styles.heroTeamNameWinner,
-                      isFinished && isHomeWinner && styles.heroTeamNameLoser,
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {match.awayTeam.name}
-                  </Text>
-                </TouchableOpacity>
-                {goalsForTeam('AWAY').map((event) => (
-                  <Text
-                    key={event.id}
-                    style={styles.heroGoalScorer}
-                    numberOfLines={1}
-                  >
-                    ⚽ {event.playerName} {getGoalTime(event)}
-                  </Text>
-                ))}
-              </View>
+                return (
+                  <View style={styles.heroScorersContainer}>
+                    {Array.from({ length: maxGoals }).map((_, index) => {
+                      const hGoal = homeGoals[index];
+                      const aGoal = awayGoals[index];
+                      return (
+                        <View key={`hero-scorer-row-${index}`} style={styles.heroScorersRow}>
+                          <View style={styles.heroScorersHomeCol}>
+                            {hGoal ? (
+                              <Text style={styles.heroScorerTextHome} numberOfLines={1}>
+                                {hGoal.playerName} {getGoalTime(hGoal)}
+                              </Text>
+                            ) : null}
+                          </View>
+                          <View style={styles.heroScorerBallCol}>
+                            <Text style={styles.heroScorerBall}>⚽</Text>
+                          </View>
+                          <View style={styles.heroScorersAwayCol}>
+                            {aGoal ? (
+                              <Text style={styles.heroScorerTextAway} numberOfLines={1}>
+                                {aGoal.playerName} {getGoalTime(aGoal)}
+                              </Text>
+                            ) : null}
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                );
+              })()}
             </View>
 
             <View style={styles.tabsRow}>
@@ -2950,9 +2972,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   heroScoreboard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
     backgroundColor: '#F8FAFC',
     borderRadius: 14,
     paddingVertical: 12,
@@ -2960,6 +2980,63 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderWidth: 1,
     borderColor: '#CBD5E1',
+  },
+  heroScoreboardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  heroScorersContainer: {
+    width: '100%',
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+    gap: 4,
+  },
+  heroScorersRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  heroScorersHomeCol: {
+    flex: 1,
+    alignItems: 'flex-end',
+    paddingRight: 6,
+  },
+  heroScorerTextHome: {
+    color: '#64748B',
+    fontFamily: FONT_SANS,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '600',
+    textAlign: 'right',
+    fontVariant: ['tabular-nums'],
+  },
+  heroScorerBallCol: {
+    width: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroScorerBall: {
+    fontSize: 11,
+    lineHeight: 14,
+  },
+  heroScorersAwayCol: {
+    flex: 1,
+    alignItems: 'flex-start',
+    paddingLeft: 6,
+  },
+  heroScorerTextAway: {
+    color: '#64748B',
+    fontFamily: FONT_SANS,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '600',
+    textAlign: 'left',
+    fontVariant: ['tabular-nums'],
   },
   heroTeamCol: {
     flex: 1,
@@ -2972,17 +3049,6 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     fontWeight: '700',
     textAlign: 'center',
-  },
-  heroGoalScorer: {
-    color: '#1E40AF',
-    fontFamily: FONT_SANS,
-    fontSize: 10,
-    lineHeight: 15,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginTop: 2,
-    maxWidth: '100%',
-    fontVariant: ['tabular-nums'],
   },
   heroCenterCol: {
     alignItems: 'center',
