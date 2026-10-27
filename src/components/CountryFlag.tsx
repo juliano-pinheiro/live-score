@@ -87,6 +87,8 @@ interface CountryFlagProps {
   style?: object;
 }
 
+const FAILED_FLAGS = new Set<string>();
+
 export const CountryFlag = React.memo<CountryFlagProps>(({
   country,
   size = 19,
@@ -116,7 +118,7 @@ export const CountryFlag = React.memo<CountryFlagProps>(({
 
   const code = COUNTRY_CODE_MAP[normalized];
 
-  if (code && !hasError) {
+  if (code && !hasError && !FAILED_FLAGS.has(code)) {
     const height = Math.round(size * 0.7);
     return (
       <View
@@ -131,7 +133,10 @@ export const CountryFlag = React.memo<CountryFlagProps>(({
           style={{ width: size, height, borderRadius: 2 }}
           resizeMode="cover"
           fadeDuration={0}
-          onError={() => setHasError(true)}
+          onError={() => {
+            FAILED_FLAGS.add(code);
+            setHasError(true);
+          }}
         />
       </View>
     );

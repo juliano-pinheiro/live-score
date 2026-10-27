@@ -329,10 +329,11 @@ export const HomeScreen: React.FC = () => {
 
       try {
         const apiMatches = await fetchMatchesFromApi(selectedDate, (updates) => {
-          if (!isActive) return;
+          if (!isActive || updates.length === 0) return;
           const updatesById = new Map(updates.map((match) => [match.id, match]));
-          setMatches((currentMatches) =>
-            currentMatches.map((currentMatch) => {
+          setMatches((currentMatches) => {
+            let hasAnyChange = false;
+            const updated = currentMatches.map((currentMatch) => {
               const update = updatesById.get(currentMatch.id);
               if (!update) return currentMatch;
               const resolvedHomeScore = Math.max(currentMatch.homeTeam.score, update.homeTeam.score);
@@ -348,6 +349,21 @@ export const HomeScreen: React.FC = () => {
                       createdAt: Date.now(),
                     }
                   : undefined;
+
+              const isSame =
+                currentMatch.status === update.status &&
+                currentMatch.minute === update.minute &&
+                currentMatch.minuteLabel === update.minuteLabel &&
+                currentMatch.homeTeam.score === resolvedHomeScore &&
+                currentMatch.awayTeam.score === resolvedAwayScore &&
+                currentMatch.homeTeam.redCards === (Math.max(currentMatch.homeTeam.redCards ?? 0, update.homeTeam.redCards ?? 0) || null) &&
+                currentMatch.awayTeam.redCards === (Math.max(currentMatch.awayTeam.redCards ?? 0, update.awayTeam.redCards ?? 0) || null) &&
+                !goalAlert &&
+                !update.recentAlert;
+
+              if (isSame) return currentMatch;
+              hasAnyChange = true;
+
               return {
                 ...currentMatch,
                 status: update.status,
@@ -377,15 +393,16 @@ export const HomeScreen: React.FC = () => {
                     ? undefined
                     : currentMatch.recentAlert),
               };
-            })
-          );
+            });
+            return hasAnyChange ? updated : currentMatches;
+          });
         });
         if (!isActive) return;
         setMatches((previousMatches) => {
           const previousById = new Map(
             previousMatches.map((match) => [match.id, match])
           );
-          return apiMatches.map((match) => {
+          const nextMatches = apiMatches.map((match) => {
             const previous = previousById.get(match.id);
             const resolvedHomeScore = Math.max(previous?.homeTeam.score ?? 0, match.homeTeam.score);
             const resolvedAwayScore = Math.max(previous?.awayTeam.score ?? 0, match.awayTeam.score);
@@ -453,6 +470,34 @@ export const HomeScreen: React.FC = () => {
                 (previous?.isPinned ?? false),
             };
           });
+
+          if (previousMatches.length === 0 || previousMatches.length !== nextMatches.length) {
+            return nextMatches;
+          }
+
+          let hasDiff = false;
+          for (let i = 0; i < nextMatches.length; i++) {
+            const pm = previousMatches[i];
+            const nm = nextMatches[i];
+            if (
+              !pm ||
+              pm.id !== nm.id ||
+              pm.status !== nm.status ||
+              pm.minute !== nm.minute ||
+              pm.minuteLabel !== nm.minuteLabel ||
+              pm.homeTeam.score !== nm.homeTeam.score ||
+              pm.awayTeam.score !== nm.awayTeam.score ||
+              pm.homeTeam.redCards !== nm.homeTeam.redCards ||
+              pm.awayTeam.redCards !== nm.awayTeam.redCards ||
+              pm.isPinned !== nm.isPinned ||
+              pm.recentAlert?.id !== nm.recentAlert?.id
+            ) {
+              hasDiff = true;
+              break;
+            }
+          }
+
+          return hasDiff ? nextMatches : previousMatches;
         });
         setApiError(null);
         const now = new Date();
@@ -1187,11 +1232,11 @@ export const HomeScreen: React.FC = () => {
                 styles.listContent,
                 { paddingBottom: Math.max(20, insets.bottom + 18) },
               ]}
-              initialNumToRender={6}
-              maxToRenderPerBatch={6}
-              windowSize={5}
-              updateCellsBatchingPeriod={40}
-              removeClippedSubviews={Platform.OS !== 'web'}
+              initialNumToRender={5}
+              maxToRenderPerBatch={4}
+              windowSize={4}
+              updateCellsBatchingPeriod={50}
+              removeClippedSubviews={Platform.OS === 'android'}
               ListEmptyComponent={
                 <View style={styles.emptyBox}>
                   <Text style={styles.emptyTitle}>

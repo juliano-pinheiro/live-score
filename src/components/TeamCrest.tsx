@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 interface TeamCrestProps {
@@ -8,6 +8,8 @@ interface TeamCrestProps {
   size: number;
 }
 
+const FAILED_LOGOS = new Set<string>();
+
 export const TeamCrest = React.memo<TeamCrestProps>(({
   logoUrl,
   shortName,
@@ -16,15 +18,16 @@ export const TeamCrest = React.memo<TeamCrestProps>(({
 }) => {
   const [hasLoadError, setHasLoadError] = useState(false);
 
-  useEffect(() => {
-    setHasLoadError(false);
-  }, [logoUrl]);
+  const isFailed = !logoUrl || hasLoadError || FAILED_LOGOS.has(logoUrl);
 
-  if (logoUrl && !hasLoadError) {
+  if (!isFailed) {
     return (
       <Image
         accessibilityLabel={`Escudo do ${shortName}`}
-        onError={() => setHasLoadError(true)}
+        onError={() => {
+          if (logoUrl) FAILED_LOGOS.add(logoUrl);
+          setHasLoadError(true);
+        }}
         fadeDuration={0}
         resizeMode="contain"
         source={{ uri: logoUrl }}

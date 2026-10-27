@@ -752,28 +752,36 @@ function getLeagueMetadata(event: ESPNEvent): LeagueMetadata {
   return { name, country: 'Internacional' };
 }
 
+const ATTEMPTED_LEAGUES = new Set<string>();
+
 async function resolveLeagueName(event: ESPNEvent): Promise<void> {
   const leagueId = getLeagueId(event);
-  const response = await fetch(
-    `${API_CONFIG.BASE_URL}/all/summary?event=${encodeURIComponent(event.id)}&_=${Date.now()}`
-  );
-  if (!response.ok) {
-    throw new Error(`resposta HTTP ${response.status}`);
-  }
+  if (DYNAMIC_LEAGUES.has(leagueId) || ATTEMPTED_LEAGUES.has(leagueId)) return;
+  ATTEMPTED_LEAGUES.add(leagueId);
 
-  const data: {
-    header?: {
-      league?: {
-        name?: string;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}/all/summary?event=${encodeURIComponent(event.id)}&_=${Date.now()}`,
+      { signal: controller.signal }
+    ).finally(() => clearTimeout(timeoutId));
+    if (!response.ok) return;
+
+    const data: {
+      header?: {
+        league?: {
+          name?: string;
+        };
       };
-    };
-  } = await response.json();
-  const name = data.header?.league?.name?.trim();
-  if (!name) {
-    throw new Error('a resposta não inclui o nome da competição');
+    } = await response.json();
+    const name = data.header?.league?.name?.trim();
+    if (name) {
+      DYNAMIC_LEAGUES.set(leagueId, { name, country: 'Internacional' });
+    }
+  } catch {
+    // Falha silenciosa para não quebrar a listagem e não repetir em loop
   }
-
-  DYNAMIC_LEAGUES.set(leagueId, { name, country: 'Internacional' });
 }
 
 function getEventStatus(status: ESPNEvent['status']): MatchStatus {
@@ -2302,16 +2310,15 @@ export async function fetchMatchesFromApi(
   });
 
   void Promise.all(
-    Array.from(unresolvedLeagues.values(), async (event) => {
-      try {
-        await resolveLeagueName(event);
-      } catch (error) {
-        console.warn(
-          `Não foi possível resolver o nome da competição ${getLeagueId(event)}:`,
-          error
-        );
-      }
-    })
+    Array.from(unresolvedLeagues.values())
+      .slice(0, 2)
+      .map(async (event) => {
+        try {
+          await resolveLeagueName(event);
+        } catch {
+          // Ignora para não travar
+        }
+      })
   );
 
   const matches = data.events
