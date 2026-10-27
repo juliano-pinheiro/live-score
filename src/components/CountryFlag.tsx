@@ -6,6 +6,7 @@ const COUNTRY_CODE_MAP: Record<string, string> = {
   germany: 'de',
   'arabia saudita': 'sa',
   'saudi arabia': 'sa',
+  saudi: 'sa',
   argentina: 'ar',
   australia: 'au',
   austria: 'at',
@@ -17,9 +18,13 @@ const COUNTRY_CODE_MAP: Record<string, string> = {
   canada: 'ca',
   chile: 'cl',
   china: 'cn',
+  chipre: 'cy',
+  cyprus: 'cy',
   colombia: 'co',
   'coreia do sul': 'kr',
   'south korea': 'kr',
+  korea: 'kr',
+  'costa rica': 'cr',
   croacia: 'hr',
   croatia: 'hr',
   dinamarca: 'dk',
@@ -27,6 +32,8 @@ const COUNTRY_CODE_MAP: Record<string, string> = {
   egito: 'eg',
   egypt: 'eg',
   'el salvador': 'sv',
+  'emirados arabes unidos': 'ae',
+  uae: 'ae',
   equador: 'ec',
   ecuador: 'ec',
   escocia: 'gb-sct',
@@ -35,6 +42,7 @@ const COUNTRY_CODE_MAP: Record<string, string> = {
   spain: 'es',
   'estados unidos': 'us',
   usa: 'us',
+  eua: 'us',
   'united states': 'us',
   europa: 'eu',
   europe: 'eu',
@@ -42,14 +50,23 @@ const COUNTRY_CODE_MAP: Record<string, string> = {
   france: 'fr',
   grecia: 'gr',
   greece: 'gr',
+  guatemala: 'gt',
   holanda: 'nl',
   'paises baixos': 'nl',
   netherlands: 'nl',
+  honduras: 'hn',
+  hungria: 'hu',
+  hungary: 'hu',
   india: 'in',
   inglaterra: 'gb-eng',
   england: 'gb-eng',
+  irlanda: 'ie',
+  ireland: 'ie',
+  'irlanda do norte': 'gb-nir',
+  'northern ireland': 'gb-nir',
   italia: 'it',
   italy: 'it',
+  jamaica: 'jm',
   japao: 'jp',
   japan: 'jp',
   marrocos: 'ma',
@@ -59,13 +76,23 @@ const COUNTRY_CODE_MAP: Record<string, string> = {
   norway: 'no',
   'pais de gales': 'gb-wls',
   wales: 'gb-wls',
+  panama: 'pa',
   paraguai: 'py',
   paraguay: 'py',
   peru: 'pe',
   polonia: 'pl',
   poland: 'pl',
   portugal: 'pt',
+  catar: 'qa',
+  qatar: 'qa',
+  'republica tcheca': 'cz',
+  'czech republic': 'cz',
+  czechia: 'cz',
+  romenia: 'ro',
+  romania: 'ro',
   russia: 'ru',
+  servia: 'rs',
+  serbia: 'rs',
   suecia: 'se',
   sweden: 'se',
   suica: 'ch',
@@ -114,6 +141,20 @@ export const CountryFlag = React.memo<CountryFlagProps>(({
     normalized === 'torneio internacional'
   ) {
     return <Text style={[styles.emoji, { fontSize: Math.max(12, size * 0.7) }]}>🌍</Text>;
+  }
+
+  if (normalized === 'asia' || normalized === 'oceania') {
+    return <Text style={[styles.emoji, { fontSize: Math.max(12, size * 0.7) }]}>🌏</Text>;
+  }
+
+  if (
+    normalized === 'america do sul' ||
+    normalized === 'america do norte' ||
+    normalized === 'america do norte e central' ||
+    normalized === 'americas' ||
+    normalized === 'south america'
+  ) {
+    return <Text style={[styles.emoji, { fontSize: Math.max(12, size * 0.7) }]}>🌎</Text>;
   }
 
   const code = COUNTRY_CODE_MAP[normalized];

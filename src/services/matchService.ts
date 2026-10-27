@@ -666,52 +666,271 @@ const TEAM_LOGO_OVERRIDES: Record<string, string> = {
 };
 
 const KNOWN_LEAGUES: Record<string, LeagueMetadata> = {
+  '1': { name: 'Copa Libertadores', country: 'América do Sul' },
   '2': { name: 'UEFA Champions League', country: 'Europa' },
-  '620': { name: 'Bolivian Liga Profesional', country: 'Bolívia' },
-  '630': { name: 'Brazilian Serie A', country: 'Brasil' },
-  '660': { name: 'LigaPro Ecuador', country: 'Equador' },
-  '670': { name: 'Peruvian Liga 1', country: 'Peru' },
-  '680': { name: 'Liga AUF Uruguaya', country: 'Uruguai' },
-  '700': { name: 'English Premier League', country: 'Inglaterra' },
-  '710': { name: 'French Ligue 1', country: 'França' },
-  '720': { name: 'German Bundesliga', country: 'Alemanha' },
-  '725': { name: 'Dutch Eredivisie', country: 'Países Baixos' },
-  '730': { name: 'Italian Serie A', country: 'Itália' },
-  '740': { name: 'Spanish LALIGA', country: 'Espanha' },
-  '745': { name: 'Argentine Liga Profesional de Fútbol', country: 'Argentina' },
-  '760': { name: 'Mexican Liga BBVA MX', country: 'México' },
+  '3': { name: 'UEFA Europa League', country: 'Europa' },
+  '620': { name: 'División Profesional', country: 'Bolívia' },
+  '630': { name: 'Brasileirão Série A', country: 'Brasil' },
+  '660': { name: 'LigaPro', country: 'Equador' },
+  '670': { name: 'Liga 1', country: 'Peru' },
+  '680': { name: 'Primera División AUF', country: 'Uruguai' },
+  '700': { name: 'Premier League', country: 'Inglaterra' },
+  '710': { name: 'Ligue 1', country: 'França' },
+  '720': { name: 'Bundesliga', country: 'Alemanha' },
+  '725': { name: 'Eredivisie', country: 'Países Baixos' },
+  '730': { name: 'Serie A', country: 'Itália' },
+  '740': { name: 'LALIGA', country: 'Espanha' },
+  '745': { name: 'Liga Profesional de Fútbol', country: 'Argentina' },
+  '760': { name: 'Liga MX', country: 'México' },
+  '2054': { name: 'UEFA Nations League', country: 'Europa' },
   '2391': { name: 'CAF Champions League', country: 'África' },
-  '3903': { name: 'Argentine Nacional B', country: 'Argentina' },
-  '3906': { name: 'Australian A-League Men', country: 'Austrália' },
-  '3907': { name: 'Austrian Bundesliga', country: 'Áustria' },
-  '3913': { name: 'Danish Superliga', country: 'Dinamarca' },
-  '3914': { name: 'English League Championship', country: 'Inglaterra' },
-  '3921': { name: 'Spanish LALIGA 2', country: 'Espanha' },
-  '3926': { name: 'French Ligue 2', country: 'França' },
-  '3927': { name: 'German 2. Bundesliga', country: 'Alemanha' },
-  '3931': { name: 'Italian Serie B', country: 'Itália' },
-  '3932': { name: 'Mexican Liga de Expansión MX', country: 'México' },
-  '3933': { name: 'Dutch Keuken Kampioen Divisie', country: 'Países Baixos' },
-  '3934': { name: 'Paraguayan Primera División', country: 'Paraguai' },
-  '3940': { name: 'Scottish Championship', country: 'Escócia' },
-  '3943': { name: 'Salvadoran Primera Division', country: 'El Salvador' },
-  '3945': { name: 'Swedish Allsvenskan', country: 'Suécia' },
-  '3946': { name: 'Turkish Super Lig', country: 'Turquia' },
-  '4007': { name: 'Brazilian Serie B', country: 'Brasil' },
-  '5487': { name: "NCAA Men's Soccer", country: 'Estados Unidos' },
-  '5499': { name: "NCAA Women's Soccer", country: 'Estados Unidos' },
+  '2447': { name: 'CONCACAF Champions Cup', country: 'América do Norte e Central' },
+  '2466': { name: 'AFC Champions League Elite', country: 'Ásia' },
+  '2514': { name: 'MLS', country: 'Estados Unidos' },
+  '3903': { name: 'Primera Nacional', country: 'Argentina' },
+  '3906': { name: 'A-League Men', country: 'Austrália' },
+  '3907': { name: 'Bundesliga', country: 'Áustria' },
+  '3908': { name: 'Pro League', country: 'Bélgica' },
+  '3911': { name: 'Primera División', country: 'Chile' },
+  '3912': { name: 'Primera A', country: 'Colômbia' },
+  '3913': { name: 'Superliga', country: 'Dinamarca' },
+  '3914': { name: 'Championship', country: 'Inglaterra' },
+  '3915': { name: 'League One', country: 'Inglaterra' },
+  '3916': { name: 'League Two', country: 'Inglaterra' },
+  '3917': { name: 'National League', country: 'Inglaterra' },
+  '3918': { name: 'Community Shield', country: 'Inglaterra' },
+  '3919': { name: 'FA Cup', country: 'Inglaterra' },
+  '3920': { name: 'Carabao Cup', country: 'Inglaterra' },
+  '3921': { name: 'LALIGA 2', country: 'Espanha' },
+  '3926': { name: 'Ligue 2', country: 'França' },
+  '3927': { name: '2. Bundesliga', country: 'Alemanha' },
+  '3928': { name: 'Super League', country: 'Grécia' },
+  '3929': { name: 'J1 League', country: 'Japão' },
+  '3930': { name: 'Eliteserien', country: 'Noruega' },
+  '3931': { name: 'Serie B', country: 'Itália' },
+  '3932': { name: 'Liga de Expansión MX', country: 'México' },
+  '3933': { name: 'Eerste Divisie', country: 'Países Baixos' },
+  '3934': { name: 'Primera División', country: 'Paraguai' },
+  '3935': { name: 'Primeira Liga', country: 'Portugal' },
+  '3936': { name: 'Liga Portugal 2', country: 'Portugal' },
+  '3939': { name: 'Premiership', country: 'Escócia' },
+  '3940': { name: 'Championship', country: 'Escócia' },
+  '3941': { name: 'K League 1', country: 'Coreia do Sul' },
+  '3943': { name: 'Primera División', country: 'El Salvador' },
+  '3944': { name: 'Super League', country: 'Suíça' },
+  '3945': { name: 'Allsvenskan', country: 'Suécia' },
+  '3946': { name: 'Süper Lig', country: 'Turquia' },
+  '3951': { name: 'Copa del Rey', country: 'Espanha' },
+  '3952': { name: 'Supercopa da Espanha', country: 'Espanha' },
+  '3953': { name: 'Coppa Italia', country: 'Itália' },
+  '3954': { name: 'DFB-Pokal', country: 'Alemanha' },
+  '3955': { name: 'Coupe de France', country: 'França' },
+  '3956': { name: 'Copa do Brasil', country: 'Brasil' },
+  '3957': { name: 'KNVB Beker', country: 'Países Baixos' },
+  '3958': { name: 'Taça da Liga', country: 'Portugal' },
+  '3959': { name: 'Scottish Cup', country: 'Escócia' },
+  '4007': { name: 'Brasileirão Série B', country: 'Brasil' },
+  '4008': { name: 'Série C', country: 'Brasil' },
+  '5487': { name: "NCAA Masculino", country: 'Estados Unidos' },
+  '5499': { name: "NCAA Feminino", country: 'Estados Unidos' },
   '8301': { name: 'NWSL', country: 'Estados Unidos' },
   '8316': { name: 'Indian Super League', country: 'Índia' },
   '8376': { name: 'Chinese Super League', country: 'China' },
   '18000': { name: 'CAF Confederation Cup', country: 'África' },
-  '19834': { name: 'Club Friendly', country: 'Internacional' },
-  '20115': { name: 'Dutch KNVB Beker Vrouwen', country: 'Países Baixos' },
+  '18480': { name: 'UEFA Conference League', country: 'Europa' },
+  '18481': { name: 'EFL Trophy', country: 'Inglaterra' },
+  '19833': { name: 'Amistoso Internacional', country: 'Internacional' },
+  '19834': { name: 'Amistoso Interclubes', country: 'Internacional' },
+  '19835': { name: 'Copa da Turquia', country: 'Turquia' },
+  '19878': { name: 'Copa Argentina', country: 'Argentina' },
+  '19888': { name: 'USL Championship', country: 'Estados Unidos' },
+  '20115': { name: 'KNVB Beker Feminina', country: 'Países Baixos' },
+  '20421': { name: 'Copa Sul-Americana', country: 'América do Sul' },
+  '20422': { name: 'Recopa Sul-Americana', country: 'América do Sul' },
+  '20499': { name: 'Copa de la Liga', country: 'Argentina' },
+  '20546': { name: 'Copa do Rei Saudita', country: 'Arábia Saudita' },
   '20922': { name: 'Taça de Portugal', country: 'Portugal' },
   '21231': { name: 'Saudi Pro League', country: 'Arábia Saudita' },
+  '22947': { name: 'AFC Champions League Two', country: 'Ásia' },
   '23633': { name: 'USL Super League', country: 'Estados Unidos' },
 };
 
 const DYNAMIC_LEAGUES = new Map<string, LeagueMetadata>();
+
+const LEAGUE_ACRONYMS = new Set([
+  'EFL',
+  'UEFA',
+  'CONMEBOL',
+  'CONCACAF',
+  'AFC',
+  'CAF',
+  'FIFA',
+  'MLS',
+  'USL',
+  'NWSL',
+  'NCAA',
+  'MX',
+  'BBVA',
+  'DFB',
+  'DFL',
+  'KNVB',
+  'AUF',
+  'SC',
+  'FC',
+  'ADT',
+  'SP',
+  'RJ',
+  'MG',
+  'RS',
+  'PR',
+]);
+
+export function cleanLeagueDisplayName(name: string, country?: string): string {
+  let cleaned = (name ?? '').trim();
+  const lowerCountry = (country ?? '').trim().toLowerCase();
+
+  // Remove prefixos gentílicos em inglês ou português quando redundantes
+  cleaned = cleaned
+    .replace(/^(English|Inglês|Ingles)\s+/i, '')
+    .replace(/^(Spanish|Espanhol)\s+/i, '')
+    .replace(/^(Italian|Italiano)\s+/i, '')
+    .replace(/^(German|Alemão|Alemao)\s+/i, '')
+    .replace(/^(French|Francês|Frances)\s+/i, '')
+    .replace(/^(Peruvian|Peruano)\s+/i, '')
+    .replace(/^(Brazilian|Brasileiro)\s+/i, '')
+    .replace(/^(Argentine|Argentino)\s+/i, '')
+    .replace(/^(Portuguese|Português|Portugues)\s+/i, '')
+    .replace(/^(Dutch|Holandês|Holandes)\s+/i, '')
+    .replace(/^(Scottish|Escocês|Escoces)\s+/i, '')
+    .replace(/^(Turkish|Turco)\s+/i, '')
+    .replace(/^(Danish|Dinamarquês|Dinamarques)\s+/i, '')
+    .replace(/^(Swedish|Sueco)\s+/i, '')
+    .replace(/^(Norwegian|Norueguês|Noruegues)\s+/i, '')
+    .replace(/^(Austrian|Austríaco|Austriaco)\s+/i, '')
+    .replace(/^(Swiss|Suíço|Suico)\s+/i, '')
+    .replace(/^(Greek|Grego)\s+/i, '')
+    .replace(/^(Belgian|Belga)\s+/i, '')
+    .replace(/^(Australian|Australiano)\s+/i, '')
+    .replace(/^(Mexican|Mexicano)\s+/i, '')
+    .replace(/^(Bolivian|Boliviano)\s+/i, '')
+    .replace(/^(Paraguayan|Paraguaio)\s+/i, '')
+    .replace(/^(Chilean|Chileno)\s+/i, '')
+    .replace(/^(Colombian|Colombiano)\s+/i, '')
+    .replace(/^(Japanese|Japonês|Japones)\s+/i, '')
+    .replace(/^(South Korean|Sul-Coreano|Coreano)\s+/i, '')
+    .replace(/^(Salvadoran|Salvadorenho)\s+/i, '');
+
+  if (lowerCountry === 'brasil' || lowerCountry === 'brazil') {
+    if (/^Serie A$/i.test(cleaned)) cleaned = 'Brasileirão Série A';
+    else if (/^Serie B$/i.test(cleaned)) cleaned = 'Brasileirão Série B';
+  } else if (lowerCountry === 'estados unidos' || lowerCountry === 'usa') {
+    if (/^Major League Soccer$/i.test(cleaned)) cleaned = 'MLS';
+  } else if (lowerCountry === 'méxico' || lowerCountry === 'mexico') {
+    if (/^Liga BBVA MX$/i.test(cleaned)) cleaned = 'Liga MX';
+  } else if (lowerCountry === 'argentina') {
+    if (/^Nacional B$/i.test(cleaned)) cleaned = 'Primera Nacional';
+  }
+
+  return cleaned.trim() || name;
+}
+
+export function inferLeagueCountry(name: string, slug?: string): string {
+  const text = `${name} ${slug ?? ''}`.toLowerCase();
+
+  if (
+    /english|england|-england\b|premier-league|championship|league-one|league-two|efl|fa-cup|carabao|national-league/i.test(
+      text
+    )
+  ) {
+    return 'Inglaterra';
+  }
+  if (/spanish|spain|-spain\b|laliga|copa-del-rey/i.test(text)) return 'Espanha';
+  if (/italian|italy|-italy\b|serie-a|serie-b|coppa-italia/i.test(text)) return 'Itália';
+  if (/german|germany|-germany\b|bundesliga|dfb-pokal/i.test(text)) return 'Alemanha';
+  if (/french|france|-france\b|ligue-1|ligue-2|coupe-de-france/i.test(text)) return 'França';
+  if (/brazilian|brazil|brasil|-brazil\b|brasileirao|copa-do-brasil/i.test(text)) return 'Brasil';
+  if (
+    /argentine|argentina|-argentina\b|primera-nacional|copa-argentina|liga-profesional/i.test(
+      text
+    )
+  ) {
+    return 'Argentina';
+  }
+  if (/portuguese|portugal|-portugal\b|primeira-liga|taca-de-portugal|taca-da-liga/i.test(text)) {
+    return 'Portugal';
+  }
+  if (/dutch|netherlands|holland|-netherlands\b|eredivisie|eerste-divisie|knvb/i.test(text)) {
+    return 'Países Baixos';
+  }
+  if (/saudi|saudi-arabia|saudi-pro-league|kings-cup/i.test(text)) return 'Arábia Saudita';
+  if (/peruvian|peru|-peru\b|liga-1|liga-2/i.test(text)) return 'Peru';
+  if (/uruguayan|uruguay|-uruguay\b|auf/i.test(text)) return 'Uruguai';
+  if (/bolivian|bolivia|-bolivia\b/i.test(text)) return 'Bolívia';
+  if (/ecuadorian|ecuador|-ecuador\b|ligapro/i.test(text)) return 'Equador';
+  if (/paraguayan|paraguay|-paraguay\b/i.test(text)) return 'Paraguai';
+  if (/chilean|chile|-chile\b/i.test(text)) return 'Chile';
+  if (/colombian|colombia|-colombia\b/i.test(text)) return 'Colômbia';
+  if (/mexican|mexico|-mexico\b|liga-mx|liga-bbva-mx|expansion-mx/i.test(text)) return 'México';
+  if (/mls|major-league-soccer|nwsl|usl|ncaa|united-states/i.test(text)) return 'Estados Unidos';
+  if (/scottish|scotland|-scotland\b/i.test(text)) return 'Escócia';
+  if (/turkish|turkey|-turkey\b|super-lig/i.test(text)) return 'Turquia';
+  if (/belgian|belgium|-belgium\b|pro-league/i.test(text)) return 'Bélgica';
+  if (/danish|denmark|-denmark\b|superliga/i.test(text)) return 'Dinamarca';
+  if (/swedish|sweden|-sweden\b|allsvenskan/i.test(text)) return 'Suécia';
+  if (/norwegian|norway|-norway\b|eliteserien/i.test(text)) return 'Noruega';
+  if (/austrian|austria|-austria\b/i.test(text)) return 'Áustria';
+  if (/swiss|switzerland|-switzerland\b/i.test(text)) return 'Suíça';
+  if (/greek|greece|-greece\b/i.test(text)) return 'Grécia';
+  if (/australian|australia|-australia\b|a-league/i.test(text)) return 'Austrália';
+  if (/japanese|japan|-japan\b|j1-league|j2-league/i.test(text)) return 'Japão';
+  if (/korean|korea|-korea\b|k-league/i.test(text)) return 'Coreia do Sul';
+  if (/chinese|china|-china\b|csl/i.test(text)) return 'China';
+  if (/indian|india|-india\b|isl/i.test(text)) return 'Índia';
+  if (/salvadoran|el-salvador/i.test(text)) return 'El Salvador';
+  if (/egyptian|egypt/i.test(text)) return 'Egito';
+  if (/moroccan|morocco/i.test(text)) return 'Marrocos';
+  if (/south-african|south-africa/i.test(text)) return 'África do Sul';
+  if (/uefa|champions-league|europa-league|conference-league|nations-league/i.test(text)) {
+    return 'Europa';
+  }
+  if (/libertadores|sudamericana|recopa|conmebol/i.test(text)) return 'América do Sul';
+  if (/concacaf/i.test(text)) return 'América do Norte e Central';
+  if (/afc/i.test(text)) return 'Ásia';
+  if (/caf/i.test(text)) return 'África';
+
+  return 'Internacional';
+}
+
+export function formatLeagueMetadata(
+  rawName: string,
+  rawCountry?: string,
+  slug?: string
+): LeagueMetadata {
+  let name = (rawName || '').trim();
+  let country = (rawCountry || '').trim();
+
+  if (!name && slug) {
+    name = slug
+      .split('-')
+      .map((word) => {
+        const upper = word.toUpperCase();
+        if (LEAGUE_ACRONYMS.has(upper)) return upper;
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      })
+      .join(' ');
+  }
+
+  if (!country || country === 'Internacional') {
+    country = inferLeagueCountry(name, slug);
+  }
+
+  name = cleanLeagueDisplayName(name, country);
+
+  return {
+    name: name || 'Competição',
+    country: country || 'Internacional',
+  };
+}
 
 function getLeagueId(event: ESPNEvent): string {
   return event.uid.match(/~l:(\d+)/)?.[1] ?? 'unknown';
@@ -744,12 +963,7 @@ function getLeagueMetadata(event: ESPNEvent): LeagueMetadata {
     return { name: 'Competição internacional', country: 'Internacional' };
   }
 
-  const name = slug
-    .split('-')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-
-  return { name, country: 'Internacional' };
+  return formatLeagueMetadata('', undefined, slug);
 }
 
 const ATTEMPTED_LEAGUES = new Set<string>();
@@ -775,9 +989,10 @@ async function resolveLeagueName(event: ESPNEvent): Promise<void> {
         };
       };
     } = await response.json();
-    const name = data.header?.league?.name?.trim();
-    if (name) {
-      DYNAMIC_LEAGUES.set(leagueId, { name, country: 'Internacional' });
+    const rawName = data.header?.league?.name?.trim();
+    if (rawName) {
+      const meta = formatLeagueMetadata(rawName, undefined, getSeasonSlug(event));
+      DYNAMIC_LEAGUES.set(leagueId, meta);
     }
   } catch {
     // Falha silenciosa para não quebrar a listagem e não repetir em loop
@@ -1384,23 +1599,31 @@ function getMatchInfo(summary: ESPNMatchSummary, match?: Match): MatchInfoItem[]
     .split(',')
     .map((part) => part.trim())
     .filter(Boolean);
-  const leagueTitle = translateMatchInfoText(
+  const rawLeagueTitle = translateMatchInfoText(
     summary.header?.league?.displayName ||
       summary.header?.league?.name ||
       seasonParts[0] ||
       match?.leagueName ||
       ''
   );
+  const meta = formatLeagueMetadata(
+    rawLeagueTitle,
+    match?.leagueCountry,
+    undefined
+  );
+  const leagueTitle = meta.name || rawLeagueTitle;
+  const leagueCountry =
+    meta.country && meta.country.toUpperCase() !== 'INTERNACIONAL'
+      ? meta.country
+      : match?.leagueCountry && match.leagueCountry.toUpperCase() !== 'INTERNACIONAL'
+      ? match.leagueCountry
+      : 'Torneio Internacional';
   if (leagueTitle) {
     items.push({
       id: 'competition',
       label: 'Competição',
       value: leagueTitle,
-      subtitle:
-        match?.leagueCountry &&
-        match.leagueCountry.toUpperCase() !== 'INTERNACIONAL'
-          ? match.leagueCountry
-          : 'Torneio Internacional',
+      subtitle: leagueCountry,
       icon: '🏆',
       category: 'COMPETITION',
     });

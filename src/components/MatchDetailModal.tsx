@@ -35,6 +35,7 @@ import {
 } from '../types/match';
 import { API_CONFIG } from '../config/api';
 import {
+  cleanLeagueDisplayName,
   fetchClubProfile,
   fetchMatchDetails,
   MatchDetails,
@@ -659,7 +660,10 @@ const MatchInfoPanel: React.FC<MatchInfoPanelProps> = ({
                   : match.leagueCountry)}
             </Text>
             <Text style={styles.matchInfoCompetitionTitle}>
-              {competitionItem?.value ?? match.leagueName}
+              {cleanLeagueDisplayName(
+                competitionItem?.value ?? match.leagueName,
+                match.leagueCountry
+              )}
             </Text>
             {roundItem && (
               <View style={styles.matchInfoRoundBadge}>
@@ -2814,9 +2818,13 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                     match.leagueCountry.toUpperCase() === 'INTERNACIONAL')
                     ? resolvedCompetition
                     : match.leagueName;
+                const cleanName = cleanLeagueDisplayName(
+                  displayLeagueName,
+                  match.leagueCountry
+                );
                 return match.leagueCountry.toUpperCase() === 'INTERNACIONAL'
-                  ? displayLeagueName
-                  : `${match.leagueCountry.toUpperCase()} • ${displayLeagueName}`;
+                  ? cleanName.toUpperCase()
+                  : `${match.leagueCountry.toUpperCase()} • ${cleanName.toUpperCase()}`;
               })()}
             </Text>
 
