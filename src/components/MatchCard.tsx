@@ -43,6 +43,7 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
   const homeScoreHighlight = useRef(new Animated.Value(0)).current;
   const awayScoreHighlight = useRef(new Animated.Value(0)).current;
   const previousScores = useRef({
+    matchId: match.id,
     home: match.homeTeam.score,
     away: match.awayTeam.score,
   });
@@ -71,15 +72,31 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
       : `${match.minuteLabel ?? match.minute ?? ''}'`;
 
   useEffect(() => {
+    if (previousScores.current.matchId !== match.id) {
+      previousScores.current = {
+        matchId: match.id,
+        home: match.homeTeam.score,
+        away: match.awayTeam.score,
+      };
+      setAnimatingHome(false);
+      setAnimatingAway(false);
+      homeScoreHighlight.setValue(0);
+      awayScoreHighlight.setValue(0);
+      homeScoreScale.setValue(1);
+      awayScoreScale.setValue(1);
+      return;
+    }
+
     if (!hasStarted) {
       previousScores.current = {
+        matchId: match.id,
         home: match.homeTeam.score,
         away: match.awayTeam.score,
       };
       return;
     }
     const { home, away } = previousScores.current;
-    if (home !== match.homeTeam.score) {
+    if (isLive && match.homeTeam.score > home) {
       setAnimatingHome(true);
       Animated.parallel([
         Animated.sequence([
@@ -107,9 +124,13 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
             useNativeDriver: false,
           }),
         ]),
-      ]).start(() => setAnimatingHome(false));
+      ]).start(() => {
+        setAnimatingHome(false);
+        homeScoreHighlight.setValue(0);
+        homeScoreScale.setValue(1);
+      });
     }
-    if (away !== match.awayTeam.score) {
+    if (isLive && match.awayTeam.score > away) {
       setAnimatingAway(true);
       Animated.parallel([
         Animated.sequence([
@@ -137,13 +158,21 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
             useNativeDriver: false,
           }),
         ]),
-      ]).start(() => setAnimatingAway(false));
+      ]).start(() => {
+        setAnimatingAway(false);
+        awayScoreHighlight.setValue(0);
+        awayScoreScale.setValue(1);
+      });
     }
     previousScores.current = {
+      matchId: match.id,
       home: match.homeTeam.score,
       away: match.awayTeam.score,
     };
   }, [
+    match.id,
+    hasStarted,
+    isLive,
     awayScoreScale,
     awayScoreHighlight,
     homeScoreScale,

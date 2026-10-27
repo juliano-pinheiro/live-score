@@ -152,3 +152,4 @@ O link para download do arquivo `.apk` pronto para instalação em qualquer disp
 ## 📄 Licença
 
 Este projeto é desenvolvido para fins de estudo e uso pessoal. Todos os direitos sobre nomes de clubes, logotipos e dados estatísticos pertencem aos seus respectivos organizadores e titulares de direitos.
+

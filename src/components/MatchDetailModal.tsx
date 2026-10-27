@@ -2130,7 +2130,12 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   const awayScoreHighlight = useRef(new Animated.Value(0)).current;
   const [animatingHome, setAnimatingHome] = useState(false);
   const [animatingAway, setAnimatingAway] = useState(false);
-  const previousScores = useRef<{ home: number; away: number } | null>(null);
+  const previousScores = useRef<{
+    matchId: string;
+    home: number;
+    away: number;
+    isInitialized: boolean;
+  } | null>(null);
   const profileTeamRef = useRef(profileTeam);
   profileTeamRef.current = profileTeam;
   const onCloseRef = useRef(onClose);
@@ -2251,7 +2256,14 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
     setProfileTeam(null);
     setClubProfile(null);
     setTeamSearch('');
-    previousScores.current = null;
+    previousScores.current = match?.id
+      ? {
+          matchId: match.id,
+          home: match.homeTeam.score,
+          away: match.awayTeam.score,
+          isInitialized: false,
+        }
+      : null;
     homeScoreScale.setValue(1);
     awayScoreScale.setValue(1);
     homeScoreHighlight.setValue(0);
@@ -2391,25 +2403,50 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   const missingAwayGoals = Math.max(0, awayTeam.score - awayGoalsInEvents.length);
 
   useEffect(() => {
-    if (!match) return;
-    if (!hasStarted) {
+    if (!match?.id || !visible) return;
+
+    // Se é uma nova partida ou o modal acabou de abrir, inicializa a referência sem disparar animação
+    if (!previousScores.current || previousScores.current.matchId !== match.id) {
       previousScores.current = {
+        matchId: match.id,
         home: homeTeam.score,
         away: awayTeam.score,
+        isInitialized: Boolean(details),
+      };
+      setAnimatingHome(false);
+      setAnimatingAway(false);
+      homeScoreHighlight.setValue(0);
+      awayScoreHighlight.setValue(0);
+      homeScoreScale.setValue(1);
+      awayScoreScale.setValue(1);
+      return;
+    }
+
+    // Se os detalhes da partida acabaram de carregar pela 1ª vez, reconcilia os placares sem animar
+    if (!previousScores.current.isInitialized) {
+      previousScores.current = {
+        matchId: match.id,
+        home: homeTeam.score,
+        away: awayTeam.score,
+        isInitialized: Boolean(details),
       };
       return;
     }
-    if (!previousScores.current) {
+
+    if (!hasStarted) {
       previousScores.current = {
+        matchId: match.id,
         home: homeTeam.score,
         away: awayTeam.score,
+        isInitialized: true,
       };
       return;
     }
 
     const { home, away } = previousScores.current;
 
-    if (home !== homeTeam.score) {
+    // Dispara animação de gol APENAS se a partida estiver AO VIVO e a pontuação tiver AUMENTADO
+    if (isLive && homeTeam.score > home) {
       setAnimatingHome(true);
       Animated.parallel([
         Animated.sequence([
@@ -2438,10 +2475,14 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
             useNativeDriver: false,
           }),
         ]),
-      ]).start(() => setAnimatingHome(false));
+      ]).start(() => {
+        setAnimatingHome(false);
+        homeScoreHighlight.setValue(0);
+        homeScoreScale.setValue(1);
+      });
     }
 
-    if (away !== awayTeam.score) {
+    if (isLive && awayTeam.score > away) {
       setAnimatingAway(true);
       Animated.parallel([
         Animated.sequence([
@@ -2470,14 +2511,25 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
             useNativeDriver: false,
           }),
         ]),
-      ]).start(() => setAnimatingAway(false));
+      ]).start(() => {
+        setAnimatingAway(false);
+        awayScoreHighlight.setValue(0);
+        awayScoreScale.setValue(1);
+      });
     }
 
     previousScores.current = {
+      matchId: match.id,
       home: homeTeam.score,
       away: awayTeam.score,
+      isInitialized: true,
     };
   }, [
+    match?.id,
+    visible,
+    details,
+    hasStarted,
+    isLive,
     homeTeam.score,
     awayTeam.score,
     homeScoreScale,

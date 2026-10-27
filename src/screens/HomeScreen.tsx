@@ -338,8 +338,9 @@ export const HomeScreen: React.FC = () => {
               if (!update) return currentMatch;
               const resolvedHomeScore = Math.max(currentMatch.homeTeam.score, update.homeTeam.score);
               const resolvedAwayScore = Math.max(currentMatch.awayTeam.score, update.awayTeam.score);
-              const homeScored = resolvedHomeScore > currentMatch.homeTeam.score;
-              const awayScored = resolvedAwayScore > currentMatch.awayTeam.score;
+              const isMatchStarted = update.status !== 'NS' && currentMatch.status !== 'NS';
+              const homeScored = isMatchStarted && resolvedHomeScore > currentMatch.homeTeam.score;
+              const awayScored = isMatchStarted && resolvedAwayScore > currentMatch.awayTeam.score;
               const goalAlert =
                 homeScored || awayScored
                   ? {
