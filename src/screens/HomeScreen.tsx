@@ -389,10 +389,11 @@ export const HomeScreen: React.FC = () => {
             const previous = previousById.get(match.id);
             const resolvedHomeScore = Math.max(previous?.homeTeam.score ?? 0, match.homeTeam.score);
             const resolvedAwayScore = Math.max(previous?.awayTeam.score ?? 0, match.awayTeam.score);
+            const isMatchStarted = match.status !== 'NS';
             const homeScored =
-              previous && resolvedHomeScore > previous.homeTeam.score;
+              isMatchStarted && previous && resolvedHomeScore > previous.homeTeam.score;
             const awayScored =
-              previous && resolvedAwayScore > previous.awayTeam.score;
+              isMatchStarted && previous && resolvedAwayScore > previous.awayTeam.score;
             let recentAlert: Match['recentAlert'];
             if (homeScored || awayScored) {
               recentAlert = {

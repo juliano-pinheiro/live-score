@@ -711,9 +711,11 @@ const MatchInfoPanel: React.FC<MatchInfoPanelProps> = ({
             >
               {statusLabel}
             </Text>
-            <Text style={styles.matchInfoGridSub}>
-              Placar: {homeTeam.score} x {awayTeam.score}
-            </Text>
+            {status !== 'NS' && (
+              <Text style={styles.matchInfoGridSub}>
+                Placar: {homeTeam.score} x {awayTeam.score}
+              </Text>
+            )}
           </View>
         </View>
       </View>
@@ -2344,6 +2346,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   const matchMinuteLabel = details?.minuteLabel ?? match?.minuteLabel ?? null;
   const isLive = matchStatus === '1H' || matchStatus === '2H' || matchStatus === 'HT';
   const isFinished = matchStatus === 'FT';
+  const hasStarted = isLive || isFinished;
 
   const matchStats = details?.stats ?? match?.stats ?? null;
   const rawMatchEvents = details?.events ?? match?.events ?? [];
@@ -2385,6 +2388,13 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
   useEffect(() => {
     if (!match) return;
+    if (!hasStarted) {
+      previousScores.current = {
+        home: homeTeam.score,
+        away: awayTeam.score,
+      };
+      return;
+    }
     if (!previousScores.current) {
       previousScores.current = {
         home: homeTeam.score,
@@ -2842,60 +2852,66 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
                 <View style={styles.heroCenterCol}>
                   <View style={styles.heroScoreRow}>
-                    <Animated.Text
-                      style={[
-                        styles.heroScoreText,
-                        isLive && styles.heroScoreLive,
-                        isFinished &&
-                          (isHomeWinner
-                            ? styles.heroScoreWinner
-                            : isAwayWinner
-                            ? styles.heroScoreLoser
-                            : styles.heroScoreFinished),
-                        animatingHome
-                          ? {
-                              transform: [{ scale: homeScoreScale }],
-                              color: homeScoreHighlight.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [isLive ? '#CB1818' : '#0F172A', '#16A34A'],
-                              }),
-                            }
-                          : null,
-                      ]}
-                    >
-                      {homeTeam.score}
-                    </Animated.Text>
-                    <Text
-                      style={[
-                        styles.heroScoreDash,
-                        isLive && styles.heroScoreDashLive,
-                      ]}
-                    >
-                      -
-                    </Text>
-                    <Animated.Text
-                      style={[
-                        styles.heroScoreText,
-                        isLive && styles.heroScoreLive,
-                        isFinished &&
-                          (isAwayWinner
-                            ? styles.heroScoreWinner
-                            : isHomeWinner
-                            ? styles.heroScoreLoser
-                            : styles.heroScoreFinished),
-                        animatingAway
-                          ? {
-                              transform: [{ scale: awayScoreScale }],
-                              color: awayScoreHighlight.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [isLive ? '#CB1818' : '#0F172A', '#16A34A'],
-                              }),
-                            }
-                          : null,
-                      ]}
-                    >
-                      {awayTeam.score}
-                    </Animated.Text>
+                    {!hasStarted ? (
+                      <Text style={styles.heroScoreDash}>vs</Text>
+                    ) : (
+                      <>
+                        <Animated.Text
+                          style={[
+                            styles.heroScoreText,
+                            isLive && styles.heroScoreLive,
+                            isFinished &&
+                              (isHomeWinner
+                                ? styles.heroScoreWinner
+                                : isAwayWinner
+                                ? styles.heroScoreLoser
+                                : styles.heroScoreFinished),
+                            animatingHome
+                              ? {
+                                  transform: [{ scale: homeScoreScale }],
+                                  color: homeScoreHighlight.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [isLive ? '#CB1818' : '#0F172A', '#16A34A'],
+                                  }),
+                                }
+                              : null,
+                          ]}
+                        >
+                          {homeTeam.score}
+                        </Animated.Text>
+                        <Text
+                          style={[
+                            styles.heroScoreDash,
+                            isLive && styles.heroScoreDashLive,
+                          ]}
+                        >
+                          -
+                        </Text>
+                        <Animated.Text
+                          style={[
+                            styles.heroScoreText,
+                            isLive && styles.heroScoreLive,
+                            isFinished &&
+                              (isAwayWinner
+                                ? styles.heroScoreWinner
+                                : isHomeWinner
+                                ? styles.heroScoreLoser
+                                : styles.heroScoreFinished),
+                            animatingAway
+                              ? {
+                                  transform: [{ scale: awayScoreScale }],
+                                  color: awayScoreHighlight.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [isLive ? '#CB1818' : '#0F172A', '#16A34A'],
+                                  }),
+                                }
+                              : null,
+                          ]}
+                        >
+                          {awayTeam.score}
+                        </Animated.Text>
+                      </>
+                    )}
                   </View>
                   <View
                     style={[

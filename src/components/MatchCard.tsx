@@ -53,6 +53,7 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
   const awayRedCards = match.awayTeam.redCards ?? 0;
   const isLive = match.status === '1H' || match.status === '2H' || match.status === 'HT';
   const isFinished = match.status === 'FT';
+  const hasStarted = isLive || isFinished;
   const isHomeWinner = isFinished && match.homeTeam.score > match.awayTeam.score;
   const isAwayWinner = isFinished && match.awayTeam.score > match.homeTeam.score;
   const alertTeam =
@@ -70,6 +71,13 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
       : `${match.minuteLabel ?? match.minute ?? ''}'`;
 
   useEffect(() => {
+    if (!hasStarted) {
+      previousScores.current = {
+        home: match.homeTeam.score,
+        away: match.awayTeam.score,
+      };
+      return;
+    }
     const { home, away } = previousScores.current;
     if (home !== match.homeTeam.score) {
       setAnimatingHome(true);
@@ -384,7 +392,7 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
                 : null,
             ]}
           >
-            {match.homeTeam.score}
+            {hasStarted ? match.homeTeam.score : ''}
           </Animated.Text>
         </View>
         <View style={styles.teamRow}>
@@ -453,7 +461,7 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
                 : null,
             ]}
           >
-            {match.awayTeam.score}
+            {hasStarted ? match.awayTeam.score : ''}
           </Animated.Text>
         </View>
       </View>
