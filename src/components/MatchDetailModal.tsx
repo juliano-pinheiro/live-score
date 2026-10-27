@@ -67,7 +67,7 @@ const MatchDetailWrapper: React.FC<MatchDetailWrapperProps> = ({
   ) : (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="fade"
       transparent
       onRequestClose={onClose}
     >
@@ -2141,7 +2141,6 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
         duration: 180,
         useNativeDriver: true,
       }).start(() => {
-        translateY.setValue(0);
         onCloseRef.current();
       });
     } else {
@@ -2157,9 +2156,9 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
         duration: 180,
         useNativeDriver: true,
       }).start(() => {
-        translateY.setValue(0);
         if (profileTeamRef.current) {
           setProfileTeam(null);
+          translateY.setValue(0);
         } else {
           onCloseRef.current();
         }
@@ -2174,6 +2173,29 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
     }
   };
 
+  const headerPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => !sidePanel && !isWide,
+      onStartShouldSetPanResponderCapture: () => !sidePanel && !isWide,
+      onMoveShouldSetPanResponder: () => !sidePanel && !isWide,
+      onMoveShouldSetPanResponderCapture: () => !sidePanel && !isWide,
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          translateY.setValue(gestureState.dy);
+        } else {
+          translateY.setValue(0);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        handleGestureEnd(gestureState);
+      },
+      onPanResponderTerminate: (_, gestureState) => {
+        handleGestureEnd(gestureState);
+      },
+    })
+  ).current;
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
@@ -2185,6 +2207,14 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
           isScrollAtTopRef.current &&
           gestureState.dy > 6 &&
           gestureState.dy > Math.abs(gestureState.dx) * 1.2
+        );
+      },
+      onMoveShouldSetPanResponderCapture: (_, gestureState) => {
+        if (sidePanel || isWide) return false;
+        return (
+          isScrollAtTopRef.current &&
+          gestureState.dy > 8 &&
+          gestureState.dy > Math.abs(gestureState.dx) * 1.5
         );
       },
       onPanResponderTerminationRequest: () => false,
@@ -2653,13 +2683,13 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
         >
           {/* Barra de arraste para mobile */}
           {!sidePanel && !isWide && (
-            <View style={styles.dragHandleArea}>
+            <View style={styles.dragHandleArea} {...headerPanResponder.panHandlers}>
               <View style={styles.handle} />
             </View>
           )}
 
           {/* Barra superior de título e botão fechar */}
-          <View style={styles.sheetTopBar}>
+          <View style={styles.sheetTopBar} {...headerPanResponder.panHandlers}>
             <Text style={styles.modalTitle}>
               {profileTeam ? 'Perfil do clube' : 'Detalhes da partida'}
             </Text>
@@ -3231,8 +3261,8 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 6,
-    paddingBottom: 10,
+    paddingTop: 10,
+    paddingBottom: 14,
   },
   handle: {
     width: 48,

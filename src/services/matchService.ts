@@ -884,6 +884,8 @@ function toMatch(event: ESPNEvent): Match | null {
   };
 }
 
+let isVarAlertsRunning = false;
+
 async function fetchRecentVARAlerts(
   matches: Match[]
 ): Promise<
@@ -902,130 +904,156 @@ async function fetchRecentVARAlerts(
     }
   >
 > {
-  const liveMatches = matches.filter(
-    (match) => match.status === '1H' || match.status === '2H' || match.status === 'HT'
-  );
-  const alerts = new Map<
-    string,
-    {
-      alertId?: string;
-      alertTeam?: 'HOME' | 'AWAY';
-      homeRedCards?: number;
-      awayRedCards?: number;
-      homeScore?: number;
-      awayScore?: number;
-      status?: MatchStatus;
-      minute?: number | null;
-      minuteLabel?: string | null;
+  if (isVarAlertsRunning) {
+    return new Map();
+  }
+  isVarAlertsRunning = true;
+
+  try {
+    const liveMatches = matches.filter(
+      (match) => match.status === '1H' || match.status === '2H' || match.status === 'HT'
+    );
+    if (liveMatches.length === 0) {
+      return new Map();
     }
-  >();
-  await Promise.all(
-    liveMatches.map(async (match) => {
-      try {
-        const response = await fetch(
-          `${API_CONFIG.BASE_URL}/all/summary?event=${encodeURIComponent(match.id)}&_=${Date.now()}`
-        );
-        if (!response.ok) {
-          throw new Error(`resposta HTTP ${response.status}`);
-        }
-        const summary: ESPNMatchSummary = await response.json();
-        const latestReview = [...(summary.keyEvents ?? [])].reverse().find((event) => {
-          const description = `${event.type?.text ?? ''} ${event.type?.type ?? ''} ${
-            event.text ?? ''
-          } ${event.shortText ?? ''}`;
-          return /\bvar\b|video assistant referee|video review/i.test(description);
-        });
-        const reviewDescription = latestReview
-          ? `${latestReview.type?.text ?? ''} ${latestReview.type?.type ?? ''} ${
-              latestReview.text ?? ''
-            } ${latestReview.shortText ?? ''}`
-          : '';
-        const isReviewActive =
-          /\bunder review\b|\bchecking\b|\breview in progress\b|\bvideo review underway\b/i.test(
-            reviewDescription
-          ) &&
-          !/\b(?:review complete|review concluded|no change|stands|overturned|decision)\b/i.test(
-            reviewDescription
-          );
-        const review = isReviewActive ? latestReview : undefined;
-        const getRedCardCount = (homeAway: 'home' | 'away'): number | undefined =>
-          getTeamStatistics(
-            summary.boxscore?.teams?.find((team) => team.homeAway === homeAway)
-          ).get('redCards');
-        const comp = summary.header?.competitions?.[0];
-        const homeComp = comp?.competitors?.find((c) => c.homeAway === 'home');
-        const awayComp = comp?.competitors?.find((c) => c.homeAway === 'away');
-        const rawStatus = comp?.status;
-        const nextStatus = rawStatus ? getEventStatus(rawStatus) : undefined;
-        const parsedMin = Number.parseInt(
-          rawStatus?.displayClock ?? rawStatus?.type.detail ?? '',
-          10
-        );
-        const nextMinute =
-          nextStatus === 'NS' || nextStatus === 'FT'
-            ? null
-            : Number.isFinite(parsedMin)
-            ? parsedMin
-            : undefined;
-        const nextMinuteLabel =
-          nextStatus === 'NS' || nextStatus === 'FT'
-            ? null
-            : rawStatus
-            ? getMinuteLabel(
-                rawStatus.displayClock,
-                [rawStatus.type.shortDetail, rawStatus.type.detail],
-                rawStatus.period
-              )
-            : undefined;
 
-        const keyEvents = summary.keyEvents ?? [];
-        const eventHomeGoals = keyEvents.filter((e) => {
-          const rawType = (e.type?.text ?? e.type?.type ?? '').toLowerCase();
-          return (rawType.includes('goal') || Boolean(e.scoringPlay)) && !rawType.includes('miss') && e.team?.id === match.homeTeam.id;
-        }).length;
-        const eventAwayGoals = keyEvents.filter((e) => {
-          const rawType = (e.type?.text ?? e.type?.type ?? '').toLowerCase();
-          return (rawType.includes('goal') || Boolean(e.scoringPlay)) && !rawType.includes('miss') && e.team?.id === match.awayTeam.id;
-        }).length;
+    // Limit concurrent requests: pinned matches first, max 4 matches per tick to prevent network pool & memory exhaustion
+    const prioritizedMatches = [...liveMatches]
+      .sort((a, b) => {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return 0;
+      })
+      .slice(0, 4);
 
-        const compHomeScore = homeComp?.score !== undefined ? Number(homeComp.score) : undefined;
-        const compAwayScore = awayComp?.score !== undefined ? Number(awayComp.score) : undefined;
-
-        const resolvedHomeScore =
-          compHomeScore !== undefined || eventHomeGoals > 0
-            ? Math.max(compHomeScore ?? 0, eventHomeGoals)
-            : undefined;
-        const resolvedAwayScore =
-          compAwayScore !== undefined || eventAwayGoals > 0
-            ? Math.max(compAwayScore ?? 0, eventAwayGoals)
-            : undefined;
-
-        const alert = {
-          alertId: review?.id,
-          alertTeam:
-            review?.team?.id === match.homeTeam.id
-              ? 'HOME' as const
-              : review?.team?.id === match.awayTeam.id
-              ? 'AWAY' as const
-              : undefined,
-          homeRedCards: getRedCardCount('home'),
-          awayRedCards: getRedCardCount('away'),
-          homeScore: resolvedHomeScore,
-          awayScore: resolvedAwayScore,
-          status: nextStatus,
-          minute: nextMinute,
-          minuteLabel: nextMinuteLabel,
-        };
-        alerts.set(match.id, alert);
-      } catch (error) {
-        console.warn(
-          `Não foi possível verificar eventos de VAR para a partida ${match.id}:`,
-          error
-        );
+    const alerts = new Map<
+      string,
+      {
+        alertId?: string;
+        alertTeam?: 'HOME' | 'AWAY';
+        homeRedCards?: number;
+        awayRedCards?: number;
+        homeScore?: number;
+        awayScore?: number;
+        status?: MatchStatus;
+        minute?: number | null;
+        minuteLabel?: string | null;
       }
-    })
-  );
-  return alerts;
+    >();
+
+    await Promise.all(
+      prioritizedMatches.map(async (match) => {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 4000);
+          const response = await fetch(
+            `${API_CONFIG.BASE_URL}/all/summary?event=${encodeURIComponent(match.id)}&_=${Date.now()}`,
+            { signal: controller.signal }
+          ).finally(() => clearTimeout(timeoutId));
+          if (!response.ok) {
+            throw new Error(`resposta HTTP ${response.status}`);
+          }
+          const summary: ESPNMatchSummary = await response.json();
+          const latestReview = [...(summary.keyEvents ?? [])].reverse().find((event) => {
+            const description = `${event.type?.text ?? ''} ${event.type?.type ?? ''} ${
+              event.text ?? ''
+            } ${event.shortText ?? ''}`;
+            return /\bvar\b|video assistant referee|video review/i.test(description);
+          });
+          const reviewDescription = latestReview
+            ? `${latestReview.type?.text ?? ''} ${latestReview.type?.type ?? ''} ${
+                latestReview.text ?? ''
+              } ${latestReview.shortText ?? ''}`
+            : '';
+          const isReviewActive =
+            /\bunder review\b|\bchecking\b|\breview in progress\b|\bvideo review underway\b/i.test(
+              reviewDescription
+            ) &&
+            !/\b(?:review complete|review concluded|no change|stands|overturned|decision)\b/i.test(
+              reviewDescription
+            );
+          const review = isReviewActive ? latestReview : undefined;
+          const getRedCardCount = (homeAway: 'home' | 'away'): number | undefined =>
+            getTeamStatistics(
+              summary.boxscore?.teams?.find((team) => team.homeAway === homeAway)
+            ).get('redCards');
+          const comp = summary.header?.competitions?.[0];
+          const homeComp = comp?.competitors?.find((c) => c.homeAway === 'home');
+          const awayComp = comp?.competitors?.find((c) => c.homeAway === 'away');
+          const rawStatus = comp?.status;
+          const nextStatus = rawStatus ? getEventStatus(rawStatus) : undefined;
+          const parsedMin = Number.parseInt(
+            rawStatus?.displayClock ?? rawStatus?.type.detail ?? '',
+            10
+          );
+          const nextMinute =
+            nextStatus === 'NS' || nextStatus === 'FT'
+              ? null
+              : Number.isFinite(parsedMin)
+              ? parsedMin
+              : undefined;
+          const nextMinuteLabel =
+            nextStatus === 'NS' || nextStatus === 'FT'
+              ? null
+              : rawStatus
+              ? getMinuteLabel(
+                  rawStatus.displayClock,
+                  [rawStatus.type.shortDetail, rawStatus.type.detail],
+                  rawStatus.period
+                )
+              : undefined;
+
+          const keyEvents = summary.keyEvents ?? [];
+          const eventHomeGoals = keyEvents.filter((e) => {
+            const rawType = (e.type?.text ?? e.type?.type ?? '').toLowerCase();
+            return (rawType.includes('goal') || Boolean(e.scoringPlay)) && !rawType.includes('miss') && e.team?.id === match.homeTeam.id;
+          }).length;
+          const eventAwayGoals = keyEvents.filter((e) => {
+            const rawType = (e.type?.text ?? e.type?.type ?? '').toLowerCase();
+            return (rawType.includes('goal') || Boolean(e.scoringPlay)) && !rawType.includes('miss') && e.team?.id === match.awayTeam.id;
+          }).length;
+
+          const compHomeScore = homeComp?.score !== undefined ? Number(homeComp.score) : undefined;
+          const compAwayScore = awayComp?.score !== undefined ? Number(awayComp.score) : undefined;
+
+          const resolvedHomeScore =
+            compHomeScore !== undefined || eventHomeGoals > 0
+              ? Math.max(compHomeScore ?? 0, eventHomeGoals)
+              : undefined;
+          const resolvedAwayScore =
+            compAwayScore !== undefined || eventAwayGoals > 0
+              ? Math.max(compAwayScore ?? 0, eventAwayGoals)
+              : undefined;
+
+          const alert = {
+            alertId: review?.id,
+            alertTeam:
+              review?.team?.id === match.homeTeam.id
+                ? 'HOME' as const
+                : review?.team?.id === match.awayTeam.id
+                ? 'AWAY' as const
+                : undefined,
+            homeRedCards: getRedCardCount('home'),
+            awayRedCards: getRedCardCount('away'),
+            homeScore: resolvedHomeScore,
+            awayScore: resolvedAwayScore,
+            status: nextStatus,
+            minute: nextMinute,
+            minuteLabel: nextMinuteLabel,
+          };
+          alerts.set(match.id, alert);
+        } catch (error) {
+          console.warn(
+            `Não foi possível verificar eventos de VAR para a partida ${match.id}:`,
+            error
+          );
+        }
+      })
+    );
+    return alerts;
+  } finally {
+    isVarAlertsRunning = false;
+  }
 }
 
 const STAT_LABELS: Record<string, { label: string; suffix?: string }> = {
