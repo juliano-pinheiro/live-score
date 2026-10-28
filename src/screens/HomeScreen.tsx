@@ -154,6 +154,7 @@ interface LeagueGroupItemProps {
   group: MatchGroup;
   isCollapsed: boolean;
   selectedMatchId: string | null;
+  isDarkMode?: boolean;
   onToggleCollapse: (groupId: string) => void;
   onSelectMatch: (match: Match) => void;
   onTogglePin: (matchId: string) => void;
@@ -164,13 +165,20 @@ const LeagueGroupItem = React.memo<LeagueGroupItemProps>(
     group,
     isCollapsed,
     selectedMatchId,
+    isDarkMode = false,
     onToggleCollapse,
     onSelectMatch,
     onTogglePin,
   }) => {
     const isPinned = group.id.startsWith('pinned-');
     return (
-      <View style={[styles.leagueGroup, isPinned && styles.leagueGroupPinned]}>
+      <View
+        style={[
+          styles.leagueGroup,
+          isDarkMode && styles.leagueGroupDark,
+          isPinned && (isDarkMode ? styles.leagueGroupPinnedDark : styles.leagueGroupPinned),
+        ]}
+      >
         <TouchableOpacity
           activeOpacity={0.7}
           accessibilityRole="button"
@@ -178,11 +186,18 @@ const LeagueGroupItem = React.memo<LeagueGroupItemProps>(
           onPress={() => onToggleCollapse(group.id)}
           style={[
             styles.leagueGroupHeader,
-            isPinned && styles.leagueGroupHeaderPinned,
+            isDarkMode && styles.leagueGroupHeaderDark,
+            isPinned && (isDarkMode ? styles.leagueGroupHeaderPinnedDark : styles.leagueGroupHeaderPinned),
             isCollapsed && styles.leagueGroupHeaderCollapsed,
           ]}
         >
-          <View style={[styles.leagueBadge, isPinned && styles.leagueBadgePinned]}>
+          <View
+            style={[
+              styles.leagueBadge,
+              isDarkMode && styles.leagueBadgeDark,
+              isPinned && styles.leagueBadgePinned,
+            ]}
+          >
             <CountryFlag country={group.leagueCountry} size={18} />
           </View>
           <View style={styles.leagueGroupTitle}>
@@ -190,6 +205,7 @@ const LeagueGroupItem = React.memo<LeagueGroupItemProps>(
               <Text
                 style={[
                   styles.leagueGroupCountry,
+                  isDarkMode && styles.leagueGroupCountryDark,
                   isPinned && styles.leagueGroupCountryPinned,
                 ]}
                 numberOfLines={1}
@@ -200,7 +216,8 @@ const LeagueGroupItem = React.memo<LeagueGroupItemProps>(
             <Text
               style={[
                 styles.leagueGroupName,
-                isPinned && styles.leagueGroupNamePinned,
+                isDarkMode && styles.leagueGroupNameDark,
+                isPinned && (isDarkMode ? styles.leagueGroupNamePinnedDark : styles.leagueGroupNamePinned),
               ]}
               numberOfLines={1}
             >
@@ -211,19 +228,26 @@ const LeagueGroupItem = React.memo<LeagueGroupItemProps>(
             <View
               style={[
                 styles.leagueGroupCountPill,
+                isDarkMode && styles.leagueGroupCountPillDark,
                 isPinned && styles.leagueGroupCountPillPinned,
               ]}
             >
               <Text
                 style={[
                   styles.leagueGroupCount,
+                  isDarkMode && styles.leagueGroupCountDark,
                   isPinned && styles.leagueGroupCountPinned,
                 ]}
               >
                 {group.matches.length}
               </Text>
             </View>
-            <Text style={styles.leagueCollapseChevron}>
+            <Text
+              style={[
+                styles.leagueCollapseChevron,
+                isDarkMode && styles.leagueCollapseChevronDark,
+              ]}
+            >
               {isCollapsed ? '▼' : '▲'}
             </Text>
           </View>
@@ -233,6 +257,7 @@ const LeagueGroupItem = React.memo<LeagueGroupItemProps>(
             <MatchCard
               key={match.id}
               match={match}
+              isDarkMode={isDarkMode}
               isSelected={selectedMatchId === match.id}
               onPress={onSelectMatch}
               onTogglePin={onTogglePin}
@@ -242,6 +267,7 @@ const LeagueGroupItem = React.memo<LeagueGroupItemProps>(
     );
   },
   (prev, next) => {
+    if (prev.isDarkMode !== next.isDarkMode) return false;
     if (prev.isCollapsed !== next.isCollapsed) return false;
     if (prev.onToggleCollapse !== next.onToggleCollapse) return false;
     if (prev.onSelectMatch !== next.onSelectMatch) return false;
@@ -298,6 +324,27 @@ export const HomeScreen: React.FC = () => {
   const [lastSyncTime, setLastSyncTime] = useState<string>('Agora');
   const [pinnedTimestamps, setPinnedTimestamps] = useState<Record<string, number>>({});
   const [collapsedLeagues, setCollapsedLeagues] = useState<Set<string>>(new Set());
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const saved = window.localStorage.getItem('nextscore_theme');
+        if (saved) return saved === 'dark';
+      } catch (e) {}
+    }
+    return false;
+  });
+
+  const toggleDarkMode = useCallback(() => {
+    setIsDarkMode((prev) => {
+      const next = !prev;
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
+        try {
+          window.localStorage.setItem('nextscore_theme', next ? 'dark' : 'light');
+        } catch (e) {}
+      }
+      return next;
+    });
+  }, []);
 
   const handleSelectMatch = useCallback((selected: Match) => {
     setSelectedMatchId(selected.id);
@@ -811,12 +858,13 @@ export const HomeScreen: React.FC = () => {
         group={group}
         isCollapsed={collapsedLeagues.has(group.id)}
         selectedMatchId={selectedMatchId}
+        isDarkMode={isDarkMode}
         onToggleCollapse={toggleCollapseLeague}
         onSelectMatch={handleSelectMatch}
         onTogglePin={handleTogglePin}
       />
     ),
-    [collapsedLeagues, selectedMatchId, toggleCollapseLeague, handleSelectMatch, handleTogglePin]
+    [collapsedLeagues, selectedMatchId, isDarkMode, toggleCollapseLeague, handleSelectMatch, handleTogglePin]
   );
 
   const groupKeyExtractor = useCallback((group: MatchGroup) => group.id, []);
@@ -893,11 +941,26 @@ export const HomeScreen: React.FC = () => {
                 {liveCount > 0 ? `${liveCount} AO VIVO` : 'AO VIVO'}
               </Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={isDarkMode ? 'Mudar para modo claro' : 'Mudar para modo noturno'}
+              activeOpacity={0.8}
+              onPress={toggleDarkMode}
+              style={[
+                styles.headerThemeBtn,
+                isDarkMode && styles.headerThemeBtnDark,
+              ]}
+            >
+              <Text style={styles.headerThemeIcon}>
+                {isDarkMode ? '☀️' : '🌙'}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
 
-      <View style={styles.screenCanvas}>
+      <View style={[styles.screenCanvas, isDarkMode && styles.screenCanvasDark]}>
         <View
           style={[
             styles.container,
@@ -906,9 +969,9 @@ export const HomeScreen: React.FC = () => {
         >
         {/* Left Sidebar on wide Desktop: Quick Competition Navigator */}
         {showDesktopSidebar && (
-          <View style={styles.leagueSidebar}>
+          <View style={[styles.leagueSidebar, isDarkMode && styles.leagueSidebarDark]}>
             <View style={styles.sidebarHeaderRow}>
-              <Text style={styles.sidebarTitle}>COMPETIÇÕES</Text>
+              <Text style={[styles.sidebarTitle, isDarkMode && styles.sidebarTitleDark]}>COMPETIÇÕES</Text>
               <Text style={styles.sidebarBadgeCount}>
                 {Math.max(0, leagues.length - 1)}
               </Text>
@@ -925,7 +988,8 @@ export const HomeScreen: React.FC = () => {
                     onPress={() => setSelectedLeague(league.id)}
                     style={[
                       styles.leagueItem,
-                      isSelected && styles.leagueItemActive,
+                      isDarkMode && styles.leagueItemDark,
+                      isSelected && (isDarkMode ? styles.leagueItemActiveDark : styles.leagueItemActive),
                     ]}
                   >
                     <View style={styles.leagueSidebarFlagBox}>
@@ -938,7 +1002,8 @@ export const HomeScreen: React.FC = () => {
                       <Text
                         style={[
                           styles.leagueItemName,
-                          isSelected && styles.leagueItemNameActive,
+                          isDarkMode && styles.leagueItemNameDark,
+                          isSelected && (isDarkMode ? styles.leagueItemNameActiveDark : styles.leagueItemNameActive),
                         ]}
                         numberOfLines={1}
                       >
@@ -946,7 +1011,10 @@ export const HomeScreen: React.FC = () => {
                       </Text>
                       {league.country ? (
                         <Text
-                          style={styles.leagueItemCountry}
+                          style={[
+                            styles.leagueItemCountry,
+                            isDarkMode && styles.leagueItemCountryDark,
+                          ]}
                           numberOfLines={1}
                         >
                           {league.country}
@@ -956,13 +1024,15 @@ export const HomeScreen: React.FC = () => {
                     <View
                       style={[
                         styles.leagueCountBadge,
-                        isSelected && styles.leagueCountBadgeActive,
+                        isDarkMode && styles.leagueCountBadgeDark,
+                        isSelected && (isDarkMode ? styles.leagueCountBadgeActiveDark : styles.leagueCountBadgeActive),
                       ]}
                     >
                       <Text
                         style={[
                           styles.leagueCount,
-                          isSelected && styles.leagueCountActive,
+                          isDarkMode && styles.leagueCountDark,
+                          isSelected && (isDarkMode ? styles.leagueCountActiveDark : styles.leagueCountActive),
                         ]}
                       >
                         {league.count}
@@ -984,21 +1054,21 @@ export const HomeScreen: React.FC = () => {
           {/* Sofascore-Style Modern Sports Feed Controls */}
           <View style={styles.modernControlsContainer}>
             {/* 1. Horizontal Date Strip Carousel */}
-            <View style={styles.dateStripWrapper}>
+            <View style={[styles.dateStripWrapper, isDarkMode && styles.dateStripWrapperDark]}>
               <TouchableOpacity
                 accessibilityRole="button"
                 accessibilityLabel="Dia anterior"
                 onPress={() => shiftDate(-1)}
-                style={styles.dateStripArrow}
+                style={[styles.dateStripArrow, isDarkMode && styles.dateStripArrowDark]}
               >
-                <Text style={styles.dateStripArrowText}>‹</Text>
+                <Text style={[styles.dateStripArrowText, isDarkMode && styles.dateStripArrowTextDark]}>‹</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 accessibilityRole="button"
                 accessibilityLabel="Abrir calendário"
                 onPress={() => setIsCalendarVisible(true)}
-                style={styles.calendarMiniBtn}
+                style={[styles.calendarMiniBtn, isDarkMode && styles.calendarMiniBtnDark]}
               >
                 <Text style={styles.calendarMiniIcon}>📅</Text>
               </TouchableOpacity>
@@ -1025,13 +1095,15 @@ export const HomeScreen: React.FC = () => {
                       onPress={() => handleSelectDate(dayDate)}
                       style={[
                         styles.dayCapsule,
+                        isDarkMode && styles.dayCapsuleDark,
                         isSelected && styles.dayCapsuleActive,
-                        isToday && !isSelected && styles.dayCapsuleToday,
+                        isToday && !isSelected && (isDarkMode ? styles.dayCapsuleTodayDark : styles.dayCapsuleToday),
                       ]}
                     >
                       <Text
                         style={[
                           styles.dayCapsuleWeek,
+                          isDarkMode && styles.dayCapsuleWeekDark,
                           isSelected && styles.dayCapsuleWeekActive,
                           isToday && !isSelected && styles.dayCapsuleWeekToday,
                         ]}
@@ -1041,6 +1113,7 @@ export const HomeScreen: React.FC = () => {
                       <Text
                         style={[
                           styles.dayCapsuleNum,
+                          isDarkMode && styles.dayCapsuleNumDark,
                           isSelected && styles.dayCapsuleNumActive,
                           isToday && !isSelected && styles.dayCapsuleNumToday,
                         ]}
@@ -1056,9 +1129,9 @@ export const HomeScreen: React.FC = () => {
                 accessibilityRole="button"
                 accessibilityLabel="Próximo dia"
                 onPress={() => shiftDate(1)}
-                style={styles.dateStripArrow}
+                style={[styles.dateStripArrow, isDarkMode && styles.dateStripArrowDark]}
               >
-                <Text style={styles.dateStripArrowText}>›</Text>
+                <Text style={[styles.dateStripArrowText, isDarkMode && styles.dateStripArrowTextDark]}>›</Text>
               </TouchableOpacity>
             </View>
 
@@ -1082,6 +1155,7 @@ export const HomeScreen: React.FC = () => {
                   }}
                   style={[
                     styles.pillFilter,
+                    isDarkMode && styles.pillFilterDark,
                     activeTab === 'ALL' &&
                       statusFilter === 'ALL' &&
                       styles.pillFilterActive,
@@ -1090,6 +1164,7 @@ export const HomeScreen: React.FC = () => {
                   <Text
                     style={[
                       styles.pillFilterText,
+                      isDarkMode && styles.pillFilterTextDark,
                       activeTab === 'ALL' &&
                         statusFilter === 'ALL' &&
                         styles.pillFilterTextActive,
@@ -1100,6 +1175,7 @@ export const HomeScreen: React.FC = () => {
                   <View
                     style={[
                       styles.pillBadge,
+                      isDarkMode && styles.pillBadgeDark,
                       activeTab === 'ALL' &&
                         statusFilter === 'ALL' &&
                         styles.pillBadgeActive,
@@ -1108,6 +1184,7 @@ export const HomeScreen: React.FC = () => {
                     <Text
                       style={[
                         styles.pillBadgeText,
+                        isDarkMode && styles.pillBadgeTextDark,
                         activeTab === 'ALL' &&
                           statusFilter === 'ALL' &&
                           styles.pillBadgeTextActive,
@@ -1129,6 +1206,7 @@ export const HomeScreen: React.FC = () => {
                   style={[
                     styles.pillFilter,
                     styles.pillFilterLive,
+                    isDarkMode && styles.pillFilterLiveDark,
                     statusFilter === 'LIVE' && styles.pillFilterLiveActive,
                   ]}
                 >
@@ -1151,6 +1229,7 @@ export const HomeScreen: React.FC = () => {
                     style={[
                       styles.pillBadge,
                       styles.pillBadgeLive,
+                      isDarkMode && styles.pillBadgeLiveDark,
                       statusFilter === 'LIVE' && styles.pillBadgeLiveActive,
                     ]}
                   >
@@ -1181,12 +1260,14 @@ export const HomeScreen: React.FC = () => {
                   }}
                   style={[
                     styles.pillFilter,
+                    isDarkMode && styles.pillFilterDark,
                     activeTab === 'FAVORITES' && styles.pillFilterActive,
                   ]}
                 >
                   <Text
                     style={[
                       styles.pillFilterText,
+                      isDarkMode && styles.pillFilterTextDark,
                       activeTab === 'FAVORITES' && styles.pillFilterTextActive,
                     ]}
                   >
@@ -1196,12 +1277,14 @@ export const HomeScreen: React.FC = () => {
                     <View
                       style={[
                         styles.pillBadge,
+                        isDarkMode && styles.pillBadgeDark,
                         activeTab === 'FAVORITES' && styles.pillBadgeActive,
                       ]}
                     >
                       <Text
                         style={[
                           styles.pillBadgeText,
+                          isDarkMode && styles.pillBadgeTextDark,
                           activeTab === 'FAVORITES' &&
                             styles.pillBadgeTextActive,
                         ]}
@@ -1224,12 +1307,14 @@ export const HomeScreen: React.FC = () => {
                   }}
                   style={[
                     styles.pillFilter,
+                    isDarkMode && styles.pillFilterDark,
                     statusFilter === 'FINISHED' && styles.pillFilterActive,
                   ]}
                 >
                   <Text
                     style={[
                       styles.pillFilterText,
+                      isDarkMode && styles.pillFilterTextDark,
                       statusFilter === 'FINISHED' && styles.pillFilterTextActive,
                     ]}
                   >
@@ -1238,12 +1323,14 @@ export const HomeScreen: React.FC = () => {
                   <View
                     style={[
                       styles.pillBadge,
+                      isDarkMode && styles.pillBadgeDark,
                       statusFilter === 'FINISHED' && styles.pillBadgeActive,
                     ]}
                   >
                     <Text
                       style={[
                         styles.pillBadgeText,
+                        isDarkMode && styles.pillBadgeTextDark,
                         statusFilter === 'FINISHED' &&
                           styles.pillBadgeTextActive,
                       ]}
@@ -1265,12 +1352,14 @@ export const HomeScreen: React.FC = () => {
                   }}
                   style={[
                     styles.pillFilter,
+                    isDarkMode && styles.pillFilterDark,
                     statusFilter === 'UPCOMING' && styles.pillFilterActive,
                   ]}
                 >
                   <Text
                     style={[
                       styles.pillFilterText,
+                      isDarkMode && styles.pillFilterTextDark,
                       statusFilter === 'UPCOMING' && styles.pillFilterTextActive,
                     ]}
                   >
@@ -1279,12 +1368,14 @@ export const HomeScreen: React.FC = () => {
                   <View
                     style={[
                       styles.pillBadge,
+                      isDarkMode && styles.pillBadgeDark,
                       statusFilter === 'UPCOMING' && styles.pillBadgeActive,
                     ]}
                   >
                     <Text
                       style={[
                         styles.pillBadgeText,
+                        isDarkMode && styles.pillBadgeTextDark,
                         statusFilter === 'UPCOMING' &&
                           styles.pillBadgeTextActive,
                       ]}
@@ -1308,12 +1399,14 @@ export const HomeScreen: React.FC = () => {
                   }}
                   style={[
                     styles.pillFilter,
+                    isDarkMode && styles.pillFilterDark,
                     activeTab === 'COMPETITIONS' && styles.pillFilterActive,
                   ]}
                 >
                   <Text
                     style={[
                       styles.pillFilterText,
+                      isDarkMode && styles.pillFilterTextDark,
                       activeTab === 'COMPETITIONS' && styles.pillFilterTextActive,
                     ]}
                   >
@@ -1328,12 +1421,14 @@ export const HomeScreen: React.FC = () => {
                   onPress={() => setSortChronologically((prev) => !prev)}
                   style={[
                     styles.pillFilter,
+                    isDarkMode && styles.pillFilterDark,
                     sortChronologically && styles.pillFilterActive,
                   ]}
                 >
                   <Text
                     style={[
                       styles.pillFilterText,
+                      isDarkMode && styles.pillFilterTextDark,
                       sortChronologically && styles.pillFilterTextActive,
                     ]}
                   >
@@ -1345,7 +1440,7 @@ export const HomeScreen: React.FC = () => {
 
             {/* Sub-selector for Competitions */}
             {activeTab === 'COMPETITIONS' && (
-              <View style={styles.competitionSelector}>
+              <View style={[styles.competitionSelector, isDarkMode && styles.competitionSelectorDark]}>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -1357,15 +1452,17 @@ export const HomeScreen: React.FC = () => {
                       onPress={() => setSelectedLeague(league.id)}
                       style={[
                         styles.competitionChip,
+                        isDarkMode && styles.competitionChipDark,
                         selectedLeague === league.id &&
-                          styles.competitionChipActive,
+                          (isDarkMode ? styles.competitionChipActiveDark : styles.competitionChipActive),
                       ]}
                     >
                       <Text
                         style={[
                           styles.competitionChipText,
+                          isDarkMode && styles.competitionChipTextDark,
                           selectedLeague === league.id &&
-                            styles.competitionChipTextActive,
+                            (isDarkMode ? styles.competitionChipTextActiveDark : styles.competitionChipTextActive),
                         ]}
                         numberOfLines={1}
                       >
@@ -1436,20 +1533,21 @@ export const HomeScreen: React.FC = () => {
                 matches={matches}
                 visible={Boolean(selectedMatch)}
                 sidePanel
+                isDarkMode={isDarkMode}
                 onClose={() => setSelectedMatchId(null)}
               />
             ) : (
-              <View style={styles.infoPanel}>
+              <View style={[styles.infoPanel, isDarkMode && styles.infoPanelDark]}>
                 <View style={styles.infoPanelHeroIconBox}>
                   <Text style={styles.infoPanelHeroEmoji}>🏟️</Text>
                 </View>
                 <Text style={styles.infoPanelEyebrow}>
                   CENTRAL DA PARTIDA • NEXT SCORE
                 </Text>
-                <Text style={styles.infoPanelTitle}>
+                <Text style={[styles.infoPanelTitle, isDarkMode && styles.infoPanelTitleDark]}>
                   Selecione um confronto ao lado
                 </Text>
-                <Text style={styles.infoPanelDescription}>
+                <Text style={[styles.infoPanelDescription, isDarkMode && styles.infoPanelDescriptionDark]}>
                   Clique em qualquer partida da lista para abrir o painel
                   completo com eventos em tempo real, estatísticas comparativas,
                   mapa tático das formações, classificação e ficha técnica.
@@ -1460,6 +1558,7 @@ export const HomeScreen: React.FC = () => {
                     style={[
                       styles.infoPanelStatCard,
                       styles.infoPanelStatCardLive,
+                      isDarkMode && styles.infoPanelStatCardDark,
                     ]}
                   >
                     <Text
@@ -1483,6 +1582,7 @@ export const HomeScreen: React.FC = () => {
                     style={[
                       styles.infoPanelStatCard,
                       styles.infoPanelStatCardFinished,
+                      isDarkMode && styles.infoPanelStatCardDark,
                     ]}
                   >
                     <Text
@@ -1506,6 +1606,7 @@ export const HomeScreen: React.FC = () => {
                     style={[
                       styles.infoPanelStatCard,
                       styles.infoPanelStatCardUpcoming,
+                      isDarkMode && styles.infoPanelStatCardDark,
                     ]}
                   >
                     <Text
@@ -1548,6 +1649,7 @@ export const HomeScreen: React.FC = () => {
               matches={matches}
               visible={Boolean(selectedMatch)}
               sidePanel={false}
+              isDarkMode={isDarkMode}
               onClose={() => setSelectedMatchId(null)}
             />
           )
@@ -1560,16 +1662,16 @@ export const HomeScreen: React.FC = () => {
           onRequestClose={() => setIsCalendarVisible(false)}
         >
           <View style={styles.calendarOverlay}>
-            <View style={styles.calendarPanel}>
+            <View style={[styles.calendarPanel, isDarkMode && styles.calendarPanelDark]}>
               <View style={styles.calendarHeader}>
-                <Text style={styles.calendarTitle}>ESCOLHER DATA</Text>
+                <Text style={[styles.calendarTitle, isDarkMode && styles.calendarTitleDark]}>ESCOLHER DATA</Text>
                 <TouchableOpacity
                   accessibilityRole="button"
                   accessibilityLabel="Fechar calendário"
                   onPress={() => setIsCalendarVisible(false)}
-                  style={styles.calendarCloseButton}
+                  style={[styles.calendarCloseButton, isDarkMode && styles.calendarCloseButtonDark]}
                 >
-                  <Text style={styles.calendarCloseText}>×</Text>
+                  <Text style={[styles.calendarCloseText, isDarkMode && styles.calendarCloseTextDark]}>×</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.monthNavigation}>
@@ -2658,5 +2760,202 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     marginTop: 10,
     textAlign: 'center',
+  },
+  headerThemeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.16)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerThemeBtnDark: {
+    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    borderColor: 'rgba(0, 229, 255, 0.45)',
+  },
+  headerThemeIcon: {
+    fontSize: 15,
+    lineHeight: 18,
+  },
+  screenCanvasDark: {
+    backgroundColor: '#0A0F1D',
+  },
+  leagueSidebarDark: {
+    backgroundColor: '#111827',
+    borderColor: '#1F2937',
+  },
+  sidebarTitleDark: {
+    color: '#00E5FF',
+  },
+  leagueItemDark: {
+    borderBottomColor: '#1F2937',
+  },
+  leagueItemActiveDark: {
+    backgroundColor: '#1A2338',
+  },
+  leagueItemNameDark: {
+    color: '#F9FAFB',
+  },
+  leagueItemNameActiveDark: {
+    color: '#00E5FF',
+  },
+  leagueItemCountryDark: {
+    color: '#6B7280',
+  },
+  leagueCountBadgeDark: {
+    backgroundColor: '#1F2937',
+  },
+  leagueCountBadgeActiveDark: {
+    backgroundColor: 'rgba(0, 229, 255, 0.2)',
+  },
+  leagueCountDark: {
+    color: '#9CA3AF',
+  },
+  leagueCountActiveDark: {
+    color: '#00E5FF',
+  },
+  dateStripWrapperDark: {
+    backgroundColor: '#111827',
+    borderColor: '#1F2937',
+    shadowColor: '#000000',
+  },
+  calendarMiniBtnDark: {
+    backgroundColor: '#1F2937',
+  },
+  dateStripArrowDark: {
+    backgroundColor: '#1F2937',
+  },
+  dateStripArrowTextDark: {
+    color: '#9CA3AF',
+  },
+  dayCapsuleDark: {
+    backgroundColor: '#1F2937',
+    borderColor: '#374151',
+  },
+  dayCapsuleTodayDark: {
+    backgroundColor: '#064E3B',
+    borderColor: '#059669',
+  },
+  dayCapsuleWeekDark: {
+    color: '#9CA3AF',
+  },
+  dayCapsuleWeekTodayDark: {
+    color: '#6EE7B7',
+  },
+  dayCapsuleNumDark: {
+    color: '#F9FAFB',
+  },
+  dayCapsuleNumTodayDark: {
+    color: '#A7F3D0',
+  },
+  pillFilterDark: {
+    backgroundColor: '#111827',
+    borderColor: '#1F2937',
+  },
+  pillFilterLiveDark: {
+    backgroundColor: '#1A1016',
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+  },
+  pillFilterTextDark: {
+    color: '#9CA3AF',
+  },
+  pillBadgeDark: {
+    backgroundColor: '#1F2937',
+  },
+  pillBadgeLiveDark: {
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+  },
+  pillBadgeTextDark: {
+    color: '#9CA3AF',
+  },
+  competitionSelectorDark: {
+    backgroundColor: '#111827',
+    borderColor: '#1F2937',
+  },
+  competitionChipDark: {
+    backgroundColor: '#1F2937',
+    borderColor: '#374151',
+  },
+  competitionChipActiveDark: {
+    backgroundColor: '#090D16',
+    borderColor: '#00E5FF',
+  },
+  competitionChipTextDark: {
+    color: '#9CA3AF',
+  },
+  competitionChipTextActiveDark: {
+    color: '#00E5FF',
+  },
+  leagueGroupDark: {
+    backgroundColor: '#111827',
+    borderColor: '#1F2937',
+    shadowColor: '#000000',
+  },
+  leagueGroupPinnedDark: {
+    borderColor: '#059669',
+  },
+  leagueGroupHeaderDark: {
+    backgroundColor: '#161F30',
+    borderBottomColor: '#1F2937',
+  },
+  leagueGroupHeaderPinnedDark: {
+    backgroundColor: '#064E3B',
+  },
+  leagueBadgeDark: {
+    backgroundColor: '#111827',
+    borderColor: '#1F2937',
+  },
+  leagueGroupCountryDark: {
+    color: '#6B7280',
+  },
+  leagueGroupNameDark: {
+    color: '#F9FAFB',
+  },
+  leagueGroupNamePinnedDark: {
+    color: '#A7F3D0',
+  },
+  leagueGroupCountPillDark: {
+    backgroundColor: '#1F2937',
+  },
+  leagueGroupCountPillPinnedDark: {
+    backgroundColor: 'rgba(5, 150, 105, 0.4)',
+  },
+  leagueGroupCountDark: {
+    color: '#9CA3AF',
+  },
+  leagueGroupCountPinnedDark: {
+    color: '#A7F3D0',
+  },
+  leagueCollapseChevronDark: {
+    color: '#9CA3AF',
+  },
+  infoPanelDark: {
+    backgroundColor: '#111827',
+    borderColor: '#1F2937',
+  },
+  infoPanelTitleDark: {
+    color: '#F9FAFB',
+  },
+  infoPanelDescriptionDark: {
+    color: '#9CA3AF',
+  },
+  infoPanelStatCardDark: {
+    backgroundColor: '#161F30',
+    borderColor: '#1F2937',
+  },
+  calendarPanelDark: {
+    backgroundColor: '#111827',
+    borderColor: '#1F2937',
+  },
+  calendarTitleDark: {
+    color: '#F9FAFB',
+  },
+  calendarCloseButtonDark: {
+    backgroundColor: '#1F2937',
+  },
+  calendarCloseTextDark: {
+    color: '#9CA3AF',
   },
 });

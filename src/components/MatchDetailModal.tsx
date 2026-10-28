@@ -48,6 +48,7 @@ interface MatchDetailModalProps {
   visible: boolean;
   onClose: () => void;
   sidePanel?: boolean;
+  isDarkMode?: boolean;
 }
 
 interface MatchDetailWrapperProps {
@@ -2081,6 +2082,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   visible,
   onClose,
   sidePanel = false,
+  isDarkMode = false,
 }) => {
   const [details, setDetails] = useState<MatchDetails | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
@@ -2738,8 +2740,9 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
         <Animated.View
           style={[
             styles.sheet,
-            isWide && styles.sheetWide,
-            sidePanel && styles.sheetSidePanel,
+            isDarkMode && styles.sheetDark,
+            isWide && (isDarkMode ? styles.sheetWideDark : styles.sheetWide),
+            sidePanel && (isDarkMode ? styles.sheetSidePanelDark : styles.sheetSidePanel),
             !sidePanel &&
               !isWide && {
                 transform: [{ translateY }],
@@ -2755,8 +2758,8 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
           )}
 
           {/* Barra superior de título e botão fechar */}
-          <View style={styles.sheetTopBar} {...headerPanResponder.panHandlers}>
-            <Text style={styles.modalTitle}>
+          <View style={[styles.sheetTopBar, isDarkMode && styles.sheetTopBarDark]} {...headerPanResponder.panHandlers}>
+            <Text style={[styles.modalTitle, isDarkMode && styles.modalTitleDark]}>
               {profileTeam ? 'Perfil do clube' : 'Detalhes da partida'}
             </Text>
             <TouchableOpacity
@@ -2765,9 +2768,9 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 profileTeam ? 'Voltar aos detalhes' : 'Fechar detalhes'
               }
               onPress={() => (profileTeam ? setProfileTeam(null) : dismissModal())}
-              style={styles.closeBtn}
+              style={[styles.closeBtn, isDarkMode && styles.closeBtnDark]}
             >
-              <Text style={styles.closeBtnText}>
+              <Text style={[styles.closeBtnText, isDarkMode && styles.closeBtnTextDark]}>
                 {profileTeam ? 'Voltar' : sidePanel ? '×' : 'Fechar'}
               </Text>
             </TouchableOpacity>
@@ -2857,7 +2860,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
             ) : (
               <>
             {/* Cabeçalho da Liga */}
-            <Text style={styles.leagueHeader}>
+            <Text style={[styles.leagueHeader, isDarkMode && styles.leagueHeaderDark]}>
               {(() => {
                 const resolvedCompetition = matchInfo.find(
                   (item) => item.id === 'competition'
@@ -2881,7 +2884,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
             </Text>
 
             {/* Placar Expandido */}
-            <View style={styles.heroScoreboard}>
+            <View style={[styles.heroScoreboard, isDarkMode && styles.heroScoreboardDark]}>
               <View style={styles.heroScoreboardTopRow}>
                 <View style={styles.heroTeamCol}>
                   <TouchableOpacity
@@ -2900,6 +2903,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                     <Text
                       style={[
                         styles.heroTeamName,
+                        isDarkMode && styles.heroTeamNameDark,
                         isFinished && isHomeWinner && styles.heroTeamNameWinner,
                         isFinished && isAwayWinner && styles.heroTeamNameLoser,
                       ]}
@@ -2913,7 +2917,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 <View style={styles.heroCenterCol}>
                   <View style={styles.heroScoreRow}>
                     {!hasStarted ? (
-                      <Text style={styles.heroScoreDash}>vs</Text>
+                      <Text style={[styles.heroScoreDash, isDarkMode && styles.heroScoreDashDark]}>vs</Text>
                     ) : (
                       <>
                         <Animated.Text
@@ -3013,6 +3017,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                     <Text
                       style={[
                         styles.heroTeamName,
+                        isDarkMode && styles.heroTeamNameDark,
                         isFinished && isAwayWinner && styles.heroTeamNameWinner,
                         isFinished && isHomeWinner && styles.heroTeamNameLoser,
                       ]}
@@ -3062,7 +3067,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
               })()}
             </View>
 
-            <View style={styles.tabsRow}>
+            <View style={[styles.tabsRow, isDarkMode && styles.tabsRowDark]}>
               {tabsContentWidth > tabsViewportWidth + 4 && tabsScrollX > 4 && (
                 <TouchableOpacity
                   accessibilityLabel="Voltar abas para a esquerda"
@@ -3134,13 +3139,15 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                     }}
                     style={[
                       styles.tabButton,
-                      activeTab === tab.id && styles.tabButtonActive,
+                      isDarkMode && styles.tabButtonDark,
+                      activeTab === tab.id && (isDarkMode ? styles.tabButtonActiveDark : styles.tabButtonActive),
                     ]}
                   >
                     <Text
                       style={[
                         styles.tabText,
-                        activeTab === tab.id && styles.tabTextActive,
+                        isDarkMode && styles.tabTextDark,
+                        activeTab === tab.id && (isDarkMode ? styles.tabTextActiveDark : styles.tabTextActive),
                       ]}
                     >
                       {tab.label}
@@ -3313,6 +3320,59 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 12,
+  },
+  sheetDark: {
+    backgroundColor: '#0F172A',
+    borderColor: '#1F2937',
+  },
+  sheetWideDark: {
+    backgroundColor: '#0F172A',
+    borderColor: '#1F2937',
+  },
+  sheetSidePanelDark: {
+    backgroundColor: '#111827',
+    borderColor: '#1F2937',
+  },
+  sheetTopBarDark: {
+    borderBottomColor: '#1F2937',
+  },
+  modalTitleDark: {
+    color: '#F9FAFB',
+  },
+  closeBtnDark: {
+    backgroundColor: '#1E293B',
+  },
+  closeBtnTextDark: {
+    color: '#9CA3AF',
+  },
+  leagueHeaderDark: {
+    color: '#00E5FF',
+  },
+  heroScoreboardDark: {
+    backgroundColor: '#161F30',
+    borderColor: '#1F2937',
+  },
+  heroTeamNameDark: {
+    color: '#F9FAFB',
+  },
+  heroScoreDashDark: {
+    color: '#64748B',
+  },
+  tabsRowDark: {
+    backgroundColor: '#161F30',
+  },
+  tabButtonDark: {
+    backgroundColor: 'transparent',
+  },
+  tabButtonActiveDark: {
+    backgroundColor: '#00E5FF',
+  },
+  tabTextDark: {
+    color: '#9CA3AF',
+  },
+  tabTextActiveDark: {
+    color: '#05070D',
+    fontWeight: '800',
   },
   inlinePanel: {
     flex: 1,

@@ -22,6 +22,7 @@ const FONT_SCORE = Platform.select({
 interface MatchCardProps {
   match: Match;
   isSelected?: boolean;
+  isDarkMode?: boolean;
   onPress: (match: Match) => void;
   onTogglePin: (matchId: string) => void;
 }
@@ -29,6 +30,7 @@ interface MatchCardProps {
 const MatchCardComponent: React.FC<MatchCardProps> = ({
   match,
   isSelected = false,
+  isDarkMode = false,
   onPress,
   onTogglePin,
 }) => {
@@ -319,13 +321,16 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
       onPress={() => onPress(match)}
       style={[
         styles.card,
-        isLive && styles.cardLive,
+        isDarkMode && styles.cardDark,
+        isLive && (isDarkMode ? styles.cardLiveDark : styles.cardLive),
         match.isPinned && styles.cardPinned,
-        isSelected && styles.cardSelected,
+        isSelected && (isDarkMode ? styles.cardSelectedDark : styles.cardSelected),
       ]}
     >
       <View style={styles.statusColumn}>
-        <Text style={styles.startTimeText}>{match.startTime}</Text>
+        <Text style={[styles.startTimeText, isDarkMode && styles.startTimeTextDark]}>
+          {match.startTime}
+        </Text>
         {statusLabel ? (
           <View style={styles.statusLine}>
             {isLive && (
@@ -339,6 +344,7 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
             <Text
               style={[
                 styles.statusText,
+                isDarkMode && styles.statusTextDark,
                 match.status === 'HT'
                   ? styles.statusTextHalftime
                   : isLive && styles.statusTextLive,
@@ -349,7 +355,9 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
           </View>
         ) : (
           <View style={styles.statusLine}>
-            <Text style={styles.statusTextScheduled}>AGD</Text>
+            <Text style={[styles.statusTextScheduled, isDarkMode && styles.statusTextScheduledDark]}>
+              AGD
+            </Text>
           </View>
         )}
       </View>
@@ -366,8 +374,9 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
             <Text
               style={[
                 styles.teamName,
-                isFinished && isHomeWinner && styles.teamNameWinner,
-                isFinished && isAwayWinner && styles.teamNameLoser,
+                isDarkMode && styles.teamNameDark,
+                isFinished && isHomeWinner && (isDarkMode ? styles.teamNameWinnerDark : styles.teamNameWinner),
+                isFinished && isAwayWinner && (isDarkMode ? styles.teamNameLoserDark : styles.teamNameLoser),
               ]}
               numberOfLines={1}
             >
@@ -403,19 +412,20 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
           <Animated.Text
             style={[
               styles.score,
+              isDarkMode && styles.scoreDark,
               isLive && styles.scoreLive,
               isFinished &&
                 (isHomeWinner
-                  ? styles.scoreWinner
+                  ? (isDarkMode ? styles.scoreWinnerDark : styles.scoreWinner)
                   : isAwayWinner
-                  ? styles.scoreLoser
+                  ? (isDarkMode ? styles.scoreLoserDark : styles.scoreLoser)
                   : null),
               animatingHome
                 ? {
                     transform: [{ scale: homeScoreScale }],
                     color: homeScoreHighlight.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [isLive ? '#EF4444' : '#0F172A', '#16A34A'],
+                      outputRange: [isLive ? '#EF4444' : isDarkMode ? '#F9FAFB' : '#0F172A', '#16A34A'],
                     }),
                   }
                 : null,
@@ -435,8 +445,9 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
             <Text
               style={[
                 styles.teamName,
-                isFinished && isAwayWinner && styles.teamNameWinner,
-                isFinished && isHomeWinner && styles.teamNameLoser,
+                isDarkMode && styles.teamNameDark,
+                isFinished && isAwayWinner && (isDarkMode ? styles.teamNameWinnerDark : styles.teamNameWinner),
+                isFinished && isHomeWinner && (isDarkMode ? styles.teamNameLoserDark : styles.teamNameLoser),
               ]}
               numberOfLines={1}
             >
@@ -472,19 +483,20 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
           <Animated.Text
             style={[
               styles.score,
+              isDarkMode && styles.scoreDark,
               isLive && styles.scoreLive,
               isFinished &&
                 (isAwayWinner
-                  ? styles.scoreWinner
+                  ? (isDarkMode ? styles.scoreWinnerDark : styles.scoreWinner)
                   : isHomeWinner
-                  ? styles.scoreLoser
+                  ? (isDarkMode ? styles.scoreLoserDark : styles.scoreLoser)
                   : null),
               animatingAway
                 ? {
                     transform: [{ scale: awayScoreScale }],
                     color: awayScoreHighlight.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [isLive ? '#EF4444' : '#0F172A', '#16A34A'],
+                      outputRange: [isLive ? '#EF4444' : isDarkMode ? '#F9FAFB' : '#0F172A', '#16A34A'],
                     }),
                   }
                 : null,
@@ -520,11 +532,12 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
         <Animated.View
           style={[
             styles.pinButton,
-            match.isPinned && styles.pinButtonActive,
+            isDarkMode && styles.pinButtonDark,
+            match.isPinned && (isDarkMode ? styles.pinButtonActiveDark : styles.pinButtonActive),
             { transform: [{ scale: pinScale }] },
           ]}
         >
-          <Text style={[styles.pinIcon, match.isPinned && styles.pinIconActive]}>
+          <Text style={[styles.pinIcon, isDarkMode && styles.pinIconDark, match.isPinned && styles.pinIconActive]}>
             {match.isPinned ? '★' : '☆'}
           </Text>
         </Animated.View>
@@ -764,9 +777,63 @@ const styles = StyleSheet.create({
   pinIconActive: {
     color: '#D97706',
   },
+  cardDark: {
+    backgroundColor: '#111827',
+    borderBottomColor: '#1F2937',
+  },
+  cardLiveDark: {
+    backgroundColor: '#16131D',
+    borderLeftColor: '#EF4444',
+  },
+  cardSelectedDark: {
+    backgroundColor: '#142038',
+    borderLeftColor: '#00E5FF',
+  },
+  startTimeTextDark: {
+    color: '#94A3B8',
+  },
+  statusTextDark: {
+    color: '#94A3B8',
+  },
+  statusTextScheduledDark: {
+    color: '#94A3B8',
+  },
+  teamNameDark: {
+    color: '#F9FAFB',
+  },
+  teamNameWinnerDark: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  teamNameLoserDark: {
+    color: '#6B7280',
+    fontWeight: '400',
+  },
+  scoreDark: {
+    color: '#F9FAFB',
+  },
+  scoreWinnerDark: {
+    color: '#00E5FF',
+    fontWeight: '700',
+  },
+  scoreLoserDark: {
+    color: '#6B7280',
+  },
+  pinButtonDark: {
+    borderColor: '#374151',
+    backgroundColor: '#1F2937',
+  },
+  pinButtonActiveDark: {
+    borderColor: '#F59E0B',
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+  },
+  pinIconDark: {
+    color: '#9CA3AF',
+  },
 });
 
 export const MatchCard = React.memo<MatchCardProps>(MatchCardComponent, (prevProps, nextProps) => {
+  if (prevProps.isDarkMode !== nextProps.isDarkMode) return false;
   if (prevProps.isSelected !== nextProps.isSelected) return false;
   if (prevProps.match === nextProps.match) return true;
   const prev = prevProps.match;

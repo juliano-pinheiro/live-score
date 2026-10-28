@@ -125,10 +125,6 @@
       font-size: 8.5px;
       font-weight: 700;
       letter-spacing: 0.5px;
-    }
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
       text-transform: uppercase;
       margin-top: 1px;
     }
@@ -136,6 +132,151 @@
       display: flex;
       align-items: center;
       gap: 8px;
+    }
+    .header-theme-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .header-theme-btn:hover {
+      background: rgba(0, 229, 255, 0.15);
+      border-color: rgba(0, 229, 255, 0.45);
+    }
+    .phone-frame.dark {
+      --bg: #0A0F1D;
+      --card: #111827;
+      --card-goal: #064E3B;
+      --border: #1F2937;
+      --text: #F9FAFB;
+      --text-secondary: #E5E7EB;
+      --muted: #9CA3AF;
+      --subtle: #6B7280;
+    }
+    .phone-frame.dark .date-carousel-strip {
+      background: #111827;
+      border-color: #1F2937;
+    }
+    .phone-frame.dark .cal-btn {
+      background: #1F2937;
+      border-color: #374151;
+      color: #9CA3AF;
+    }
+    .phone-frame.dark .day-capsule {
+      background: #1F2937;
+      border-color: #374151;
+    }
+    .phone-frame.dark .day-capsule-week {
+      color: #9CA3AF;
+    }
+    .phone-frame.dark .day-capsule-num {
+      color: #F9FAFB;
+    }
+    .phone-frame.dark .day-capsule.active {
+      background: #090D16;
+      border-color: #00E5FF;
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+    }
+    .phone-frame.dark .day-capsule.today:not(.active) {
+      background: #064E3B;
+      border-color: #059669;
+    }
+    .phone-frame.dark .day-capsule.today:not(.active) .day-capsule-week {
+      color: #6EE7B7;
+    }
+    .phone-frame.dark .day-capsule.today:not(.active) .day-capsule-num {
+      color: #A7F3D0;
+    }
+    .phone-frame.dark .filter-pill {
+      background: #111827;
+      border-color: #1F2937;
+      color: #9CA3AF;
+    }
+    .phone-frame.dark .filter-pill .filter-pill-badge {
+      background: #1F2937;
+      color: #9CA3AF;
+    }
+    .phone-frame.dark .filter-pill.active {
+      background: #090D16;
+      border-color: #00E5FF;
+      color: #FFFFFF;
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+    }
+    .phone-frame.dark .filter-pill.active .filter-pill-badge {
+      background: #00E5FF;
+      color: #05070D;
+    }
+    .phone-frame.dark .league-card {
+      background: #111827;
+      border-color: #1F2937;
+    }
+    .phone-frame.dark .league-header {
+      background: #161F30;
+      border-bottom-color: #1F2937;
+    }
+    .phone-frame.dark .league-badge-box {
+      background: #111827;
+      border-color: #1F2937;
+    }
+    .phone-frame.dark .league-name {
+      color: #F9FAFB;
+    }
+    .phone-frame.dark .league-count {
+      background: #1F2937;
+      color: #9CA3AF;
+    }
+    .phone-frame.dark .match-row {
+      background: #111827;
+      border-bottom-color: #1F2937;
+    }
+    .phone-frame.dark .team-name {
+      color: #F9FAFB;
+    }
+    .phone-frame.dark .score {
+      color: #F9FAFB;
+    }
+    .phone-frame.dark .pin-btn {
+      background: #1F2937;
+      border-color: #374151;
+      color: #9CA3AF;
+    }
+    .phone-frame.dark .pin-btn.active {
+      background: rgba(245, 158, 11, 0.2);
+      border-color: #F59E0B;
+      color: #F59E0B;
+    }
+    .phone-frame.dark .detail-sheet {
+      background: #111827;
+      color: #F9FAFB;
+    }
+    .phone-frame.dark .sheet-hero-score {
+      background: #161F30;
+      border-color: #1F2937;
+    }
+    .phone-frame.dark .hero-team-name {
+      color: #F9FAFB;
+    }
+    .phone-frame.dark .sheet-tabs {
+      background: #161F30;
+    }
+    .phone-frame.dark .sheet-tab {
+      color: #9CA3AF;
+    }
+    .phone-frame.dark .sheet-tab.active {
+      background: #00E5FF;
+      color: #05070D;
+    }
+    .phone-frame.dark .detail-section {
+      background: #161F30;
+      border-color: #1F2937;
     }
     .header-live-pill {
       display: flex;
@@ -599,6 +740,7 @@
             <span class="live-dot"></span>
             <span id="headerLiveText">3 AO VIVO</span>
           </button>
+          <button class="header-theme-btn" id="themeBtn" onclick="toggleDarkMode()" title="Alternar modo noturno">🌙</button>
         </div>
       </div>
     </div>
@@ -839,6 +981,14 @@
 
     function closeModal(e) {
       document.getElementById('matchModal').classList.remove('open');
+    }
+
+    function toggleDarkMode() {
+      const frame = document.querySelector('.phone-frame');
+      const btn = document.getElementById('themeBtn');
+      const isDark = frame.classList.toggle('dark');
+      btn.textContent = isDark ? '☀️' : '🌙';
+      btn.title = isDark ? 'Mudar para modo claro' : 'Mudar para modo noturno';
     }
 
     // Initial render
