@@ -826,7 +826,7 @@ export const HomeScreen: React.FC = () => {
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel="Voltar para a tela de início"
-            activeOpacity={0.78}
+            activeOpacity={0.8}
             onPress={handleGoHome}
             style={styles.brandCluster}
           >
@@ -834,11 +834,59 @@ export const HomeScreen: React.FC = () => {
               <View style={styles.brandLivePulseDot} />
               <Text style={styles.brandLogoIcon}>⚽</Text>
             </View>
-            <View style={styles.brandRow}>
-              <Text style={styles.brandTitle}>NEXT</Text>
-              <Text style={styles.brandAccent}>SCORE</Text>
+            <View style={styles.brandTextColumn}>
+              <View style={styles.brandRow}>
+                <Text style={styles.brandTitle}>NEXT</Text>
+                <Text style={styles.brandAccent}>SCORE</Text>
+              </View>
+              <Text style={styles.brandSubtitle}>AO VIVO • FUTEBOL EM TEMPO REAL</Text>
             </View>
           </TouchableOpacity>
+
+          <View style={styles.headerRightActions}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Filtrar partidas ao vivo"
+              activeOpacity={0.8}
+              onPress={() => {
+                setActiveTab('ALL');
+                setSelectedLeague('ALL');
+                setStatusFilter((prev) => (prev === 'LIVE' ? 'ALL' : 'LIVE'));
+              }}
+              style={[
+                styles.headerLivePill,
+                statusFilter === 'LIVE' && styles.headerLivePillActive,
+              ]}
+            >
+              <View
+                style={[
+                  styles.headerLiveDot,
+                  statusFilter === 'LIVE' && styles.headerLiveDotActive,
+                ]}
+              />
+              <Text
+                style={[
+                  styles.headerLiveText,
+                  statusFilter === 'LIVE' && styles.headerLiveTextActive,
+                ]}
+              >
+                {liveCount > 0 ? `${liveCount} AO VIVO` : 'AO VIVO'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Atualizar placares"
+              activeOpacity={0.75}
+              onPress={handleRefresh}
+              style={[
+                styles.headerRefreshBtn,
+                isLoading && styles.headerRefreshBtnLoading,
+              ]}
+            >
+              <Text style={styles.headerRefreshIcon}>🔄</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -1490,15 +1538,20 @@ export const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F3F6FA',
   },
   topNavbar: {
     width: '100%',
-    backgroundColor: '#0F172A',
-    borderBottomWidth: 3,
-    borderBottomColor: '#2563EB',
+    backgroundColor: '#1652D0',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.16)',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    shadowColor: '#1652D0',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    elevation: 4,
   },
   topNavbarInner: {
     width: '100%',
@@ -1506,29 +1559,29 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     gap: 12,
   },
   brandCluster: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   brandLogoMark: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#1E293B',
-    borderWidth: 1,
-    borderColor: '#3B82F6',
+    width: 38,
+    height: 38,
+    borderRadius: 11,
+    backgroundColor: '#0F3DA6',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
   },
   brandLivePulseDot: {
     position: 'absolute',
-    top: 5,
-    right: 5,
+    top: 3,
+    right: 3,
     width: 7,
     height: 7,
     borderRadius: 4,
@@ -1536,6 +1589,9 @@ const styles = StyleSheet.create({
   },
   brandLogoIcon: {
     fontSize: 18,
+  },
+  brandTextColumn: {
+    justifyContent: 'center',
   },
   brandRow: {
     flexDirection: 'row',
@@ -1549,12 +1605,75 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   brandAccent: {
-    color: '#60A5FA',
+    color: '#38BDF8',
     fontSize: 18,
     lineHeight: 22,
     fontWeight: '900',
     letterSpacing: 0.8,
     marginLeft: 4,
+  },
+  brandSubtitle: {
+    color: '#BFDBFE',
+    fontSize: 8.5,
+    lineHeight: 11,
+    marginTop: 1,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  headerRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerLivePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.28)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  headerLivePillActive: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#FFFFFF',
+  },
+  headerLiveDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#F87171',
+  },
+  headerLiveDotActive: {
+    backgroundColor: '#DC2626',
+  },
+  headerLiveText: {
+    color: '#FFFFFF',
+    fontSize: 10.5,
+    lineHeight: 14,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+  },
+  headerLiveTextActive: {
+    color: '#DC2626',
+  },
+  headerRefreshBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerRefreshBtnLoading: {
+    opacity: 0.5,
+  },
+  headerRefreshIcon: {
+    fontSize: 13,
   },
   subtitle: {
     color: '#94A3B8',
@@ -1652,11 +1771,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: '#E2E8F0',
     paddingHorizontal: 10,
     paddingVertical: 10,
     marginBottom: 10,
     gap: 8,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
   },
   topControlsRow: {
     flexDirection: 'column',
@@ -1683,7 +1807,7 @@ const styles = StyleSheet.create({
   },
   tabsRow: {
     flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#EEF2F6',
     borderRadius: 8,
     padding: 3,
     gap: 4,
@@ -1700,7 +1824,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   tabButtonActive: {
-    backgroundColor: '#1D4ED8',
+    backgroundColor: '#1652D0',
   },
   tabText: {
     color: '#334155',
@@ -1984,14 +2108,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: '#E2E8F0',
     padding: 12,
   },
   sidebarHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#0F172A',
+    backgroundColor: '#1652D0',
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 9,
@@ -2235,11 +2359,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    borderLeftWidth: 4,
-    borderLeftColor: '#2563EB',
+    borderBottomColor: '#F1F5F9',
+    borderLeftWidth: 3.5,
+    borderLeftColor: '#1652D0',
   },
   leagueGroupHeaderPinned: {
     backgroundColor: '#FEF3C7',
@@ -2267,7 +2391,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   leagueGroupCountry: {
-    color: '#2563EB',
+    color: '#1652D0',
     fontFamily: FONT_SANS,
     fontSize: 10,
     lineHeight: 14,

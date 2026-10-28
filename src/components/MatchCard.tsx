@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#EDF2EF',
+    borderBottomColor: '#F1F5F9',
     borderLeftWidth: 3,
     borderLeftColor: 'transparent',
   },
@@ -561,8 +561,8 @@ const styles = StyleSheet.create({
     zIndex: 10,
     elevation: 10,
     borderWidth: 2,
-    borderColor: '#2563EB',
-    backgroundColor: 'rgba(37, 99, 235, 0.14)',
+    borderColor: '#1652D0',
+    backgroundColor: 'rgba(22, 82, 208, 0.12)',
     borderRadius: 10,
   },
   cardLive: {
@@ -570,11 +570,11 @@ const styles = StyleSheet.create({
     borderLeftColor: '#E11D48',
   },
   cardPinned: {
-    borderLeftColor: '#2563EB',
+    borderLeftColor: '#1652D0',
   },
   cardSelected: {
     backgroundColor: '#EFF6FF',
-    borderLeftColor: '#2563EB',
+    borderLeftColor: '#1652D0',
   },
   statusColumn: {
     width: 48,

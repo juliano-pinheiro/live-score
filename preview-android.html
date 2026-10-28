@@ -3,474 +3,721 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Next Score Android — Preview Interativo</title>
+  <title>Next Score Android — Preview Interativo Moderno</title>
   <style>
     :root {
-      --bg: #0A0E17;
-      --card: #121826;
-      --card-goal: #112224;
-      --border: #1E293B;
-      --accent: #10B981;
-      --accent-light: #34D399;
-      --text: #F8FAFC;
-      --muted: #94A3B8;
-      --subtle: #64748B;
+      --bg: #F3F6FA;
+      --card: #FFFFFF;
+      --card-goal: #ECFDF5;
+      --border: #E2E8F0;
+      --header-bg: #1652D0;
+      --header-dark: #0F3DA6;
+      --accent: #1652D0;
+      --accent-cyan: #38BDF8;
+      --live-red: #E11D48;
+      --live-red-bg: #FFE4E6;
+      --text: #0F172A;
+      --text-secondary: #334155;
+      --muted: #64748B;
+      --subtle: #94A3B8;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Plus Jakarta Sans', sans-serif; }
     body {
-      background: #05070B;
+      background: linear-gradient(135deg, #E6EDF5 0%, #D8E2EE 100%);
       color: var(--text);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 20px;
+      padding: 24px;
     }
     .phone-frame {
-      width: 400px;
-      height: 820px;
+      width: 410px;
+      height: 840px;
       background: var(--bg);
-      border-radius: 38px;
-      border: 8px solid #1E293B;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.75);
+      border-radius: 40px;
+      border: 10px solid #FFFFFF;
+      box-shadow: 0 24px 60px rgba(15, 35, 75, 0.18), 0 4px 16px rgba(0,0,0,0.06);
       display: flex;
       flex-direction: column;
       overflow: hidden;
       position: relative;
     }
+    .top-header {
+      background: linear-gradient(180deg, #1856D6 0%, #134BC4 100%);
+      color: #FFFFFF;
+      padding: 14px 16px 14px;
+      box-shadow: 0 4px 14px rgba(22, 82, 208, 0.25);
+      z-index: 5;
+    }
     .status-bar {
       display: flex;
       justify-content: space-between;
-      padding: 12px 24px 6px;
       font-size: 11px;
       font-weight: 700;
-      color: var(--muted);
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 12px;
+      padding: 0 4px;
     }
-    .app-content {
-      flex: 1;
-      padding: 12px 16px;
-      overflow-y: auto;
-    }
-    .header {
+    .header-main {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
     }
-    .brand { font-size: 21px; font-weight: 900; letter-spacing: 1px; }
-    .brand span { color: var(--accent); }
-    .sync-sub { font-size: 11px; color: var(--subtle); margin-top: 2px; }
-    .header-actions { display: flex; gap: 6px; align-items: center; }
-    .btn-pill {
-      background: #1E293B;
-      border: 1px solid #334155;
-      color: var(--text);
-      font-size: 11px;
-      font-weight: 700;
-      padding: 6px 10px;
-      border-radius: 999px;
+    .brand-cluster {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       cursor: pointer;
     }
-    .btn-pill.live-on {
-      background: rgba(16, 185, 129, 0.14);
-      border-color: rgba(16, 185, 129, 0.4);
-      color: var(--accent-light);
+    .brand-logo-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      background: #0D3FA8;
+      border: 1.5px solid rgba(255, 255, 255, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .brand-live-pulse-dot {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #EF4444;
+      border: 1.5px solid #0D3FA8;
+      animation: pulse-red 1.2s infinite;
+    }
+    .brand-logo-icon { font-size: 18px; }
+    .brand-text-col { display: flex; flex-direction: column; }
+    .brand-title-row { display: flex; align-items: center; gap: 4px; }
+    .brand-title {
+      color: #FFFFFF;
+      font-size: 19px;
+      font-weight: 900;
+      letter-spacing: 0.8px;
+      line-height: 22px;
+    }
+    .brand-accent {
+      color: var(--accent-cyan);
+      font-size: 19px;
+      font-weight: 900;
+      letter-spacing: 0.8px;
+    }
+    .brand-sub {
+      color: #BFDBFE;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-live-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      padding: 6px 11px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #FFFFFF;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .header-live-pill.active {
+      background: #FFFFFF;
+      color: var(--live-red);
+      border-color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #EF4444;
+      animation: pulse-red 1.2s infinite;
+    }
+    .header-live-pill.active .live-dot {
+      background: var(--live-red);
+    }
+    @keyframes pulse-red {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.3); }
+    }
+    .header-refresh-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .header-refresh-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .app-content {
+      flex: 1;
+      padding: 12px 14px;
+      overflow-y: auto;
+    }
+
+    /* Controls Card */
+    .controls-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 10px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .tabs-row {
+      display: flex;
+      background: #EEF2F6;
+      padding: 3px;
+      border-radius: 10px;
+      gap: 4px;
+    }
+    .tab-btn {
+      flex: 1;
+      text-align: center;
+      padding: 7px 0;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      background: transparent;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #FFFFFF;
+      box-shadow: 0 2px 6px rgba(22, 82, 208, 0.28);
+    }
+    .filter-pills {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .filter-pill {
       display: flex;
       align-items: center;
       gap: 5px;
-    }
-    .dot-pulse {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--accent);
-      animation: pulse 1.4s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(1.25); }
-    }
-    .tabs {
-      display: flex;
-      background: var(--card);
-      padding: 4px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      margin-bottom: 12px;
-    }
-    .tab {
-      flex: 1;
-      text-align: center;
-      padding: 8px 0;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--subtle);
-      border-radius: 9px;
-      cursor: pointer;
-    }
-    .tab.active { background: #1E293B; color: var(--text); }
-    .chips { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
-    .chip {
-      padding: 5px 11px;
+      padding: 6px 12px;
       border-radius: 999px;
       font-size: 11px;
-      font-weight: 600;
-      background: var(--card);
+      font-weight: 700;
+      background: #F8FAFC;
       border: 1px solid var(--border);
       color: var(--muted);
       cursor: pointer;
       white-space: nowrap;
+      transition: all 0.2s;
     }
-    .chip.active {
-      background: rgba(16, 185, 129, 0.15);
-      border-color: var(--accent);
-      color: var(--accent-light);
+    .filter-pill.active {
+      background: #EFF6FF;
+      border-color: #93C5FD;
+      color: var(--accent);
     }
-    .match-card {
-      background: var(--card);
+    .filter-pill.live.active {
+      background: var(--live-red-bg);
+      border-color: #FECDD3;
+      color: var(--live-red);
+    }
+
+    /* League Group */
+    .league-group {
+      background: #FFFFFF;
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 15px;
+      border-radius: 14px;
       margin-bottom: 12px;
-      cursor: pointer;
-      transition: all 0.25s ease;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
     }
-    .match-card:hover { border-color: #334155; }
-    .match-card.goal-flash {
-      background: var(--card-goal);
-      border-color: var(--accent);
-      box-shadow: 0 0 20px rgba(16,185,129,0.2);
-    }
-    .card-top {
+    .league-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      padding: 9px 12px;
+      background: #FFFFFF;
+      border-bottom: 1px solid #F1F5F9;
+      border-left: 3.5px solid var(--accent);
     }
-    .league-meta { font-size: 11px; color: var(--muted); font-weight: 600; }
-    .league-meta b { color: var(--subtle); font-size: 10px; letter-spacing: 0.6px; }
-    .badge-row { display: flex; align-items: center; gap: 6px; }
-    .goal-pill {
-      background: var(--accent);
-      color: #052E16;
+    .league-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .league-flag { font-size: 16px; }
+    .league-info { display: flex; flex-direction: column; }
+    .league-name {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .league-country {
       font-size: 10px;
-      font-weight: 900;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .league-count-badge {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent);
+      background: #EFF6FF;
       padding: 2px 7px;
-      border-radius: 6px;
-    }
-    .time-pill {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      font-weight: 800;
-      padding: 3px 8px;
       border-radius: 999px;
-      background: rgba(16, 185, 129, 0.14);
-      color: var(--accent-light);
     }
-    .time-pill.ft { background: #1E293B; color: var(--muted); }
-    .scoreboard {
+
+    /* Match Row */
+    .match-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
+      padding: 11px 12px;
+      border-bottom: 1px solid #F8FAFC;
+      cursor: pointer;
+      transition: background 0.15s;
     }
-    .team { flex: 1; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
-    .team.home { justify-content: flex-end; text-align: right; }
-    .team.away { justify-content: flex-start; text-align: left; }
-    .color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-    .score-box {
-      background: #0B0F19;
-      border: 1px solid var(--border);
-      padding: 6px 13px;
-      border-radius: 12px;
-      margin: 0 10px;
-      font-size: 19px;
+    .match-row:last-child { border-bottom: none; }
+    .match-row:hover { background: #F8FAFC; }
+    .match-time-col {
+      width: 44px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
+    .match-time { font-size: 11px; font-weight: 700; color: var(--muted); }
+    .match-status-live {
+      font-size: 10px;
       font-weight: 800;
-      letter-spacing: 1px;
-    }
-    .stats-strip {
+      color: var(--live-red);
       display: flex;
-      background: #0B0F19;
-      border-radius: 10px;
-      padding: 8px 10px;
-      justify-content: space-between;
       align-items: center;
+      gap: 3px;
     }
-    .stat-mini {
+    .match-status-live::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--live-red);
+      display: inline-block;
+    }
+    .match-teams-col {
       flex: 1;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      font-weight: 700;
-      color: #CBD5E1;
-      padding: 0 4px;
+      flex-direction: column;
+      gap: 6px;
+      padding: 0 8px;
     }
-    .stat-mini span.lbl { font-size: 8.5px; color: var(--subtle); letter-spacing: 0.4px; }
-    .divider { width: 1px; height: 14px; background: var(--border); margin: 0 4px; }
-    /* Modal */
+    .team-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .team-crest {
+      width: 17px;
+      height: 17px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 800;
+      color: #FFFFFF;
+      flex-shrink: 0;
+    }
+    .match-scores-col {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      min-width: 26px;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+    .match-scores-col.live { color: var(--live-red); }
+
+    /* Modal Sheet */
     .modal-backdrop {
       position: absolute;
       inset: 0;
-      background: rgba(5, 8, 17, 0.8);
+      background: rgba(15, 23, 42, 0.6);
       display: none;
       align-items: flex-end;
-      z-index: 20;
+      z-index: 30;
+      backdrop-filter: blur(2px);
     }
     .modal-backdrop.open { display: flex; }
     .modal-sheet {
       width: 100%;
-      background: #0F1624;
-      border-top: 1px solid var(--border);
+      background: #FFFFFF;
       border-radius: 24px 24px 0 0;
-      padding: 16px 18px 26px;
-      max-height: 82%;
+      padding: 18px 20px 28px;
+      max-height: 85%;
       overflow-y: auto;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
+      animation: slideUp 0.25s ease-out;
     }
-    .sheet-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-    .stat-bar-wrap { margin-bottom: 14px; }
-    .stat-bar-head { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
-    .bar-track { display: flex; height: 8px; border-radius: 4px; overflow: hidden; gap: 3px; background: #0B0F19; }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      background: #CBD5E1;
+      border-radius: 2px;
+      margin: 0 auto 14px;
+    }
+    .sheet-league-bar {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 12px;
+    }
+    .sheet-hero-score {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 12px 6px;
+      background: #F8FAFC;
+      border-radius: 16px;
+      border: 1px solid #E2E8F0;
+      margin-bottom: 16px;
+    }
+    .hero-team {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      width: 100px;
+      text-align: center;
+    }
+    .hero-team-crest {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 900;
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .hero-team-name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .hero-score-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .hero-score-digits {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--live-red);
+      letter-spacing: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+    .hero-time-badge {
+      background: var(--live-red);
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    .stat-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+    .stat-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+    .stat-bar {
+      display: flex;
+      height: 7px;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #E2E8F0;
+      gap: 2px;
+    }
+    .bar-fill-left { background: var(--accent); }
+    .bar-fill-right { background: var(--live-red); }
   </style>
 </head>
 <body>
   <div class="phone-frame">
-    <div class="status-bar">
-      <span>13:05</span>
-      <span>5G • 100%</span>
-    </div>
-    <div class="app-content">
-      <div class="header">
-        <div>
-          <div class="brand">NEXT<span>SCORE</span></div>
-          <div class="sync-sub" id="syncText">Futebol ao vivo • Sync: Agora</div>
+    <!-- Top Header -->
+    <div class="top-header">
+      <div class="status-bar">
+        <span>13:45</span>
+        <span>5G • 100%</span>
+      </div>
+      <div class="header-main">
+        <div class="brand-cluster" onclick="setTab('ALL')">
+          <div class="brand-logo-mark">
+            <div class="brand-live-pulse-dot"></div>
+            <span class="brand-logo-icon">⚽</span>
+          </div>
+          <div class="brand-text-col">
+            <div class="brand-title-row">
+              <span class="brand-title">NEXT</span>
+              <span class="brand-accent">SCORE</span>
+            </div>
+            <span class="brand-sub">AO VIVO • FUTEBOL EM TEMPO REAL</span>
+          </div>
         </div>
         <div class="header-actions">
-          <button class="btn-pill" onclick="forceGoal()">⚡ Gol Teste</button>
-          <button class="btn-pill live-on" id="liveBtn" onclick="toggleLive()">
-            <span class="dot-pulse" id="liveDot"></span>
-            <span id="liveLabel">REAL-TIME</span>
+          <button class="header-live-pill" id="headerLiveBtn" onclick="toggleLiveFilter()">
+            <span class="live-dot"></span>
+            <span id="headerLiveText">3 AO VIVO</span>
+          </button>
+          <button class="header-refresh-btn" onclick="triggerRefresh()">
+            🔄
           </button>
         </div>
       </div>
-
-      <div class="tabs">
-        <div class="tab active" id="tab-LIVE" onclick="setTab('LIVE')">Ao Vivo</div>
-        <div class="tab" id="tab-ALL" onclick="setTab('ALL')">Todos</div>
-        <div class="tab" id="tab-PINNED" onclick="setTab('PINNED')">★ Fixados</div>
-      </div>
-
-      <div id="matchesList"></div>
     </div>
 
-    <div class="modal-backdrop" id="detailModal" onclick="closeModal(event)">
-      <div class="modal-sheet" onclick="event.stopPropagation()" id="modalContent"></div>
+    <!-- App Content -->
+    <div class="app-content">
+      <!-- Controls Card -->
+      <div class="controls-card">
+        <div class="tabs-row">
+          <button class="tab-btn active" id="tab-ALL" onclick="setTab('ALL')">Todos</button>
+          <button class="tab-btn" id="tab-FAV" onclick="setTab('FAV')">Favoritos</button>
+          <button class="tab-btn" id="tab-LEAGUES" onclick="setTab('LEAGUES')">Competições</button>
+        </div>
+        <div class="filter-pills">
+          <button class="filter-pill live active" id="filter-LIVE" onclick="setFilter('LIVE')">
+            <span class="live-dot"></span> Ao Vivo (3)
+          </button>
+          <button class="filter-pill" id="filter-FINISHED" onclick="setFilter('FINISHED')">Finalizados</button>
+          <button class="filter-pill" id="filter-UPCOMING" onclick="setFilter('UPCOMING')">Próximos</button>
+        </div>
+      </div>
+
+      <!-- Matches Container -->
+      <div id="matchesContainer"></div>
+    </div>
+
+    <!-- Interactive Match Detail Modal -->
+    <div class="modal-backdrop" id="matchModal" onclick="closeModal(event)">
+      <div class="modal-sheet" onclick="event.stopPropagation()" id="modalSheetContent"></div>
     </div>
   </div>
 
   <script>
-    let activeTab = 'LIVE';
-    let isLiveOn = true;
-    let selectedMatchId = null;
+    let currentTab = 'ALL';
+    let currentFilter = 'LIVE';
 
-    let matches = [
+    const matchesData = [
       {
-        id: 'm-1', country: 'BRASIL', league: 'Brasileirão Série A', status: '2H', minute: 67, isPinned: true,
+        id: '1',
+        country: 'BRASIL',
+        league: 'Brasileirão Série A',
+        flag: '🇧🇷',
+        minute: '68\'',
+        isLive: true,
         home: { name: 'Flamengo', short: 'FLA', color: '#E11D48', score: 2 },
-        away: { name: 'Palmeiras', short: 'PAL', color: '#10B981', score: 1 },
-        stats: { poss: [56, 44], shots: [14, 9], target: [6, 4], corners: [7, 4] },
-        events: [
-          { min: 18, type: 'GOL', player: 'Pedro', team: 'FLA' },
-          { min: 41, type: 'GOL', player: 'Estêvão', team: 'PAL' },
-          { min: 59, type: 'GOL', player: 'Arrascaeta', team: 'FLA' }
-        ]
+        away: { name: 'Palmeiras', short: 'PAL', color: '#059669', score: 1 },
+        stats: { poss: [58, 42], shots: [14, 8], corners: [6, 3] }
       },
       {
-        id: 'm-2', country: 'INGLATERRA', league: 'Premier League', status: '2H', minute: 78, isPinned: true,
-        home: { name: 'Man City', short: 'MCI', color: '#38BDF8', score: 2 },
-        away: { name: 'Arsenal', short: 'ARS', color: '#F43F5E', score: 2 },
-        stats: { poss: [64, 36], shots: [17, 8], target: [7, 5], corners: [9, 3] },
-        events: [
-          { min: 12, type: 'GOL', player: 'Haaland', team: 'MCI' },
-          { min: 31, type: 'GOL', player: 'Saka', team: 'ARS' },
-          { min: 54, type: 'GOL', player: 'Gabriel', team: 'ARS' },
-          { min: 71, type: 'GOL', player: 'Foden', team: 'MCI' }
-        ]
+        id: '2',
+        country: 'INGLATERRA',
+        league: 'Premier League',
+        flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+        minute: '76\'',
+        isLive: true,
+        home: { name: 'Manchester City', short: 'MCI', color: '#0EA5E9', score: 3 },
+        away: { name: 'Liverpool', short: 'LIV', color: '#DC2626', score: 2 },
+        stats: { poss: [62, 38], shots: [17, 11], corners: [8, 5] }
       },
       {
-        id: 'm-3', country: 'BRASIL', league: 'Brasileirão Série A', status: '1H', minute: 34, isPinned: false,
-        home: { name: 'Botafogo', short: 'BOT', color: '#F8FAFC', score: 1 },
-        away: { name: 'São Paulo', short: 'SAO', color: '#EF4444', score: 0 },
-        stats: { poss: [61, 39], shots: [8, 3], target: [4, 1], corners: [5, 1] },
-        events: [
-          { min: 29, type: 'GOL', player: 'Igor Jesus', team: 'BOT' }
-        ]
+        id: '3',
+        country: 'PAÍSES BAIXOS',
+        league: 'KNVB Beker',
+        flag: '🇳🇱',
+        minute: '70\'',
+        isLive: true,
+        home: { name: 'Kloetinge', short: 'KLO', color: '#0284C7', score: 0 },
+        away: { name: 'SC Cambuur', short: 'CAM', color: '#EAB308', score: 1 },
+        stats: { poss: [40, 60], shots: [5, 12], corners: [2, 7] }
       }
     ];
 
-    function render() {
-      const container = document.getElementById('matchesList');
-      const now = Date.now();
-      const filtered = matches.filter(m => {
-        if (activeTab === 'LIVE') return m.status !== 'FT';
-        if (activeTab === 'PINNED') return m.isPinned;
+    function renderMatches() {
+      const container = document.getElementById('matchesContainer');
+      const filtered = matchesData.filter(m => {
+        if (currentFilter === 'LIVE') return m.isLive;
         return true;
       });
 
-      container.innerHTML = filtered.map(m => {
-        const isGoal = m.goalAt && (now - m.goalAt < 6000);
-        return `
-          <div class="match-card ${isGoal ? 'goal-flash' : ''}" onclick="openModal('${m.id}')">
-            <div class="card-top">
-              <div class="league-meta"><b>${m.country}</b> • ${m.league}</div>
-              <div class="badge-row">
-                ${isGoal ? '<span class="goal-pill">GOL!</span>' : ''}
-                <div class="time-pill">
-                  <span class="dot-pulse"></span> ${m.minute}'
-                </div>
+      container.innerHTML = filtered.map(m => `
+        <div class="league-group">
+          <div class="league-header">
+            <div class="league-header-left">
+              <span class="league-flag">${m.flag}</span>
+              <div class="league-info">
+                <span class="league-name">${m.league}</span>
+                <span class="league-country">${m.country}</span>
               </div>
             </div>
-            <div class="scoreboard">
-              <div class="team home">
+            <span class="league-count-badge">1 JOGO</span>
+          </div>
+          <div class="match-row" onclick="openModal('${m.id}')">
+            <div class="match-time-col">
+              <span class="match-status-live">${m.minute}</span>
+            </div>
+            <div class="match-teams-col">
+              <div class="team-line">
+                <div class="team-crest" style="background:${m.home.color}">${m.home.short}</div>
                 <span>${m.home.name}</span>
-                <span class="color-dot" style="background:${m.home.color}"></span>
               </div>
-              <div class="score-box">${m.home.score} : ${m.away.score}</div>
-              <div class="team away">
-                <span class="color-dot" style="background:${m.away.color}"></span>
+              <div class="team-line">
+                <div class="team-crest" style="background:${m.away.color}">${m.away.short}</div>
                 <span>${m.away.name}</span>
               </div>
             </div>
-            <div class="stats-strip">
-              <div class="stat-mini"><span>${m.stats.poss[0]}%</span><span class="lbl">POSSE</span><span>${m.stats.poss[1]}%</span></div>
-              <div class="divider"></div>
-              <div class="stat-mini"><span>${m.stats.shots[0]}(${m.stats.target[0]})</span><span class="lbl">FINALIZ.</span><span>${m.stats.shots[1]}(${m.stats.target[1]})</span></div>
-              <div class="divider"></div>
-              <div class="stat-mini"><span>${m.stats.corners[0]}</span><span class="lbl">ESCANT.</span><span>${m.stats.corners[1]}</span></div>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      if (selectedMatchId) renderModalContent();
-    }
-
-    function openModal(id) {
-      selectedMatchId = id;
-      document.getElementById('detailModal').classList.add('open');
-      renderModalContent();
-    }
-
-    function closeModal() {
-      selectedMatchId = null;
-      document.getElementById('detailModal').classList.remove('open');
-    }
-
-    function renderModalContent() {
-      const m = matches.find(x => x.id === selectedMatchId);
-      if (!m) return;
-      const shotsTot = m.stats.shots[0] + m.stats.shots[1] || 1;
-      const shotsPct = Math.round((m.stats.shots[0] / shotsTot) * 100);
-      const cornTot = m.stats.corners[0] + m.stats.corners[1] || 1;
-      const cornPct = Math.round((m.stats.corners[0] / cornTot) * 100);
-
-      document.getElementById('modalContent').innerHTML = `
-        <div class="sheet-top">
-          <span style="font-size:11px;color:#94A3B8;font-weight:700">${m.country} • ${m.league}</span>
-          <button class="btn-pill" onclick="closeModal()">Fechar</button>
-        </div>
-        <div style="text-align:center;padding:14px;background:#161F33;border-radius:16px;margin-bottom:16px;">
-          <div style="font-size:13px;color:#94A3B8;margin-bottom:6px">${m.home.name} vs ${m.away.name}</div>
-          <div style="font-size:30px;font-weight:900">${m.home.score} - ${m.away.score}</div>
-          <div style="font-size:11px;color:#34D399;font-weight:800;margin-top:4px">AO VIVO • ${m.minute}'</div>
-        </div>
-        <div style="background:#141C2E;padding:15px;border-radius:16px;margin-bottom:14px;border:1px solid #1E293B">
-          <div style="font-size:10px;color:#64748B;font-weight:800;margin-bottom:12px;letter-spacing:0.8px">ESTATÍSTICAS ESSENCIAIS</div>
-          <div class="stat-bar-wrap">
-            <div class="stat-bar-head"><span>${m.stats.poss[0]}%</span><span>Posse de Bola</span><span>${m.stats.poss[1]}%</span></div>
-            <div class="bar-track">
-              <div style="width:${m.stats.poss[0]}%;background:${m.home.color}"></div>
-              <div style="width:${m.stats.poss[1]}%;background:${m.away.color}"></div>
-            </div>
-          </div>
-          <div class="stat-bar-wrap">
-            <div class="stat-bar-head"><span>${m.stats.shots[0]} (${m.stats.target[0]})</span><span>Finalizações (No Alvo)</span><span>${m.stats.shots[1]} (${m.stats.target[1]})</span></div>
-            <div class="bar-track">
-              <div style="width:${shotsPct}%;background:${m.home.color}"></div>
-              <div style="width:${100 - shotsPct}%;background:${m.away.color}"></div>
-            </div>
-          </div>
-          <div class="stat-bar-wrap" style="margin-bottom:0">
-            <div class="stat-bar-head"><span>${m.stats.corners[0]}</span><span>Escanteios</span><span>${m.stats.corners[1]}</span></div>
-            <div class="bar-track">
-              <div style="width:${cornPct}%;background:${m.home.color}"></div>
-              <div style="width:${100 - cornPct}%;background:${m.away.color}"></div>
+            <div class="match-scores-col ${m.isLive ? 'live' : ''}">
+              <span>${m.home.score}</span>
+              <span>${m.away.score}</span>
             </div>
           </div>
         </div>
-        <div style="background:#141C2E;padding:15px;border-radius:16px;border:1px solid #1E293B">
-          <div style="font-size:10px;color:#64748B;font-weight:800;margin-bottom:10px;letter-spacing:0.8px">GOLS E LANCES DECISIVOS</div>
-          ${m.events.map(e => `
-            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1E293B;font-size:13px">
-              <span style="color:#34D399;font-weight:700">${e.min}'</span>
-              <span style="font-weight:600">${e.player}</span>
-              <span style="color:#64748B;font-weight:700">${e.team}</span>
-            </div>
-          `).join('')}
+      `).join('');
+    }
+
+    function setTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById(`tab-${tab}`);
+      if (activeBtn) activeBtn.classList.add('active');
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById(`filter-${filter}`);
+      if (activeBtn) activeBtn.classList.add('active');
+      renderMatches();
+    }
+
+    function toggleLiveFilter() {
+      if (currentFilter === 'LIVE') {
+        setFilter('ALL');
+        document.getElementById('headerLiveBtn').classList.remove('active');
+      } else {
+        setFilter('LIVE');
+        document.getElementById('headerLiveBtn').classList.add('active');
+      }
+    }
+
+    function triggerRefresh() {
+      const btn = document.querySelector('.header-refresh-btn');
+      btn.style.transform = 'rotate(360deg)';
+      btn.style.transition = 'transform 0.5s ease';
+      setTimeout(() => {
+        btn.style.transform = 'rotate(0deg)';
+        btn.style.transition = 'none';
+        renderMatches();
+      }, 500);
+    }
+
+    function openModal(matchId) {
+      const match = matchesData.find(m => m.id === matchId);
+      if (!match) return;
+
+      const sheet = document.getElementById('modalSheetContent');
+      sheet.innerHTML = `
+        <div class="sheet-handle"></div>
+        <div class="sheet-league-bar">${match.country} • ${match.league}</div>
+        <div class="sheet-hero-score">
+          <div class="hero-team">
+            <div class="hero-team-crest" style="background:${match.home.color}">${match.home.short}</div>
+            <span class="hero-team-name">${match.home.name}</span>
+          </div>
+          <div class="hero-score-center">
+            <div class="hero-score-digits">${match.home.score} - ${match.away.score}</div>
+            <span class="hero-time-badge">${match.minute}</span>
+          </div>
+          <div class="hero-team">
+            <div class="hero-team-crest" style="background:${match.away.color}">${match.away.short}</div>
+            <span class="hero-team-name">${match.away.name}</span>
+          </div>
+        </div>
+
+        <div style="font-size:12px; font-weight:800; color:#0F172A; margin-bottom:10px;">ESTATÍSTICAS DA PARTIDA</div>
+        
+        <div class="stat-row">
+          <div class="stat-head"><span>${match.stats.poss[0]}%</span><span>Posse de Bola</span><span>${match.stats.poss[1]}%</span></div>
+          <div class="stat-bar"><div class="bar-fill-left" style="width:${match.stats.poss[0]}%"></div><div class="bar-fill-right" style="width:${match.stats.poss[1]}%"></div></div>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-head"><span>${match.stats.shots[0]}</span><span>Finalizações</span><span>${match.stats.shots[1]}</span></div>
+          <div class="stat-bar"><div class="bar-fill-left" style="width:${(match.stats.shots[0]/(match.stats.shots[0]+match.stats.shots[1]))*100}%"></div><div class="bar-fill-right" style="width:${(match.stats.shots[1]/(match.stats.shots[0]+match.stats.shots[1]))*100}%"></div></div>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-head"><span>${match.stats.corners[0]}</span><span>Escanteios</span><span>${match.stats.corners[1]}</span></div>
+          <div class="stat-bar"><div class="bar-fill-left" style="width:${(match.stats.corners[0]/(match.stats.corners[0]+match.stats.corners[1]))*100}%"></div><div class="bar-fill-right" style="width:${(match.stats.corners[1]/(match.stats.corners[0]+match.stats.corners[1]))*100}%"></div></div>
         </div>
       `;
+
+      document.getElementById('matchModal').classList.add('open');
     }
 
-    function setTab(t) {
-      activeTab = t;
-      ['LIVE', 'ALL', 'PINNED'].forEach(k => {
-        document.getElementById('tab-' + k).classList.toggle('active', k === t);
-      });
-      render();
+    function closeModal(e) {
+      document.getElementById('matchModal').classList.remove('open');
     }
 
-    function toggleLive() {
-      isLiveOn = !isLiveOn;
-      document.getElementById('liveLabel').textContent = isLiveOn ? 'REAL-TIME' : 'PAUSADO';
-    }
-
-    function forceGoal() {
-      const idx = Math.floor(Math.random() * matches.length);
-      const m = matches[idx];
-      m.minute = Math.min(90, m.minute + 1);
-      const isHome = Math.random() > 0.45;
-      if (isHome) {
-        m.home.score++;
-        m.stats.shots[0]++;
-        m.stats.target[0]++;
-        m.events.push({ min: m.minute, type: 'GOL', player: 'Gol Ao Vivo!', team: m.home.short });
-      } else {
-        m.away.score++;
-        m.stats.shots[1]++;
-        m.stats.target[1]++;
-        m.events.push({ min: m.minute, type: 'GOL', player: 'Gol Ao Vivo!', team: m.away.short });
-      }
-      m.goalAt = Date.now();
-      document.getElementById('syncText').textContent = 'Futebol ao vivo • Gol agora!';
-      render();
-    }
-
-    setInterval(() => {
-      if (!isLiveOn) return;
-      matches.forEach(m => {
-        if (m.minute < 90) m.minute++;
-        const shift = Math.floor(Math.random() * 3) - 1;
-        m.stats.poss[0] = Math.min(72, Math.max(28, m.stats.poss[0] + shift));
-        m.stats.poss[1] = 100 - m.stats.poss[0];
-        if (Math.random() < 0.35) m.stats.shots[0]++;
-        if (Math.random() < 0.2) m.stats.corners[0]++;
-      });
-      document.getElementById('syncText').textContent = 'Futebol ao vivo • Sync: ' + new Date().toLocaleTimeString();
-      render();
-    }, 4000);
-
-    render();
+    // Initial render
+    renderMatches();
   </script>
 </body>
 </html>
-

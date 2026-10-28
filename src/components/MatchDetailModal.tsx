@@ -3359,7 +3359,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   leagueHeader: {
-    color: '#1D4ED8',
+    color: '#1652D0',
     fontSize: 10,
     lineHeight: 13,
     fontWeight: '800',
@@ -3371,7 +3371,7 @@ const styles = StyleSheet.create({
   tabsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#EEF2F6',
     borderRadius: 10,
     padding: 3,
     marginBottom: 10,
@@ -3384,7 +3384,7 @@ const styles = StyleSheet.create({
     borderRadius: 7,
   },
   tabButtonActive: {
-    backgroundColor: '#1D4ED8',
+    backgroundColor: '#1652D0',
   },
   tabText: {
     color: '#334155',
@@ -4045,7 +4045,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   clubFormWin: {
-    backgroundColor: '#1D4ED8',
+    backgroundColor: '#16A34A',
   },
   clubFormDraw: {
     backgroundColor: '#64748B',
