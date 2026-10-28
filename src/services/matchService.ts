@@ -2498,7 +2498,15 @@ export async function fetchMatchesFromApi(
 ): Promise<Match[]> {
   const date = getLocalDateString(selectedDate);
   const url = `${API_CONFIG.BASE_URL}/all/scoreboard?dates=${date}&limit=500&_=${Date.now()}`;
-  const response = await fetch(url);
+  
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 9000);
+  let response: Response;
+  try {
+    response = await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
   if (!response.ok) {
     throw new Error(`A API global de futebol respondeu com HTTP ${response.status}.`);
   }
@@ -2544,49 +2552,60 @@ export async function fetchMatchesFromApi(
       })
   );
 
+  const seenIds = new Set<string>();
   const matches = data.events
     .map(toMatch)
-    .filter((match): match is Match => match !== null);
-  void fetchRecentVARAlerts(matches).then((varAlerts) => {
-    const updatedMatches = matches.flatMap((match) => {
-    if (!varAlerts.has(match.id)) return [];
-    const matchUpdates = varAlerts.get(match.id);
-    return [{
-      ...match,
-      status: matchUpdates?.status ?? match.status,
-      minute: matchUpdates?.minute !== undefined ? matchUpdates.minute : match.minute,
-      minuteLabel:
-        matchUpdates?.minuteLabel !== undefined
-          ? matchUpdates.minuteLabel
-          : match.minuteLabel,
-      homeTeam: {
-        ...match.homeTeam,
-        score:
-          matchUpdates?.homeScore !== undefined && Number.isFinite(matchUpdates.homeScore)
-            ? matchUpdates.homeScore
-            : match.homeTeam.score,
-        redCards: matchUpdates?.homeRedCards ?? match.homeTeam.redCards,
-      },
-      awayTeam: {
-        ...match.awayTeam,
-        score:
-          matchUpdates?.awayScore !== undefined && Number.isFinite(matchUpdates.awayScore)
-            ? matchUpdates.awayScore
-            : match.awayTeam.score,
-        redCards: matchUpdates?.awayRedCards ?? match.awayTeam.redCards,
-      },
-      ...(matchUpdates?.alertId
-        ? {
-            recentAlert: {
-              id: matchUpdates.alertId,
-              type: 'VAR' as const,
-              team: matchUpdates.alertTeam,
-            },
-          }
-        : {}),
-    }];
+    .filter((match): match is Match => {
+      if (!match || seenIds.has(match.id)) return false;
+      seenIds.add(match.id);
+      return true;
     });
-    onMatchUpdates?.(updatedMatches);
-  });
+
+  void fetchRecentVARAlerts(matches)
+    .then((varAlerts) => {
+      const updatedMatches = matches.flatMap((match) => {
+        if (!varAlerts.has(match.id)) return [];
+        const matchUpdates = varAlerts.get(match.id);
+        return [{
+          ...match,
+          status: matchUpdates?.status ?? match.status,
+          minute: matchUpdates?.minute !== undefined ? matchUpdates.minute : match.minute,
+          minuteLabel:
+            matchUpdates?.minuteLabel !== undefined
+              ? matchUpdates.minuteLabel
+              : match.minuteLabel,
+          homeTeam: {
+            ...match.homeTeam,
+            score:
+              matchUpdates?.homeScore !== undefined && Number.isFinite(matchUpdates.homeScore)
+                ? matchUpdates.homeScore
+                : match.homeTeam.score,
+            redCards: matchUpdates?.homeRedCards ?? match.homeTeam.redCards,
+          },
+          awayTeam: {
+            ...match.awayTeam,
+            score:
+              matchUpdates?.awayScore !== undefined && Number.isFinite(matchUpdates.awayScore)
+                ? matchUpdates.awayScore
+                : match.awayTeam.score,
+            redCards: matchUpdates?.awayRedCards ?? match.awayTeam.redCards,
+          },
+          ...(matchUpdates?.alertId
+            ? {
+                recentAlert: {
+                  id: matchUpdates.alertId,
+                  type: 'VAR' as const,
+                  team: matchUpdates.alertTeam,
+                },
+              }
+            : {}),
+        }];
+      });
+      onMatchUpdates?.(updatedMatches);
+    })
+    .catch((err) => {
+      console.warn('Erro ao atualizar alertas de VAR:', err);
+    });
+
   return matches;
 }

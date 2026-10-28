@@ -44,7 +44,7 @@ export const TeamCrest = React.memo<TeamCrestProps>(({
       ]}
     >
       <Text style={[styles.fallbackText, { fontSize: Math.max(8, size * 0.32) }]}>
-        {shortName.slice(0, 3)}
+        {(shortName || '').slice(0, 3)}
       </Text>
     </View>
   );

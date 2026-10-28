@@ -210,7 +210,7 @@ const LeagueGroupItem = React.memo<LeagueGroupItemProps>(
                 ]}
                 numberOfLines={1}
               >
-                {group.leagueCountry.toUpperCase()}
+                {String(group.leagueCountry || '').toUpperCase()}
               </Text>
             )}
             <Text
@@ -1495,11 +1495,11 @@ export const HomeScreen: React.FC = () => {
                 styles.listContent,
                 { paddingBottom: Math.max(20, insets.bottom + 18) },
               ]}
-              initialNumToRender={5}
-              maxToRenderPerBatch={4}
-              windowSize={4}
+              initialNumToRender={6}
+              maxToRenderPerBatch={6}
+              windowSize={7}
               updateCellsBatchingPeriod={50}
-              removeClippedSubviews={Platform.OS === 'android'}
+              removeClippedSubviews={false}
               ListEmptyComponent={
                 <View style={styles.emptyBox}>
                   <Text style={styles.emptyTitle}>

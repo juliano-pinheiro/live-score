@@ -656,14 +656,14 @@ const MatchInfoPanel: React.FC<MatchInfoPanelProps> = ({
           <View style={styles.matchInfoCompetitionBody}>
             <Text style={styles.matchInfoCompetitionLabel}>
               {competitionItem?.subtitle ??
-                (match.leagueCountry.toUpperCase() === 'INTERNACIONAL'
+                ((match.leagueCountry || '').toUpperCase() === 'INTERNACIONAL'
                   ? 'Torneio Internacional'
-                  : match.leagueCountry)}
+                  : (match.leagueCountry || 'Competição'))}
             </Text>
             <Text style={styles.matchInfoCompetitionTitle}>
               {cleanLeagueDisplayName(
-                competitionItem?.value ?? match.leagueName,
-                match.leagueCountry
+                competitionItem?.value ?? (match.leagueName || ''),
+                match.leagueCountry || ''
               )}
             </Text>
             {roundItem && (
@@ -2154,9 +2154,11 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
         duration: 180,
         useNativeDriver: true,
       }).start(() => {
+        translateY.setValue(0);
         onCloseRef.current();
       });
     } else {
+      translateY.setValue(0);
       onCloseRef.current();
     }
   };
@@ -2169,9 +2171,9 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
         duration: 180,
         useNativeDriver: true,
       }).start(() => {
+        translateY.setValue(0);
         if (profileTeamRef.current) {
           setProfileTeam(null);
-          translateY.setValue(0);
         } else {
           onCloseRef.current();
         }
@@ -2188,10 +2190,12 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
   const headerPanResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => !sidePanel && !isWide,
-      onStartShouldSetPanResponderCapture: () => !sidePanel && !isWide,
-      onMoveShouldSetPanResponder: () => !sidePanel && !isWide,
-      onMoveShouldSetPanResponderCapture: () => !sidePanel && !isWide,
+      onStartShouldSetPanResponder: () => false,
+      onStartShouldSetPanResponderCapture: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) =>
+        !sidePanel && !isWide && Math.abs(gestureState.dy) > 6,
+      onMoveShouldSetPanResponderCapture: (_, gestureState) =>
+        !sidePanel && !isWide && Math.abs(gestureState.dy) > 6,
       onPanResponderTerminationRequest: () => false,
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
@@ -2348,14 +2352,19 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
       }
     };
     void loadDetails();
-    const interval = setInterval(
-      loadDetails,
-      API_CONFIG.LIVE_DETAIL_REFRESH_INTERVAL_MS
-    );
+    const isCurrentlyFinished = match?.status === 'FT';
+    let interval: ReturnType<typeof setInterval> | null = null;
+    if (!isCurrentlyFinished) {
+      const pollDelay =
+        match?.status === '1H' || match?.status === '2H' || match?.status === 'HT'
+          ? API_CONFIG.LIVE_DETAIL_REFRESH_INTERVAL_MS
+          : 30000;
+      interval = setInterval(loadDetails, pollDelay);
+    }
 
     return () => {
       isActive = false;
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
     };
   }, [match?.id, visible, refreshDetailsKey, match?.homeTeam.score, match?.awayTeam.score]);
 
@@ -2603,7 +2612,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   const lineups = details?.lineups ?? null;
   const headToHead = details?.headToHead ?? null;
   const matchInfo = details?.info ?? [];
-  const hasAdditionalStats = Boolean(details?.additionalStats.length);
+  const hasAdditionalStats = Boolean(details?.additionalStats?.length);
   const hasStatistics = Boolean(matchStats || hasAdditionalStats);
   const firstHalfEvents = (matchEvents ?? [])
     .filter((event) => event.period === 1 && !isPeriodMarkerEvent(event))
@@ -2694,7 +2703,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
         awayValue: Number(matchStats.corners[1]) || 0,
       });
     }
-    details?.additionalStats.forEach((statistic) => {
+    (details?.additionalStats ?? []).forEach((statistic) => {
       const suffix = statistic.suffix ?? '';
       const label =
         statistic.id === 'saves'
@@ -2865,21 +2874,24 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 const resolvedCompetition = matchInfo.find(
                   (item) => item.id === 'competition'
                 )?.value;
+                const safeLeagueName = match.leagueName || '';
+                const safeLeagueCountry = match.leagueCountry || 'Competição';
+                const isInternational = safeLeagueCountry.toUpperCase() === 'INTERNACIONAL';
                 const displayLeagueName =
                   resolvedCompetition &&
                   (/^(group stage|regular season|competição internacional)$/i.test(
-                    match.leagueName.trim()
+                    safeLeagueName.trim()
                   ) ||
-                    match.leagueCountry.toUpperCase() === 'INTERNACIONAL')
+                    isInternational)
                     ? resolvedCompetition
-                    : match.leagueName;
+                    : safeLeagueName;
                 const cleanName = cleanLeagueDisplayName(
                   displayLeagueName,
-                  match.leagueCountry
+                  safeLeagueCountry
                 );
-                return match.leagueCountry.toUpperCase() === 'INTERNACIONAL'
+                return isInternational
                   ? cleanName.toUpperCase()
-                  : `${match.leagueCountry.toUpperCase()} • ${cleanName.toUpperCase()}`;
+                  : `${safeLeagueCountry.toUpperCase()} • ${cleanName.toUpperCase()}`;
               })()}
             </Text>
 

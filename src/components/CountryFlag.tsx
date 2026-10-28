@@ -123,11 +123,13 @@ export const CountryFlag = React.memo<CountryFlagProps>(({
 }) => {
   const [hasError, setHasError] = useState(false);
 
-  if (!country || country === 'ALL' || country === 'Todas as ligas') {
+  const countryStr = typeof country === 'string' ? country : (country ? String(country) : '');
+
+  if (!countryStr || countryStr === 'ALL' || countryStr === 'Todas as ligas') {
     return <Text style={[styles.emoji, { fontSize: Math.max(12, size * 0.7) }]}>🏆</Text>;
   }
 
-  const normalized = country
+  const normalized = countryStr
     .trim()
     .toLowerCase()
     .normalize('NFD')
@@ -185,7 +187,7 @@ export const CountryFlag = React.memo<CountryFlagProps>(({
 
   return (
     <Text style={[styles.fallbackAcronym, { fontSize: Math.max(9, size * 0.45) }]}>
-      {country.slice(0, 2).toUpperCase()}
+      {countryStr.slice(0, 2).toUpperCase()}
     </Text>
   );
 });
