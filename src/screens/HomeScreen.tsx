@@ -783,6 +783,19 @@ export const HomeScreen: React.FC = () => {
     [matches]
   );
 
+  const dateStripDays = useMemo(() => {
+    const days: Date[] = [];
+    for (let offset = -3; offset <= 3; offset++) {
+      const d = new Date(selectedDate);
+      d.setDate(d.getDate() + offset);
+      days.push(d);
+    }
+    return days;
+  }, [selectedDate]);
+
+  const selectedDateKey = useMemo(() => getDateKey(selectedDate), [selectedDate]);
+  const todayDateKey = useMemo(() => getDateKey(new Date()), []);
+
   const shiftDate = (days: number) => {
     const nextDate = new Date(selectedDate);
     nextDate.setDate(nextDate.getDate() + days);
@@ -973,19 +986,99 @@ export const HomeScreen: React.FC = () => {
             showSideDetails && styles.mainColumnWithDetails,
           ]}
         >
-          {/* Unified Controls Card */}
-          <View style={styles.controlsCard}>
-            <View
-              style={[
-                styles.topControlsRow,
-                showSideDetails && styles.topControlsRowWide,
-              ]}
-            >
-              <View style={styles.tabsRow}>
+          {/* Sofascore-Style Modern Sports Feed Controls */}
+          <View style={styles.modernControlsContainer}>
+            {/* 1. Horizontal Date Strip Carousel */}
+            <View style={styles.dateStripWrapper}>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Dia anterior"
+                onPress={() => shiftDate(-1)}
+                style={styles.dateStripArrow}
+              >
+                <Text style={styles.dateStripArrowText}>‹</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Abrir calendário"
+                onPress={() => setIsCalendarVisible(true)}
+                style={styles.calendarMiniBtn}
+              >
+                <Text style={styles.calendarMiniIcon}>📅</Text>
+              </TouchableOpacity>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.dateStripScroll}
+              >
+                {dateStripDays.map((dayDate) => {
+                  const dayKey = getDateKey(dayDate);
+                  const isSelected = dayKey === selectedDateKey;
+                  const isToday = dayKey === todayDateKey;
+                  const dayName = isToday
+                    ? 'HOJE'
+                    : WEEKDAYS_SHORT[dayDate.getDay()].replace('.', '').toUpperCase();
+                  const dayNum = String(dayDate.getDate()).padStart(2, '0');
+
+                  return (
+                    <TouchableOpacity
+                      key={dayKey}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Jogos de ${dayName} ${dayNum}`}
+                      onPress={() => handleSelectDate(dayDate)}
+                      style={[
+                        styles.dayCapsule,
+                        isSelected && styles.dayCapsuleActive,
+                        isToday && !isSelected && styles.dayCapsuleToday,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.dayCapsuleWeek,
+                          isSelected && styles.dayCapsuleWeekActive,
+                          isToday && !isSelected && styles.dayCapsuleWeekToday,
+                        ]}
+                      >
+                        {dayName}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.dayCapsuleNum,
+                          isSelected && styles.dayCapsuleNumActive,
+                          isToday && !isSelected && styles.dayCapsuleNumToday,
+                        ]}
+                      >
+                        {dayNum}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Próximo dia"
+                onPress={() => shiftDate(1)}
+                style={styles.dateStripArrow}
+              >
+                <Text style={styles.dateStripArrowText}>›</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* 2. Horizontal Filter Pills Strip */}
+            <View style={styles.filterPillsRow}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.filterPillsContent}
+              >
+                {/* Todos */}
                 <TouchableOpacity
                   accessibilityRole="tab"
                   accessibilityState={{
-                    selected: activeTab === 'ALL',
+                    selected: activeTab === 'ALL' && statusFilter === 'ALL',
                   }}
                   onPress={() => {
                     setActiveTab('ALL');
@@ -993,56 +1086,129 @@ export const HomeScreen: React.FC = () => {
                     setSelectedLeague('ALL');
                   }}
                   style={[
-                    styles.tabButton,
-                    activeTab === 'ALL' && styles.tabButtonActive,
+                    styles.pillFilter,
+                    activeTab === 'ALL' &&
+                      statusFilter === 'ALL' &&
+                      styles.pillFilterActive,
                   ]}
                 >
                   <Text
-                    numberOfLines={1}
                     style={[
-                      styles.tabText,
-                      activeTab === 'ALL' && styles.tabTextActive,
+                      styles.pillFilterText,
+                      activeTab === 'ALL' &&
+                        statusFilter === 'ALL' &&
+                        styles.pillFilterTextActive,
                     ]}
                   >
-                    Todos
+                    ⚡ Todos
                   </Text>
+                  <View
+                    style={[
+                      styles.pillBadge,
+                      activeTab === 'ALL' &&
+                        statusFilter === 'ALL' &&
+                        styles.pillBadgeActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.pillBadgeText,
+                        activeTab === 'ALL' &&
+                          statusFilter === 'ALL' &&
+                          styles.pillBadgeTextActive,
+                      ]}
+                    >
+                      {matches.length}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
 
+                {/* Ao Vivo */}
                 <TouchableOpacity
                   accessibilityRole="tab"
-                  accessibilityState={{
-                    selected: activeTab === 'FAVORITES',
-                  }}
+                  accessibilityState={{ selected: statusFilter === 'LIVE' }}
                   onPress={() => {
-                    setActiveTab('FAVORITES');
-                    setStatusFilter('ALL');
-                    setSelectedLeague('ALL');
+                    setActiveTab('ALL');
+                    setStatusFilter((prev) => (prev === 'LIVE' ? 'ALL' : 'LIVE'));
                   }}
                   style={[
-                    styles.tabButton,
-                    activeTab === 'FAVORITES' && styles.tabButtonActive,
+                    styles.pillFilter,
+                    styles.pillFilterLive,
+                    statusFilter === 'LIVE' && styles.pillFilterLiveActive,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.pillLiveDot,
+                      statusFilter === 'LIVE' && styles.pillLiveDotActive,
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.pillFilterText,
+                      styles.pillFilterTextLive,
+                      statusFilter === 'LIVE' && styles.pillFilterTextActive,
+                    ]}
+                  >
+                    Ao Vivo
+                  </Text>
+                  <View
+                    style={[
+                      styles.pillBadge,
+                      styles.pillBadgeLive,
+                      statusFilter === 'LIVE' && styles.pillBadgeLiveActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.pillBadgeText,
+                        styles.pillBadgeTextLive,
+                        statusFilter === 'LIVE' && styles.pillBadgeTextActive,
+                      ]}
+                    >
+                      {liveCount}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                {/* Favoritos */}
+                <TouchableOpacity
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: activeTab === 'FAVORITES' }}
+                  onPress={() => {
+                    if (activeTab === 'FAVORITES') {
+                      setActiveTab('ALL');
+                    } else {
+                      setActiveTab('FAVORITES');
+                      setStatusFilter('ALL');
+                      setSelectedLeague('ALL');
+                    }
+                  }}
+                  style={[
+                    styles.pillFilter,
+                    activeTab === 'FAVORITES' && styles.pillFilterActive,
                   ]}
                 >
                   <Text
-                    numberOfLines={1}
                     style={[
-                      styles.tabText,
-                      activeTab === 'FAVORITES' && styles.tabTextActive,
+                      styles.pillFilterText,
+                      activeTab === 'FAVORITES' && styles.pillFilterTextActive,
                     ]}
                   >
-                    Favoritos
+                    ⭐ Favoritos
                   </Text>
                   {pinnedCount > 0 && (
                     <View
                       style={[
-                        styles.tabBadge,
-                        activeTab === 'FAVORITES' && styles.tabBadgeActive,
+                        styles.pillBadge,
+                        activeTab === 'FAVORITES' && styles.pillBadgeActive,
                       ]}
                     >
                       <Text
                         style={[
-                          styles.tabBadgeText,
-                          activeTab === 'FAVORITES' && styles.tabBadgeTextActive,
+                          styles.pillBadgeText,
+                          activeTab === 'FAVORITES' &&
+                            styles.pillBadgeTextActive,
                         ]}
                       >
                         {pinnedCount}
@@ -1051,182 +1217,138 @@ export const HomeScreen: React.FC = () => {
                   )}
                 </TouchableOpacity>
 
+                {/* Finalizados */}
+                <TouchableOpacity
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: statusFilter === 'FINISHED' }}
+                  onPress={() => {
+                    setActiveTab('ALL');
+                    setStatusFilter((prev) =>
+                      prev === 'FINISHED' ? 'ALL' : 'FINISHED'
+                    );
+                  }}
+                  style={[
+                    styles.pillFilter,
+                    statusFilter === 'FINISHED' && styles.pillFilterActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.pillFilterText,
+                      statusFilter === 'FINISHED' && styles.pillFilterTextActive,
+                    ]}
+                  >
+                    Finalizados
+                  </Text>
+                  <View
+                    style={[
+                      styles.pillBadge,
+                      statusFilter === 'FINISHED' && styles.pillBadgeActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.pillBadgeText,
+                        statusFilter === 'FINISHED' &&
+                          styles.pillBadgeTextActive,
+                      ]}
+                    >
+                      {finishedCount}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                {/* Próximos */}
+                <TouchableOpacity
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: statusFilter === 'UPCOMING' }}
+                  onPress={() => {
+                    setActiveTab('ALL');
+                    setStatusFilter((prev) =>
+                      prev === 'UPCOMING' ? 'ALL' : 'UPCOMING'
+                    );
+                  }}
+                  style={[
+                    styles.pillFilter,
+                    statusFilter === 'UPCOMING' && styles.pillFilterActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.pillFilterText,
+                      statusFilter === 'UPCOMING' && styles.pillFilterTextActive,
+                    ]}
+                  >
+                    Próximos
+                  </Text>
+                  <View
+                    style={[
+                      styles.pillBadge,
+                      statusFilter === 'UPCOMING' && styles.pillBadgeActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.pillBadgeText,
+                        statusFilter === 'UPCOMING' &&
+                          styles.pillBadgeTextActive,
+                      ]}
+                    >
+                      {upcomingCount}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                {/* Competições */}
                 <TouchableOpacity
                   accessibilityRole="tab"
                   accessibilityState={{ selected: activeTab === 'COMPETITIONS' }}
                   onPress={() => {
-                    setActiveTab('COMPETITIONS');
-                    setStatusFilter('ALL');
-                    setSelectedLeague('ALL');
+                    if (activeTab === 'COMPETITIONS') {
+                      setActiveTab('ALL');
+                    } else {
+                      setActiveTab('COMPETITIONS');
+                      setStatusFilter('ALL');
+                    }
                   }}
                   style={[
-                    styles.tabButton,
-                    activeTab === 'COMPETITIONS' && styles.tabButtonActive,
+                    styles.pillFilter,
+                    activeTab === 'COMPETITIONS' && styles.pillFilterActive,
                   ]}
                 >
                   <Text
-                    numberOfLines={1}
                     style={[
-                      styles.tabText,
-                      activeTab === 'COMPETITIONS' && styles.tabTextActive,
+                      styles.pillFilterText,
+                      activeTab === 'COMPETITIONS' && styles.pillFilterTextActive,
                     ]}
                   >
-                    Competições
+                    🏆 Ligas
                   </Text>
                 </TouchableOpacity>
-              </View>
 
-              <View style={styles.dateSelectorRow}>
+                {/* Ordenar por horário */}
                 <TouchableOpacity
                   accessibilityRole="button"
-                  accessibilityLabel="Dia anterior"
-                  onPress={() => shiftDate(-1)}
-                  style={styles.dateArrow}
+                  accessibilityLabel="Ordenar jogos por horário"
+                  onPress={() => setSortChronologically((prev) => !prev)}
+                  style={[
+                    styles.pillFilter,
+                    sortChronologically && styles.pillFilterActive,
+                  ]}
                 >
-                  <Text style={styles.dateArrowText}>‹</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  accessibilityRole="button"
-                  accessibilityLabel="Escolher data das partidas"
-                  onPress={() => setIsCalendarVisible(true)}
-                  style={styles.dateCenterButton}
-                >
-                  <Text style={styles.selectedDateLabel}>
-                    {isViewingToday
-                      ? 'HOJE'
-                      : `${String(selectedDate.getDate()).padStart(2, '0')} DE ${MONTHS_SHORT[selectedDate.getMonth()].toUpperCase()}`}
-                  </Text>
-                  <Text style={styles.dateSubLabel}>
-                    {`${WEEKDAYS_SHORT[selectedDate.getDay()]}, ${String(selectedDate.getDate()).padStart(2, '0')} de ${MONTHS_SHORT[selectedDate.getMonth()]}`}
+                  <Text
+                    style={[
+                      styles.pillFilterText,
+                      sortChronologically && styles.pillFilterTextActive,
+                    ]}
+                  >
+                    ⏱️ Por Horário
                   </Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  accessibilityRole="button"
-                  accessibilityLabel="Próximo dia"
-                  onPress={() => shiftDate(1)}
-                  style={styles.dateArrow}
-                >
-                  <Text style={styles.dateArrowText}>›</Text>
-                </TouchableOpacity>
-              </View>
+              </ScrollView>
             </View>
 
-            <View
-              style={[
-                styles.secondaryControlsRow,
-                showSideDetails && styles.secondaryControlsRowWide,
-              ]}
-            >
-              <View style={styles.statusFiltersRow}>
-                {[
-                  { id: 'LIVE' as const, label: 'Ao Vivo', count: liveCount },
-                  {
-                    id: 'FINISHED' as const,
-                    label: 'Finalizado',
-                    count: finishedCount,
-                  },
-                  {
-                    id: 'UPCOMING' as const,
-                    label: 'Próximos',
-                    count: upcomingCount,
-                  },
-                ].map((filter) => {
-                  const isActive = statusFilter === filter.id;
-                  return (
-                    <TouchableOpacity
-                      key={filter.id}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: isActive }}
-                      onPress={() => {
-                        setStatusFilter((current) =>
-                          current === filter.id ? 'ALL' : filter.id
-                        );
-                      }}
-                      style={[
-                        styles.statusFilterButton,
-                        filter.id === 'LIVE' && styles.statusFilterLiveIdle,
-                        filter.id === 'FINISHED' &&
-                          styles.statusFilterFinishedIdle,
-                        filter.id === 'UPCOMING' &&
-                          styles.statusFilterUpcomingIdle,
-                        isActive && (
-                          filter.id === 'LIVE'
-                            ? styles.statusFilterLiveActive
-                            : filter.id === 'FINISHED'
-                              ? styles.statusFilterFinishedActive
-                              : styles.statusFilterUpcomingActive
-                        ),
-                      ]}
-                    >
-                      {filter.id === 'LIVE' && (
-                        <View
-                          style={[
-                            styles.filterLiveDot,
-                            isActive && styles.filterLiveDotActive,
-                          ]}
-                        />
-                      )}
-                      <Text
-                        numberOfLines={1}
-                        style={[
-                          styles.statusFilterText,
-                          filter.id === 'LIVE' && styles.statusFilterTextLive,
-                          filter.id === 'FINISHED' &&
-                            styles.statusFilterTextFinished,
-                          filter.id === 'UPCOMING' &&
-                            styles.statusFilterTextUpcoming,
-                          isActive && styles.statusFilterTextActive,
-                        ]}
-                      >
-                        {filter.label}
-                      </Text>
-                      <View
-                        style={[
-                          styles.statusFilterBadge,
-                          filter.id === 'LIVE' && styles.statusFilterBadgeLive,
-                          filter.id === 'FINISHED' &&
-                            styles.statusFilterBadgeFinished,
-                          filter.id === 'UPCOMING' &&
-                            styles.statusFilterBadgeUpcoming,
-                          isActive && styles.statusFilterBadgeActive,
-                        ]}
-                      >
-                        <Text
-                          numberOfLines={1}
-                          style={[
-                            styles.statusFilterBadgeText,
-                            filter.id === 'LIVE' &&
-                              styles.statusFilterBadgeTextLive,
-                            filter.id === 'FINISHED' &&
-                              styles.statusFilterBadgeTextFinished,
-                            filter.id === 'UPCOMING' &&
-                              styles.statusFilterBadgeTextUpcoming,
-                            isActive && styles.statusFilterBadgeTextActive,
-                          ]}
-                        >
-                          {filter.count}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              <View style={styles.lowerLeagueToggle}>
-                <Text style={styles.lowerLeagueText}>
-                  Ordenar jogos por horário de início
-                </Text>
-                <Switch
-                  accessibilityLabel="Ordenar jogos por horário de início"
-                  value={sortChronologically}
-                  onValueChange={setSortChronologically}
-                  trackColor={{ false: '#CBD5E1', true: '#93C5FD' }}
-                  thumbColor={sortChronologically ? '#1D4ED8' : '#FFFFFF'}
-                  style={styles.lowerLeagueSwitch}
-                />
-              </View>
-            </View>
-
+            {/* Sub-selector for Competitions */}
             {activeTab === 'COMPETITIONS' && (
               <View style={styles.competitionSelector}>
                 <ScrollView
@@ -1767,285 +1889,213 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  controlsCard: {
+  modernControlsContainer: {
+    marginBottom: 10,
+    gap: 8,
+  },
+  dateStripWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    marginBottom: 10,
-    gap: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
+    gap: 4,
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
-    shadowRadius: 6,
+    shadowRadius: 4,
     elevation: 1,
   },
-  topControlsRow: {
-    flexDirection: 'column',
-    gap: 8,
-  },
-  topControlsRowWide: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  secondaryControlsRow: {
-    flexDirection: 'column',
-    gap: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-  },
-  secondaryControlsRowWide: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 10,
-  },
-  tabsRow: {
-    flexDirection: 'row',
-    backgroundColor: '#EEF2F6',
-    borderRadius: 8,
-    padding: 3,
-    gap: 4,
-  },
-  tabButton: {
-    flex: 1,
-    minHeight: 34,
-    flexDirection: 'row',
-    paddingVertical: 6,
-    paddingHorizontal: 8,
+  calendarMiniBtn: {
+    width: 38,
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 6,
-    gap: 4,
+    marginRight: 2,
   },
-  tabButtonActive: {
-    backgroundColor: '#1652D0',
+  calendarMiniIcon: {
+    fontSize: 16,
   },
-  tabText: {
-    color: '#334155',
-    fontFamily: FONT_SANS,
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: '600',
-    textAlign: 'center',
+  dateStripArrow: {
+    width: 24,
+    height: 48,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F8FAFC',
   },
-  tabTextActive: {
-    color: '#FFFFFF',
+  dateStripArrowText: {
+    color: '#64748B',
+    fontSize: 18,
+    lineHeight: 20,
     fontWeight: '700',
   },
-  tabBadge: {
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    paddingHorizontal: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#CBD5E1',
-  },
-  tabBadgeActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-  },
-  tabBadgeText: {
-    color: '#334155',
-    fontFamily: FONT_SANS,
-    fontSize: 9,
-    lineHeight: 12,
-    fontWeight: '600',
-    fontVariant: ['tabular-nums'],
-  },
-  tabBadgeTextActive: {
-    color: '#FFFFFF',
-  },
-  dateSelectorRow: {
-    height: 36,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 8,
-    paddingHorizontal: 4,
-  },
-  selectedDateLabel: {
-    color: '#0F172A',
-    fontFamily: FONT_DISPLAY,
-    fontSize: 11,
-    lineHeight: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-    fontVariant: ['tabular-nums'],
-  },
-  dateArrow: {
-    width: 32,
-    height: 28,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F1F5F9',
-  },
-  dateArrowText: {
-    color: '#334155',
-    fontSize: 16,
-    lineHeight: 18,
-    fontWeight: '600',
-  },
-  dateCenterButton: {
-    flex: 1,
-    minWidth: 104,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 2,
-    paddingHorizontal: 8,
-  },
-  dateSubLabel: {
-    color: '#64748B',
-    fontFamily: FONT_SANS,
-    fontSize: 9,
-    lineHeight: 12,
-    fontWeight: '600',
-    textTransform: 'capitalize',
-    fontVariant: ['tabular-nums'],
-  },
-  statusFiltersRow: {
+  dateStripScroll: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    paddingHorizontal: 2,
   },
-  statusFilterButton: {
-    flex: 1,
-    height: 36,
-    flexDirection: 'row',
+  dayCapsule: {
+    minWidth: 44,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 6,
-    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    backgroundColor: '#FFFFFF',
   },
-  statusFilterLiveIdle: {
+  dayCapsuleActive: {
+    backgroundColor: '#1652D0',
+    borderColor: '#1652D0',
+    shadowColor: '#1652D0',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  dayCapsuleToday: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#BFDBFE',
+  },
+  dayCapsuleWeek: {
+    color: '#64748B',
+    fontSize: 9.5,
+    lineHeight: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  dayCapsuleWeekActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
+  dayCapsuleWeekToday: {
+    color: '#1D4ED8',
+    fontWeight: '800',
+  },
+  dayCapsuleNum: {
+    color: '#0F172A',
+    fontFamily: FONT_DISPLAY,
+    fontSize: 14,
+    lineHeight: 17,
+    fontWeight: '800',
+    marginTop: 1,
+    fontVariant: ['tabular-nums'],
+  },
+  dayCapsuleNumActive: {
+    color: '#FFFFFF',
+  },
+  dayCapsuleNumToday: {
+    color: '#1D4ED8',
+  },
+  filterPillsRow: {
+    flexDirection: 'row',
+  },
+  filterPillsContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 2,
+  },
+  pillFilter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  pillFilterActive: {
+    backgroundColor: '#1652D0',
+    borderColor: '#1652D0',
+    shadowColor: '#1652D0',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  pillFilterLive: {
     backgroundColor: '#FEF2F2',
     borderColor: '#FECACA',
   },
-  statusFilterFinishedIdle: {
-    backgroundColor: '#F8FAFC',
-    borderColor: '#E2E8F0',
-  },
-  statusFilterUpcomingIdle: {
-    backgroundColor: '#F8FAFC',
-    borderColor: '#E2E8F0',
-  },
-  statusFilterLiveActive: {
+  pillFilterLiveActive: {
     backgroundColor: '#DC2626',
     borderColor: '#DC2626',
+    shadowColor: '#DC2626',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  statusFilterFinishedActive: {
-    backgroundColor: '#1E293B',
-    borderColor: '#1E293B',
-  },
-  statusFilterUpcomingActive: {
-    backgroundColor: '#2563EB',
-    borderColor: '#2563EB',
-  },
-  filterLiveDot: {
+  pillLiveDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: '#DC2626',
-    marginRight: 4,
   },
-  filterLiveDotActive: {
+  pillLiveDotActive: {
     backgroundColor: '#FFFFFF',
   },
-  statusFilterText: {
+  pillFilterText: {
     color: '#475569',
     fontFamily: FONT_SANS,
     fontSize: 11,
     lineHeight: 14,
-    fontWeight: '600',
-  },
-  statusFilterTextLive: {
-    color: '#DC2626',
-  },
-  statusFilterTextFinished: {
-    color: '#475569',
-  },
-  statusFilterTextUpcoming: {
-    color: '#475569',
-  },
-  statusFilterTextActive: {
-    color: '#FFFFFF',
     fontWeight: '700',
   },
-  statusFilterBadge: {
-    minWidth: 18,
-    height: 18,
+  pillFilterTextLive: {
+    color: '#DC2626',
+  },
+  pillFilterTextActive: {
+    color: '#FFFFFF',
+  },
+  pillBadge: {
+    minWidth: 17,
+    height: 17,
     borderRadius: 9,
     paddingHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 4,
     backgroundColor: '#E2E8F0',
   },
-  statusFilterBadgeLive: {
+  pillBadgeActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.26)',
+  },
+  pillBadgeLive: {
     backgroundColor: '#FEE2E2',
   },
-  statusFilterBadgeFinished: {
-    backgroundColor: '#E2E8F0',
+  pillBadgeLiveActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.26)',
   },
-  statusFilterBadgeUpcoming: {
-    backgroundColor: '#E2E8F0',
-  },
-  statusFilterBadgeActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
-  },
-  statusFilterBadgeText: {
+  pillBadgeText: {
     color: '#334155',
     fontFamily: FONT_SANS,
-    fontSize: 9,
+    fontSize: 9.5,
     lineHeight: 12,
-    fontWeight: '600',
+    fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
-  statusFilterBadgeTextLive: {
+  pillBadgeTextLive: {
     color: '#B91C1C',
   },
-  statusFilterBadgeTextFinished: {
-    color: '#475569',
-  },
-  statusFilterBadgeTextUpcoming: {
-    color: '#475569',
-  },
-  statusFilterBadgeTextActive: {
+  pillBadgeTextActive: {
     color: '#FFFFFF',
-  },
-  lowerLeagueToggle: {
-    minHeight: 32,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 6,
-    paddingLeft: 10,
-    paddingRight: 4,
-    borderRadius: 8,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  lowerLeagueText: {
-    color: '#334155',
-    fontSize: 10,
-    lineHeight: 13,
-    fontWeight: '700',
-  },
-  lowerLeagueSwitch: {
-    transform: [{ scaleX: 0.75 }, { scaleY: 0.75 }],
   },
   competitionSelector: {
     paddingTop: 8,
