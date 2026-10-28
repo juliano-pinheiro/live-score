@@ -6,16 +6,16 @@
   <title>Next Score Android — Preview Interativo Moderno</title>
   <style>
     :root {
-      --bg: #F3F6FA;
+      --bg: #F1F5F9;
       --card: #FFFFFF;
       --card-goal: #ECFDF5;
       --border: #E2E8F0;
-      --header-bg: #1652D0;
-      --header-dark: #0F3DA6;
-      --accent: #1652D0;
+      --header-bg: #0B4FD8;
+      --header-dark: #083EA8;
+      --accent: #0B4FD8;
       --accent-cyan: #38BDF8;
-      --live-red: #E11D48;
-      --live-red-bg: #FFE4E6;
+      --live-red: #EF4444;
+      --live-red-bg: #FEF2F2;
       --text: #0F172A;
       --text-secondary: #334155;
       --muted: #64748B;
@@ -23,7 +23,7 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Plus Jakarta Sans', sans-serif; }
     body {
-      background: linear-gradient(135deg, #E6EDF5 0%, #D8E2EE 100%);
+      background: linear-gradient(135deg, #E2E8F0 0%, #CBD5E1 100%);
       color: var(--text);
       display: flex;
       justify-content: center;
@@ -44,10 +44,10 @@
       position: relative;
     }
     .top-header {
-      background: linear-gradient(180deg, #1856D6 0%, #134BC4 100%);
+      background: linear-gradient(180deg, #0B4FD8 0%, #083EA8 100%);
       color: #FFFFFF;
       padding: 14px 16px 14px;
-      box-shadow: 0 4px 14px rgba(22, 82, 208, 0.25);
+      box-shadow: 0 4px 14px rgba(11, 79, 216, 0.25);
       z-index: 5;
     }
     .status-bar {
@@ -358,23 +358,25 @@
     }
     .league-flag { font-size: 16px; }
     .league-info { display: flex; flex-direction: column; }
+    .league-country {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
     .league-name {
       font-size: 13px;
       font-weight: 800;
       color: var(--text);
-    }
-    .league-country {
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
+      margin-top: 1px;
     }
     .league-count-badge {
       font-size: 10px;
       font-weight: 700;
-      color: var(--accent);
-      background: #EFF6FF;
+      color: var(--muted);
+      background: #F1F5F9;
+      border: 1px solid var(--border);
       padding: 2px 7px;
       border-radius: 999px;
     }
@@ -739,8 +741,8 @@
             <div class="league-header-left">
               <span class="league-flag">${m.flag}</span>
               <div class="league-info">
-                <span class="league-name">${m.league}</span>
                 <span class="league-country">${m.country}</span>
+                <span class="league-name">${m.league}</span>
               </div>
             </div>
             <span class="league-count-badge">1 JOGO</span>

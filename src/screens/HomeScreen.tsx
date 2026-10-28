@@ -185,6 +185,17 @@ const LeagueGroupItem = React.memo<LeagueGroupItemProps>(
             <CountryFlag country={group.leagueCountry} size={18} />
           </View>
           <View style={styles.leagueGroupTitle}>
+            {Boolean(group.leagueCountry) && (
+              <Text
+                style={[
+                  styles.leagueGroupCountry,
+                  isPinned && styles.leagueGroupCountryPinned,
+                ]}
+                numberOfLines={1}
+              >
+                {group.leagueCountry.toUpperCase()}
+              </Text>
+            )}
             <Text
               style={[
                 styles.leagueGroupName,
@@ -193,15 +204,6 @@ const LeagueGroupItem = React.memo<LeagueGroupItemProps>(
               numberOfLines={1}
             >
               {group.leagueName}
-            </Text>
-            <Text
-              style={[
-                styles.leagueGroupCountry,
-                isPinned && styles.leagueGroupCountryPinned,
-              ]}
-              numberOfLines={1}
-            >
-              {group.leagueCountry}
             </Text>
           </View>
           <View style={styles.leagueGroupHeaderRight}>
@@ -903,12 +905,13 @@ export const HomeScreen: React.FC = () => {
         </View>
       </View>
 
-      <View
-        style={[
-          styles.container,
-          showSideDetails && styles.containerDesktop,
-        ]}
-      >
+      <View style={styles.screenCanvas}>
+        <View
+          style={[
+            styles.container,
+            showSideDetails && styles.containerDesktop,
+          ]}
+        >
         {/* Left Sidebar on wide Desktop: Quick Competition Navigator */}
         {showDesktopSidebar && (
           <View style={styles.leagueSidebar}>
@@ -1652,6 +1655,7 @@ export const HomeScreen: React.FC = () => {
             </View>
           </View>
         </Modal>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -1660,16 +1664,20 @@ export const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F3F6FA',
+    backgroundColor: '#0B4FD8',
+  },
+  screenCanvas: {
+    flex: 1,
+    backgroundColor: '#F1F5F9',
   },
   topNavbar: {
     width: '100%',
-    backgroundColor: '#1652D0',
+    backgroundColor: '#0B4FD8',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.16)',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    shadowColor: '#1652D0',
+    shadowColor: '#0B4FD8',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.22,
     shadowRadius: 10,
@@ -1693,7 +1701,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 11,
-    backgroundColor: '#0F3DA6',
+    backgroundColor: '#083EA8',
     borderWidth: 1.5,
     borderColor: 'rgba(255, 255, 255, 0.35)',
     alignItems: 'center',
@@ -1953,9 +1961,9 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
   },
   dayCapsuleActive: {
-    backgroundColor: '#1652D0',
-    borderColor: '#1652D0',
-    shadowColor: '#1652D0',
+    backgroundColor: '#0B4FD8',
+    borderColor: '#0B4FD8',
+    shadowColor: '#0B4FD8',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -1963,7 +1971,7 @@ const styles = StyleSheet.create({
   },
   dayCapsuleToday: {
     backgroundColor: '#EFF6FF',
-    borderColor: '#BFDBFE',
+    borderColor: '#93C5FD',
   },
   dayCapsuleWeek: {
     color: '#64748B',
@@ -1978,7 +1986,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   dayCapsuleWeekToday: {
-    color: '#1D4ED8',
+    color: '#0B4FD8',
     fontWeight: '800',
   },
   dayCapsuleNum: {
@@ -1994,7 +2002,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   dayCapsuleNumToday: {
-    color: '#1D4ED8',
+    color: '#0B4FD8',
   },
   filterPillsRow: {
     flexDirection: 'row',
@@ -2022,9 +2030,9 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   pillFilterActive: {
-    backgroundColor: '#1652D0',
-    borderColor: '#1652D0',
-    shadowColor: '#1652D0',
+    backgroundColor: '#0B4FD8',
+    borderColor: '#0B4FD8',
+    shadowColor: '#0B4FD8',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -2035,9 +2043,9 @@ const styles = StyleSheet.create({
     borderColor: '#FECACA',
   },
   pillFilterLiveActive: {
-    backgroundColor: '#DC2626',
-    borderColor: '#DC2626',
-    shadowColor: '#DC2626',
+    backgroundColor: '#EF4444',
+    borderColor: '#EF4444',
+    shadowColor: '#EF4444',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -2047,7 +2055,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#DC2626',
+    backgroundColor: '#EF4444',
   },
   pillLiveDotActive: {
     backgroundColor: '#FFFFFF',
@@ -2060,7 +2068,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   pillFilterTextLive: {
-    color: '#DC2626',
+    color: '#EF4444',
   },
   pillFilterTextActive: {
     color: '#FFFFFF',
@@ -2395,16 +2403,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
-    marginBottom: 12,
+    borderColor: '#E2E8F0',
+    marginBottom: 10,
     overflow: 'hidden',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
   },
   leagueGroupPinned: {
     borderColor: '#FCD34D',
     backgroundColor: '#FFFBEB',
   },
   leagueGroupHeader: {
-    minHeight: 42,
+    minHeight: 40,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
@@ -2413,7 +2426,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
     borderLeftWidth: 3.5,
-    borderLeftColor: '#1652D0',
+    borderLeftColor: '#0B4FD8',
   },
   leagueGroupHeaderPinned: {
     backgroundColor: '#FEF3C7',
@@ -2441,12 +2454,13 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   leagueGroupCountry: {
-    color: '#1652D0',
+    color: '#64748B',
     fontFamily: FONT_SANS,
-    fontSize: 10,
-    lineHeight: 14,
+    fontSize: 9,
+    lineHeight: 12,
     fontWeight: '700',
-    marginTop: 1,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   leagueGroupCountryPinned: {
     color: '#B45309',
@@ -2455,31 +2469,35 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     fontFamily: FONT_SANS,
     flexShrink: 1,
-    fontSize: 12,
-    lineHeight: 18,
-    fontWeight: '600',
+    fontSize: 12.5,
+    lineHeight: 17,
+    fontWeight: '700',
+    marginTop: 1,
   },
   leagueGroupNamePinned: {
     color: '#92400E',
   },
   leagueGroupCountPill: {
-    minWidth: 24,
-    paddingHorizontal: 7,
+    minWidth: 22,
+    paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 999,
-    backgroundColor: '#DBEAFE',
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
   },
   leagueGroupCountPillPinned: {
     backgroundColor: '#FDE68A',
+    borderColor: '#FCD34D',
   },
   leagueGroupCount: {
-    color: '#1E40AF',
+    color: '#475569',
     fontFamily: FONT_DISPLAY,
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: '600',
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
   leagueGroupCountPinned: {

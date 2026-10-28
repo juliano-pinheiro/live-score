@@ -415,7 +415,7 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
                     transform: [{ scale: homeScoreScale }],
                     color: homeScoreHighlight.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [isLive ? '#CB1818' : '#000000', '#16A34A'],
+                      outputRange: [isLive ? '#EF4444' : '#0F172A', '#16A34A'],
                     }),
                   }
                 : null,
@@ -484,7 +484,7 @@ const MatchCardComponent: React.FC<MatchCardProps> = ({
                     transform: [{ scale: awayScoreScale }],
                     color: awayScoreHighlight.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [isLive ? '#CB1818' : '#000000', '#16A34A'],
+                      outputRange: [isLive ? '#EF4444' : '#0F172A', '#16A34A'],
                     }),
                   }
                 : null,
@@ -561,20 +561,20 @@ const styles = StyleSheet.create({
     zIndex: 10,
     elevation: 10,
     borderWidth: 2,
-    borderColor: '#1652D0',
-    backgroundColor: 'rgba(22, 82, 208, 0.12)',
+    borderColor: '#0B4FD8',
+    backgroundColor: 'rgba(11, 79, 216, 0.12)',
     borderRadius: 10,
   },
   cardLive: {
     backgroundColor: '#FFFDFD',
-    borderLeftColor: '#E11D48',
+    borderLeftColor: '#EF4444',
   },
   cardPinned: {
-    borderLeftColor: '#1652D0',
+    borderLeftColor: '#0B4FD8',
   },
   cardSelected: {
     backgroundColor: '#EFF6FF',
-    borderLeftColor: '#1652D0',
+    borderLeftColor: '#0B4FD8',
   },
   statusColumn: {
     width: 48,
@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
     color: '#475569',
     fontFamily: FONT_DISPLAY,
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '700',
     lineHeight: 15,
     fontVariant: ['tabular-nums'],
   },
@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 3,
-    backgroundColor: '#CB1818',
+    backgroundColor: '#EF4444',
     marginRight: 3,
   },
   liveDotHalftime: {
@@ -612,21 +612,23 @@ const styles = StyleSheet.create({
     fontFamily: FONT_DISPLAY,
     fontSize: 10,
     lineHeight: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
   statusTextLive: {
-    color: '#CB1818',
+    color: '#EF4444',
+    fontWeight: '800',
   },
   statusTextHalftime: {
     color: '#D97706',
+    fontWeight: '800',
   },
   statusTextScheduled: {
     color: '#64748B',
     fontFamily: FONT_DISPLAY,
-    fontSize: 9,
+    fontSize: 9.5,
     lineHeight: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   teamsColumn: {
     flex: 1,
@@ -649,13 +651,13 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     fontFamily: FONT_SANS,
     flexShrink: 1,
-    fontSize: 12,
+    fontSize: 12.5,
     lineHeight: 18,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   teamNameWinner: {
     color: '#000000',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   teamNameLoser: {
     color: '#64748B',
@@ -666,16 +668,16 @@ const styles = StyleSheet.create({
     fontFamily: FONT_SCORE,
     minWidth: 20,
     textAlign: 'right',
-    fontSize: 14.5,
+    fontSize: 15,
     lineHeight: 18,
-    fontWeight: '500',
+    fontWeight: '700',
     fontVariant: ['tabular-nums'],
     letterSpacing: 0.2,
   },
   scoreWinner: {
     color: '#000000',
-    fontWeight: '500',
-    fontSize: 14.5,
+    fontWeight: '700',
+    fontSize: 15,
   },
   scoreLoser: {
     color: '#94A3B8',
@@ -683,8 +685,8 @@ const styles = StyleSheet.create({
     opacity: 0.65,
   },
   scoreLive: {
-    color: '#CB1818',
-    fontWeight: '500',
+    color: '#EF4444',
+    fontWeight: '800',
   },
   redCard: {
     minWidth: 10,
@@ -745,22 +747,22 @@ const styles = StyleSheet.create({
     height: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 9,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
-    backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
+    backgroundColor: '#F8FAFC',
   },
   pinButtonActive: {
-    borderColor: '#CBD5E1',
-    backgroundColor: '#FFFFFF',
+    borderColor: '#FDE68A',
+    backgroundColor: '#FEF3C7',
   },
   pinIcon: {
     fontSize: 18,
     lineHeight: 20,
-    color: '#64748B',
+    color: '#94A3B8',
   },
   pinIconActive: {
-    color: '#FACC15',
+    color: '#D97706',
   },
 });
 

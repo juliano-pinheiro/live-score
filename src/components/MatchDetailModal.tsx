@@ -3263,7 +3263,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(23, 43, 37, 0.38)',
+    backgroundColor: 'rgba(15, 23, 42, 0.48)',
     justifyContent: 'flex-end',
   },
   backdropWide: {
@@ -3277,7 +3277,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   sheet: {
-    backgroundColor: '#F8FAF9',
+    backgroundColor: '#F8FAFC',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 12,
@@ -3286,7 +3286,7 @@ const styles = StyleSheet.create({
     height: '92%',
     maxHeight: '92%',
     borderTopWidth: 1,
-    borderColor: '#DCE6E1',
+    borderColor: '#E2E8F0',
   },
   sheetWide: {
     width: '92%',
@@ -3294,6 +3294,8 @@ const styles = StyleSheet.create({
     maxHeight: '78%',
     borderRadius: 20,
     borderWidth: 1,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#F8FAFC',
     paddingHorizontal: 18,
     paddingTop: 14,
     paddingBottom: 18,
@@ -3307,7 +3309,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#DCE6E1',
+    borderColor: '#E2E8F0',
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 12,
@@ -3359,7 +3361,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   leagueHeader: {
-    color: '#1652D0',
+    color: '#0B4FD8',
     fontSize: 10,
     lineHeight: 13,
     fontWeight: '800',
@@ -3384,7 +3386,7 @@ const styles = StyleSheet.create({
     borderRadius: 7,
   },
   tabButtonActive: {
-    backgroundColor: '#1652D0',
+    backgroundColor: '#0B4FD8',
   },
   tabText: {
     color: '#334155',
@@ -3401,7 +3403,7 @@ const styles = StyleSheet.create({
     height: 30,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#DBEAFE',
+    backgroundColor: '#EFF6FF',
     borderRadius: 7,
   },
   tabScrollButtonLeft: {
@@ -3411,7 +3413,7 @@ const styles = StyleSheet.create({
     marginLeft: 3,
   },
   tabScrollButtonText: {
-    color: '#1D4ED8',
+    color: '#0B4FD8',
     fontSize: 16,
     lineHeight: 18,
     fontWeight: '800',
@@ -3424,13 +3426,18 @@ const styles = StyleSheet.create({
   },
   heroScoreboard: {
     flexDirection: 'column',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 10,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
   },
   heroScoreboardTopRow: {
     flexDirection: 'row',
