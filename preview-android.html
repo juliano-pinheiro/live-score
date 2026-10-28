@@ -171,23 +171,6 @@
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.4; transform: scale(1.3); }
     }
-    .header-refresh-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.14);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      color: #FFFFFF;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .header-refresh-btn:hover {
-      background: rgba(255, 255, 255, 0.25);
-    }
 
     .app-content {
       flex: 1;
@@ -616,9 +599,6 @@
             <span class="live-dot"></span>
             <span id="headerLiveText">3 AO VIVO</span>
           </button>
-          <button class="header-refresh-btn" onclick="triggerRefresh()">
-            🔄
-          </button>
         </div>
       </div>
     </div>
@@ -811,17 +791,6 @@
         setFilter('LIVE');
         document.getElementById('headerLiveBtn').classList.add('active');
       }
-    }
-
-    function triggerRefresh() {
-      const btn = document.querySelector('.header-refresh-btn');
-      btn.style.transform = 'rotate(360deg)';
-      btn.style.transition = 'transform 0.5s ease';
-      setTimeout(() => {
-        btn.style.transform = 'rotate(0deg)';
-        btn.style.transition = 'none';
-        renderMatches();
-      }, 500);
     }
 
     function openModal(matchId) {

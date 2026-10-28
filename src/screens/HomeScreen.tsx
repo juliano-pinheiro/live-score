@@ -893,19 +893,6 @@ export const HomeScreen: React.FC = () => {
                 {liveCount > 0 ? `${liveCount} AO VIVO` : 'AO VIVO'}
               </Text>
             </TouchableOpacity>
-
-            <TouchableOpacity
-              accessibilityRole="button"
-              accessibilityLabel="Atualizar placares"
-              activeOpacity={0.75}
-              onPress={handleRefresh}
-              style={[
-                styles.headerRefreshBtn,
-                isLoading && styles.headerRefreshBtnLoading,
-              ]}
-            >
-              <Text style={styles.headerRefreshIcon}>🔄</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -1803,22 +1790,6 @@ const styles = StyleSheet.create({
   },
   headerLiveTextActive: {
     color: '#FFFFFF',
-  },
-  headerRefreshBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 229, 255, 0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerRefreshBtnLoading: {
-    opacity: 0.5,
-  },
-  headerRefreshIcon: {
-    fontSize: 13,
   },
   subtitle: {
     color: '#94A3B8',
