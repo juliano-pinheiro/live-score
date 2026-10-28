@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AppState,
   FlatList,
+  Image,
   Modal,
   Platform,
   SafeAreaView,
@@ -846,8 +847,12 @@ export const HomeScreen: React.FC = () => {
             style={styles.brandCluster}
           >
             <View style={styles.brandLogoMark}>
+              <Image
+                source={require('../../assets/logo.png')}
+                style={styles.brandLogoImage}
+                resizeMode="cover"
+              />
               <View style={styles.brandLivePulseDot} />
-              <Text style={styles.brandLogoIcon}>⚽</Text>
             </View>
             <View style={styles.brandTextColumn}>
               <View style={styles.brandRow}>
@@ -1664,7 +1669,7 @@ export const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0B4FD8',
+    backgroundColor: '#090D16',
   },
   screenCanvas: {
     flex: 1,
@@ -1672,14 +1677,14 @@ const styles = StyleSheet.create({
   },
   topNavbar: {
     width: '100%',
-    backgroundColor: '#0B4FD8',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.16)',
+    backgroundColor: '#090D16',
+    borderBottomWidth: 1.5,
+    borderBottomColor: 'rgba(0, 229, 255, 0.28)',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    shadowColor: '#0B4FD8',
+    shadowColor: '#00E5FF',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.22,
+    shadowOpacity: 0.18,
     shadowRadius: 10,
     elevation: 4,
   },
@@ -1698,24 +1703,34 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   brandLogoMark: {
-    width: 38,
-    height: 38,
-    borderRadius: 11,
-    backgroundColor: '#083EA8',
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#05070D',
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.35)',
+    borderColor: '#00E5FF',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+    overflow: 'hidden',
+    shadowColor: '#00E5FF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  brandLogoImage: {
+    width: '100%',
+    height: '100%',
   },
   brandLivePulseDot: {
     position: 'absolute',
-    top: 3,
-    right: 3,
+    top: 2,
+    right: 2,
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: '#EF4444',
+    backgroundColor: '#00FF66',
   },
   brandLogoIcon: {
     fontSize: 18,
@@ -1735,7 +1750,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   brandAccent: {
-    color: '#38BDF8',
+    color: '#00E5FF',
     fontSize: 18,
     lineHeight: 22,
     fontWeight: '900',
@@ -1743,7 +1758,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   brandSubtitle: {
-    color: '#BFDBFE',
+    color: '#00FF66',
     fontSize: 8.5,
     lineHeight: 11,
     marginTop: 1,
@@ -1759,25 +1774,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.16)',
+    backgroundColor: 'rgba(0, 229, 255, 0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.28)',
+    borderColor: 'rgba(0, 229, 255, 0.35)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 999,
   },
   headerLivePillActive: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#FFFFFF',
+    backgroundColor: '#EF4444',
+    borderColor: '#EF4444',
   },
   headerLiveDot: {
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: '#F87171',
+    backgroundColor: '#EF4444',
   },
   headerLiveDotActive: {
-    backgroundColor: '#DC2626',
+    backgroundColor: '#FFFFFF',
   },
   headerLiveText: {
     color: '#FFFFFF',
@@ -1787,15 +1802,15 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   headerLiveTextActive: {
-    color: '#DC2626',
+    color: '#FFFFFF',
   },
   headerRefreshBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
+    borderColor: 'rgba(0, 229, 255, 0.25)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1961,17 +1976,17 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
   },
   dayCapsuleActive: {
-    backgroundColor: '#0B4FD8',
-    borderColor: '#0B4FD8',
-    shadowColor: '#0B4FD8',
+    backgroundColor: '#090D16',
+    borderColor: '#00E5FF',
+    shadowColor: '#00E5FF',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowOpacity: 0.35,
+    shadowRadius: 5,
     elevation: 3,
   },
   dayCapsuleToday: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#93C5FD',
+    backgroundColor: '#F0FDF4',
+    borderColor: '#86EFAC',
   },
   dayCapsuleWeek: {
     color: '#64748B',
@@ -1982,11 +1997,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   dayCapsuleWeekActive: {
-    color: '#FFFFFF',
+    color: '#00E5FF',
     fontWeight: '800',
   },
   dayCapsuleWeekToday: {
-    color: '#0B4FD8',
+    color: '#16A34A',
     fontWeight: '800',
   },
   dayCapsuleNum: {
@@ -2002,7 +2017,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   dayCapsuleNumToday: {
-    color: '#0B4FD8',
+    color: '#16A34A',
   },
   filterPillsRow: {
     flexDirection: 'row',
@@ -2030,11 +2045,11 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   pillFilterActive: {
-    backgroundColor: '#0B4FD8',
-    borderColor: '#0B4FD8',
-    shadowColor: '#0B4FD8',
+    backgroundColor: '#090D16',
+    borderColor: '#00E5FF',
+    shadowColor: '#00E5FF',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 2,
   },
@@ -2071,7 +2086,7 @@ const styles = StyleSheet.create({
     color: '#EF4444',
   },
   pillFilterTextActive: {
-    color: '#FFFFFF',
+    color: '#00E5FF',
   },
   pillBadge: {
     minWidth: 17,
@@ -2083,7 +2098,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E2E8F0',
   },
   pillBadgeActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.26)',
+    backgroundColor: 'rgba(0, 229, 255, 0.22)',
   },
   pillBadgeLive: {
     backgroundColor: '#FEE2E2',
@@ -2103,7 +2118,7 @@ const styles = StyleSheet.create({
     color: '#B91C1C',
   },
   pillBadgeTextActive: {
-    color: '#FFFFFF',
+    color: '#00E5FF',
   },
   competitionSelector: {
     paddingTop: 8,
@@ -2126,8 +2141,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFF6FF',
   },
   competitionChipActive: {
-    backgroundColor: '#1D4ED8',
-    borderColor: '#1D4ED8',
+    backgroundColor: '#090D16',
+    borderColor: '#00E5FF',
   },
   competitionChipText: {
     color: '#1E3A8A',
@@ -2136,7 +2151,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   competitionChipTextActive: {
-    color: '#FFFFFF',
+    color: '#00E5FF',
     fontWeight: '800',
   },
   errorBanner: {
@@ -2173,22 +2188,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#1652D0',
+    backgroundColor: '#090D16',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.3)',
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 9,
     marginBottom: 8,
   },
   sidebarTitle: {
-    color: '#FFFFFF',
+    color: '#00E5FF',
     fontSize: 10,
     lineHeight: 13,
-    fontWeight: '700',
+    fontWeight: '800',
     letterSpacing: 0.8,
   },
   sidebarBadgeCount: {
-    color: '#1E3A8A',
-    backgroundColor: '#93C5FD',
+    color: '#00E5FF',
+    backgroundColor: 'rgba(0, 229, 255, 0.15)',
     fontSize: 10,
     lineHeight: 13,
     fontWeight: '600',
@@ -2426,12 +2443,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
     borderLeftWidth: 3.5,
-    borderLeftColor: '#0B4FD8',
+    borderLeftColor: '#00D2FF',
   },
   leagueGroupHeaderPinned: {
-    backgroundColor: '#FEF3C7',
-    borderBottomColor: '#FDE68A',
-    borderLeftColor: '#D97706',
+    backgroundColor: '#F0FDF4',
+    borderBottomColor: '#BBF7D0',
+    borderLeftColor: '#00FF66',
   },
   leagueGroupHeaderCollapsed: {
     borderBottomWidth: 0,

@@ -10,10 +10,11 @@
       --card: #FFFFFF;
       --card-goal: #ECFDF5;
       --border: #E2E8F0;
-      --header-bg: #0B4FD8;
-      --header-dark: #083EA8;
-      --accent: #0B4FD8;
-      --accent-cyan: #38BDF8;
+      --header-bg: #090D16;
+      --header-dark: #05070D;
+      --accent: #00E5FF;
+      --accent-cyan: #00E5FF;
+      --accent-green: #00FF66;
       --live-red: #EF4444;
       --live-red-bg: #FEF2F2;
       --text: #0F172A;
@@ -23,7 +24,7 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Plus Jakarta Sans', sans-serif; }
     body {
-      background: linear-gradient(135deg, #E2E8F0 0%, #CBD5E1 100%);
+      background: linear-gradient(135deg, #0A0F1D 0%, #111827 100%);
       color: var(--text);
       display: flex;
       justify-content: center;
@@ -36,18 +37,19 @@
       height: 840px;
       background: var(--bg);
       border-radius: 40px;
-      border: 10px solid #FFFFFF;
-      box-shadow: 0 24px 60px rgba(15, 35, 75, 0.18), 0 4px 16px rgba(0,0,0,0.06);
+      border: 10px solid #1E293B;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 229, 255, 0.15);
       display: flex;
       flex-direction: column;
       overflow: hidden;
       position: relative;
     }
     .top-header {
-      background: linear-gradient(180deg, #0B4FD8 0%, #083EA8 100%);
+      background: linear-gradient(180deg, #090D16 0%, #0D1322 100%);
       color: #FFFFFF;
       padding: 14px 16px 14px;
-      box-shadow: 0 4px 14px rgba(11, 79, 216, 0.25);
+      border-bottom: 1.5px solid rgba(0, 229, 255, 0.28);
+      box-shadow: 0 4px 16px rgba(0, 229, 255, 0.12);
       z-index: 5;
     }
     .status-bar {
@@ -71,29 +73,38 @@
       cursor: pointer;
     }
     .brand-logo-mark {
-      width: 38px;
-      height: 38px;
-      border-radius: 11px;
-      background: #0D3FA8;
-      border: 1.5px solid rgba(255, 255, 255, 0.35);
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: #05070D;
+      border: 1.5px solid #00E5FF;
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      overflow: hidden;
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.35);
+    }
+    .brand-logo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
     .brand-live-pulse-dot {
       position: absolute;
-      top: 3px;
-      right: 3px;
-      width: 8px;
-      height: 8px;
+      top: 2px;
+      right: 2px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
-      background: #EF4444;
-      border: 1.5px solid #0D3FA8;
-      animation: pulse-red 1.2s infinite;
+      background: #00FF66;
+      box-shadow: 0 0 6px #00FF66;
+      animation: pulse-green 1.2s infinite;
     }
-    .brand-logo-icon { font-size: 18px; }
+    @keyframes pulse-green {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.3); }
+    }
     .brand-text-col { display: flex; flex-direction: column; }
     .brand-title-row { display: flex; align-items: center; gap: 4px; }
     .brand-title {
@@ -110,7 +121,11 @@
       letter-spacing: 0.8px;
     }
     .brand-sub {
-      color: #BFDBFE;
+      color: #00FF66;
+      font-size: 8.5px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
       font-size: 9px;
       font-weight: 700;
       letter-spacing: 0.5px;
@@ -234,13 +249,13 @@
       flex-shrink: 0;
     }
     .day-capsule.active {
-      background: var(--accent);
-      border-color: var(--accent);
-      box-shadow: 0 2px 6px rgba(22, 82, 208, 0.3);
+      background: #090D16;
+      border-color: #00E5FF;
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.35);
     }
     .day-capsule.today:not(.active) {
-      background: #EFF6FF;
-      border-color: #BFDBFE;
+      background: #F0FDF4;
+      border-color: #86EFAC;
     }
     .day-capsule-week {
       font-size: 9px;
@@ -250,11 +265,11 @@
       letter-spacing: 0.3px;
     }
     .day-capsule.active .day-capsule-week {
-      color: #FFFFFF;
+      color: #00E5FF;
       font-weight: 800;
     }
     .day-capsule.today:not(.active) .day-capsule-week {
-      color: #1D4ED8;
+      color: #16A34A;
     }
     .day-capsule-num {
       font-size: 14px;
@@ -267,7 +282,7 @@
       color: #FFFFFF;
     }
     .day-capsule.today:not(.active) .day-capsule-num {
-      color: #1D4ED8;
+      color: #16A34A;
     }
 
     .filter-pills-bar {
@@ -295,10 +310,10 @@
       box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
     }
     .pill-btn.active {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #FFFFFF;
-      box-shadow: 0 2px 6px rgba(22, 82, 208, 0.25);
+      background: #090D16;
+      border-color: #00E5FF;
+      color: #00E5FF;
+      box-shadow: 0 0 8px rgba(0, 229, 255, 0.25);
     }
     .pill-btn.live {
       background: #FEF2F2;
@@ -325,8 +340,8 @@
       font-weight: 800;
     }
     .pill-btn.active .pill-badge {
-      background: rgba(255, 255, 255, 0.28);
-      color: #FFFFFF;
+      background: rgba(0, 229, 255, 0.2);
+      color: #00E5FF;
     }
     .pill-btn.live:not(.active) .pill-badge {
       background: #FEE2E2;
@@ -349,7 +364,7 @@
       padding: 9px 12px;
       background: #FFFFFF;
       border-bottom: 1px solid #F1F5F9;
-      border-left: 3.5px solid var(--accent);
+      border-left: 3.5px solid var(--accent-cyan);
     }
     .league-header-left {
       display: flex;
@@ -585,8 +600,8 @@
       <div class="header-main">
         <div class="brand-cluster" onclick="setTab('ALL')">
           <div class="brand-logo-mark">
+            <img src="./assets/logo.png" alt="Next Score" class="brand-logo-img">
             <div class="brand-live-pulse-dot"></div>
-            <span class="brand-logo-icon">⚽</span>
           </div>
           <div class="brand-text-col">
             <div class="brand-title-row">

@@ -113,39 +113,39 @@ export default function App() {
 const styles = StyleSheet.create({
   errorContainer: {
     flex: 1,
-    backgroundColor: '#F3F6FA',
+    backgroundColor: '#090D16',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
   },
   errorTitle: {
-    color: '#1652D0',
+    color: '#00E5FF',
     fontSize: 20,
     fontWeight: '900',
     letterSpacing: 1,
     marginBottom: 8,
   },
   errorSubtitle: {
-    color: '#475569',
+    color: '#94A3B8',
     fontSize: 13,
     textAlign: 'center',
     marginBottom: 12,
   },
   errorDetail: {
-    color: '#DC2626',
+    color: '#EF4444',
     fontSize: 11,
     textAlign: 'center',
     marginBottom: 18,
   },
   retryButton: {
-    backgroundColor: '#1652D0',
+    backgroundColor: '#00E5FF',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 10,
   },
   retryButtonText: {
-    color: '#FFFFFF',
+    color: '#090D16',
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '900',
   },
 });

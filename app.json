@@ -4,15 +4,15 @@
     "slug": "next-score",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
-    "backgroundColor": "#F4F7F6",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#090D16",
     "icon": "./assets/icon.png",
     "android": {
       "package": "com.nextscore.app",
       "largeHeap": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#F4F7F6"
+        "backgroundColor": "#090D16"
       }
     },
     "web": {
